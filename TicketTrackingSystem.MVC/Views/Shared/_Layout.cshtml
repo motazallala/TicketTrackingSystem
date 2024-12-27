@@ -1,0 +1,61 @@
+﻿<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - TicketTrakingSystem.MVC</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @* <link rel="stylesheet" href="~/TicketTrakingSystem.MVC.styles.css" asp-append-version="true" /> *@
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/lib/userui/css/useruistyle.min.css" rel="stylesheet" />
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    @await RenderSectionAsync("Style", required: false)
+
+</head>
+<body>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar-->
+        <div class="border-end bg-white" id="sidebar-wrapper">
+            <div class="sidebar-heading border-bottom bg-light">Ticket Traking System</div>
+            <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action list-group-item-light p-3" asp-controller="Role" asp-action="Index">Role</a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3" asp-controller="User" asp-action="Index">Users</a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3" asp-controller="Client" asp-action="Index">Clients</a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3" asp-controller="Permission" asp-action="Index">Permissions</a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3" asp-controller="Department" asp-action="Index">Departments</a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3" asp-controller="Project" asp-action="Index">Projects</a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3" asp-controller="Users" asp-action="Index">Tickets</a>
+            </div>
+        </div>
+        <!-- Page content wrapper-->
+        <div id="page-content-wrapper">
+            <!-- Top navigation-->
+            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+                <div class="container-fluid">
+                    <button class="btn btn-primary" id="sidebarToggle">Toggle Menu</button>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
+                            <li>
+                                <partial name="_LoginPartial" />
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            <!-- Page content-->
+            <div class="container py-3">
+                <h1 class="mt-4">@ViewData["Title"] Page</h1>
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+    @* <script src="~/bootstrap/js/bootstrap.min.js"></script> *@
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    @* <script src="~/bootstrap/js/bootstrap.bundle.min.js"></script> *@
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
