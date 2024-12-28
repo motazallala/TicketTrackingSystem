@@ -1,5 +1,5 @@
 ﻿import { roleTable } from './roleTable.js';
-import { setupModalData } from '../../utility/dataModalUtility.js';
+import { setupModalData, showErrorModal } from '../../utility/dataModalUtility.js';
 import { deleteRoleAsync } from '../../services/roleServices.js';
 
 $(document).ready(function () {

@@ -35,5 +35,7 @@ export const deleteRoleAsync = (roleName) =>
     roleServiceProxy.deleteroleasync(roleName);
 export const updataRoleAsync = (updateRoleDto) =>
     roleServiceProxy.updateroleasync(updateRoleDto);
+export const getAllRolesAsHtmlAsync = () =>
+    roleServiceProxy.getallrolesashtmlasync();
 
 export default roleServiceProxy;

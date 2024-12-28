@@ -328,6 +328,126 @@ public static class ModelBuilderExtensions
                 RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
                 PermissionId = Guid.Parse("30A62382-8C8F-4A13-8806-88104F9F6066"), // GUID for CreateUser permission
             },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("2F618F69-B884-4006-A916-8131F341F0B3"), // GUID for ViewProject permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("80418A92-7E17-4B3D-880A-42BF0DF503CB"), // GUID for EditProject permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("2702C229-4DF3-4D01-99DF-DB962CB93C3D"), // GUID for DeleteProject permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("F4CED4D6-6844-483D-8B18-A0941A5C266E"), // GUID for CreateProject permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("EA4085FE-BCC9-44AC-B3F6-3D3F1055B6A7"), // GUID for ViewRole permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("AC132E0D-4D87-4217-A648-B8E97C5F4D6F"), // GUID for EditRole permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("88B6DDA7-CFCE-4CC5-833D-2F8CF8FEA5C4"), // GUID for DeleteRole permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("6D370D45-C2F0-4691-A80E-91E1DE7F9C1C"), // GUID for CreateRole permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("F595DBE8-8E15-4D3F-8A37-85A5E710FBBB"), // GUID for ViewPermission permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("4B346E07-ABBB-4F62-A3F9-4C109BC153F2"), // GUID for EditPermission permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("D634BD07-26C3-421D-8FB7-34747A258AF7"), // GUID for DeletePermission permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("5B28FB44-8E97-4A71-B5A2-B041CF58B7D2"), // GUID for CreatePermission permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("773F9A24-48EB-46CF-B6CB-C0B607A85BC8"), // GUID for ViewDepartment permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("5E4FDCAC-48FF-42FE-B06E-912DBDF73D60"), // GUID for EditDepartment permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("F8DDE594-4B1B-4A0A-9495-9818A0636DE2"), // GUID for DeleteDepartment permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("77B7C29F-6B7B-4FC5-937B-37E8AA0E37F4"), // GUID for CreateDepartment permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("CA4EAB94-88D5-4FD9-A4A2-5EAF8AD927C9"), // GUID for ViewClient permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("A2282AE2-16B1-43B5-93BD-5F75045E1919"), // GUID for EditClient permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("E79D0C94-7875-4C1E-A93C-77F1FCDB303A"), // GUID for DeleteClient permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("1E4A95A1-C2DB-46B4-A2CC-445DA1E76A8C"), // GUID for CreateClient permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("B6F8C089-740E-4741-8456-6F8D99E9657A"), // GUID for ViewTicket permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("94EBCAB5-660B-4E8D-80C1-8AD58CB7F2C5"), // GUID for EditTicket permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("A4994D1D-091F-44A9-9DF8-793F23634A9B"), // GUID for DeleteTicket permission
+            },
+            new RolePermission
+            {
+                RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
+                PermissionId = Guid.Parse("1A12F6F4-88FF-4AB6-9E44-013CBF5C1964"), // GUID for CreateTicket permission
+            },
 
             // BusinessAnalyses role permissions
             new RolePermission

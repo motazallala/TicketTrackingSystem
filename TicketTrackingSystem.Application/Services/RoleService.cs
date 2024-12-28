@@ -154,5 +154,24 @@ public class RoleService : IRoleService
         }
     }
 
+    public async Task<Result<string>> GetAllRolesAsHtmlAsync()
+    {
 
+        try
+        {
+            var role = await _roleManager.Roles.ToListAsync();
+
+            // Build HTML options for the dropdown
+            var roleDropdown = string.Join(Environment.NewLine,
+                role.Select(d => $"<option value='{d.Id}'>{d.Name}</option>"));
+
+            return Result<string>.Success(roleDropdown);
+
+        }
+        catch (Exception ex)
+        {
+
+            return Result<string>.Failure(ex.Message);
+        }
+    }
 }

@@ -36,10 +36,10 @@ public class DepartmentController : Controller
             PermissionName.DeleteDepartment.ToString()
         );
 
-        var canView = !permissions[PermissionName.ViewDepartment.ToString()];
-        var canAdd = !permissions[PermissionName.CreateDepartment.ToString()];
-        var canEdit = !permissions[PermissionName.EditDepartment.ToString()];
-        var canDelete = !permissions[PermissionName.DeleteDepartment.ToString()];
+        var canView = permissions[PermissionName.ViewDepartment.ToString()];
+        var canAdd = permissions[PermissionName.CreateDepartment.ToString()];
+        var canEdit = permissions[PermissionName.EditDepartment.ToString()];
+        var canDelete = permissions[PermissionName.DeleteDepartment.ToString()];
 
         var response = new BaseResponse();
         var parameters = request.Parameters;

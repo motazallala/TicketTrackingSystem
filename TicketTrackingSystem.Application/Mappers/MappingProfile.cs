@@ -20,5 +20,15 @@ public class MappingProfile : Profile
         CreateMap<Department, CreateDepartmentDto>().ReverseMap();
         CreateMap<Department, UpdateDepartmentDto>().ReverseMap();
         CreateMap<Project, ProjectDto>().ReverseMap();
+        CreateMap<RolePermission, RoleWithPermissionDto>()
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Role.Id))
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Role.Name))
+            .ForMember(dest => dest.Permissions, opt => opt.MapFrom(src => src.Role.RolePermissions.Select(rp => rp.Permission)))
+            .ReverseMap();
+
+        CreateMap<Permission, PermissionDto>()
+            .ForMember(dest => dest.Children, opt => opt.MapFrom(src => src.Children))
+            .ForMember(dest => dest.Parent, opt => opt.Condition(src => src.Parent != null))  // Avoid recursion when Parent is null
+            .ReverseMap();
     }
 }

@@ -7,14 +7,12 @@ using TicketTrackingSystem.Application.Interface;
 using TicketTrackingSystem.Common.Model;
 
 namespace TicketTrackingSystem.MVC.Controllers;
-public class RoleController : Controller
+public class PermissionController : Controller
 {
-    private readonly IRoleService _roleService;
     private readonly IPermissionService _permissionService;
     private readonly IUserService _userService;
-    public RoleController(IRoleService roleService, IPermissionService permissionService, IUserService userService)
+    public PermissionController(IPermissionService permissionService, IUserService userService)
     {
-        _roleService = roleService;
         _permissionService = permissionService;
         _userService = userService;
     }
@@ -22,63 +20,40 @@ public class RoleController : Controller
     {
         return View();
     }
-    public async Task<IActionResult> Details(Guid id)
-    {
-        var result = await _roleService.GetRoleById(id);
-        if (!result.IsSuccess)
-        {
-            return NotFound();
-        }
-        return View(result.Value);
-    }
 
-    [HttpPost("/role/call")]
+    [HttpPost("/permission/call")]
     public async Task<IActionResult> CallService([FromBody] DynamicRequest request)
     {
         var permissions = await CheckPermissionsAsync(
-            PermissionName.ViewRole.ToString(),
-            PermissionName.CreateRole.ToString(),
-            PermissionName.EditRole.ToString(),
-            PermissionName.DeleteRole.ToString()
+            PermissionName.ViewPermission.ToString(),
+            PermissionName.CreatePermission.ToString(),
+            PermissionName.EditPermission.ToString(),
+            PermissionName.DeletePermission.ToString()
             );
-        var canView = permissions[PermissionName.ViewRole.ToString()];
-        var canAdd = permissions[PermissionName.CreateRole.ToString()];
-        var canEdit = permissions[PermissionName.EditRole.ToString()];
-        var canDelete = permissions[PermissionName.DeleteRole.ToString()];
+        var canView = permissions[PermissionName.ViewPermission.ToString()];
+        var canAdd = permissions[PermissionName.CreatePermission.ToString()];
+        var canEdit = permissions[PermissionName.EditPermission.ToString()];
+        var canDelete = permissions[PermissionName.DeletePermission.ToString()];
 
         var response = new BaseResponse();
         var parameters = request.Parameters;
         switch (request.Method.ToLower())
         {
-            case "getallrolespaginatedasync":
+            case "getallroleswithpermissionpaginatedasync":
                 {
-                    if (!canView)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.Forbidden,
-                            Description = "You do not have permission to view roles."
-                        });
-                        return Ok(response);
-                    }
-                    if (parameters.Length < 1 || !(parameters[0] is JsonElement requestElement))
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.BadRequest,
-                            Description = "Invalid request."
-                        });
-                        break;
-                    }
                     try
                     {
-                        var dataTableRequest = JsonSerializer.Deserialize<DataTablesRequest>(requestElement.GetRawText(), new JsonSerializerOptions
+                        if (!canView)
                         {
-                            PropertyNameCaseInsensitive = true
-                        });
-                        if (dataTableRequest == null)
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.Forbidden,
+                                Description = "You do not have permission to view this page."
+                            });
+                            return Ok(response);
+                        }
+                        if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
                         {
                             response.IsSuccess = false;
                             response.SetError(new ErrorMessage
@@ -88,7 +63,21 @@ public class RoleController : Controller
                             });
                             break;
                         }
-                        var result = await _roleService.GetAllRolesPaginatedAsync(dataTableRequest);
+                        var model = JsonSerializer.Deserialize<DataTablesRequest>(parameters[0].ToString(), new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+                        if (model == null)
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.BadRequest,
+                                Description = "Invalid request."
+                            });
+                            return Ok(response);
+                        }
+                        var result = await _permissionService.GetAllRolesWithPermissionPaginatedAsync(model);
                         if (!result.IsSuccess)
                         {
                             response.IsSuccess = false;
@@ -97,6 +86,7 @@ public class RoleController : Controller
                                 Code = HttpStatusCode.InternalServerError,
                                 Description = result.ErrorMessage
                             });
+                            break;
                         }
                         response.IsSuccess = true;
                         response.Data = result.Value;
@@ -113,7 +103,8 @@ public class RoleController : Controller
                         break;
                     }
                 }
-            case "createroleasync":
+
+            case "addroletopermissionasync":
                 {
                     try
                     {
@@ -123,59 +114,9 @@ public class RoleController : Controller
                             response.SetError(new ErrorMessage
                             {
                                 Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to create roles."
-                            });
-                            return Ok(response);
-                        }
-                        if (parameters.Length < 1 || string.IsNullOrEmpty(request.Parameters[0]?.ToString()))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request."
+                                Description = "You do not have permission to add a role to a permission."
                             });
                             break;
-                        }
-                        var roleName = request.Parameters[0].ToString();
-                        var result = await _roleService.CreateRoleAsync(roleName);
-                        if (!result.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = result.ErrorMessage
-                            });
-                        }
-                        response.IsSuccess = true;
-                        response.Data = result.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-            case "updateroleasync":
-                {
-                    try
-                    {
-                        if (!canEdit)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to edit roles."
-                            });
-                            return Ok(response);
                         }
                         if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
                         {
@@ -187,11 +128,12 @@ public class RoleController : Controller
                             });
                             break;
                         }
-                        var roleDto = JsonSerializer.Deserialize<UpdateRoleDto>(parameters[0].ToString(), new JsonSerializerOptions
+                        var model = JsonSerializer.Deserialize<CreateRolePermissionsDto>(parameters[0].ToString(), new JsonSerializerOptions
                         {
                             PropertyNameCaseInsensitive = true
                         });
-                        if (roleDto == null)
+
+                        if (model == null || model.RoleId == Guid.Empty || !model.PermissionIds.Any())
                         {
                             response.IsSuccess = false;
                             response.SetError(new ErrorMessage
@@ -199,9 +141,9 @@ public class RoleController : Controller
                                 Code = HttpStatusCode.BadRequest,
                                 Description = "Invalid request."
                             });
-                            break;
+                            return Ok(response);
                         }
-                        var result = await _roleService.UpdateRoleAsync(roleDto);
+                        var result = await _permissionService.AddRoleToPermissionsAsync(model);
                         if (!result.IsSuccess)
                         {
                             response.IsSuccess = false;
@@ -210,35 +152,38 @@ public class RoleController : Controller
                                 Code = HttpStatusCode.InternalServerError,
                                 Description = result.ErrorMessage
                             });
+                            break;
                         }
                         response.IsSuccess = true;
                         response.Data = result.Value;
                         break;
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
+
                         response.IsSuccess = false;
                         response.SetError(new ErrorMessage
                         {
                             Code = HttpStatusCode.InternalServerError,
-                            Description = "An error occurred while updating the role."
+                            Description = ex.Message
                         });
                         break;
                     }
                 }
-            case "deleteroleasync":
+
+            case "removerolefrompermissionasync":
                 {
                     try
                     {
-                        if (!canDelete)
+                        if (!canAdd)
                         {
                             response.IsSuccess = false;
                             response.SetError(new ErrorMessage
                             {
                                 Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to delete roles."
+                                Description = "You do not have permission to add a role to a permission."
                             });
-                            return Ok(response);
+                            break;
                         }
                         if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
                         {
@@ -250,8 +195,22 @@ public class RoleController : Controller
                             });
                             break;
                         }
-                        var roleName = parameters[0].ToString();
-                        var result = await _roleService.DeleteRoleAsync(roleName);
+                        var model = JsonSerializer.Deserialize<CreateRolePermissionDto>(parameters[0].ToString(), new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+
+                        if (model == null || model.RoleId == Guid.Empty || model.PermissionId == Guid.Empty)
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.BadRequest,
+                                Description = "Invalid request."
+                            });
+                            return Ok(response);
+                        }
+                        var result = await _permissionService.RemoveRoleFromPermissionAsync(model);
                         if (!result.IsSuccess)
                         {
                             response.IsSuccess = false;
@@ -260,6 +219,51 @@ public class RoleController : Controller
                                 Code = HttpStatusCode.InternalServerError,
                                 Description = result.ErrorMessage
                             });
+                            break;
+                        }
+                        response.IsSuccess = true;
+                        response.Data = result.Value;
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+
+                        response.IsSuccess = false;
+                        response.SetError(new ErrorMessage
+                        {
+                            Code = HttpStatusCode.InternalServerError,
+                            Description = ex.Message
+                        });
+                        break;
+                    }
+                }
+
+
+
+            case "getallpermissionsashtmlasync":
+                {
+                    try
+                    {
+                        if (!canView)
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.Forbidden,
+                                Description = "You do not have permission to view this page."
+                            });
+                            break;
+                        }
+                        var result = await _permissionService.GetAllPermissionsAsHtmlAsync();
+                        if (!result.IsSuccess)
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.InternalServerError,
+                                Description = result.ErrorMessage
+                            });
+                            break;
                         }
                         response.IsSuccess = true;
                         response.Data = result.Value;
@@ -276,35 +280,6 @@ public class RoleController : Controller
                         break;
                     }
                 }
-
-            case "getallrolesashtmlasync":
-                {
-                    if (!canView)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.Forbidden,
-                            Description = "You do not have permission to view roles."
-                        });
-                        break;
-                    }
-                    var result = await _roleService.GetAllRolesAsHtmlAsync();
-                    if (!result.IsSuccess)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = result.ErrorMessage
-                        });
-                        break;
-                    }
-                    response.IsSuccess = true;
-                    response.Data = result.Value;
-                    break;
-                }
-
             default:
                 {
                     response.IsSuccess = false;
@@ -328,4 +303,5 @@ public class RoleController : Controller
         }
         return permissionNames.ToDictionary(p => p, p => false);
     }
+
 }

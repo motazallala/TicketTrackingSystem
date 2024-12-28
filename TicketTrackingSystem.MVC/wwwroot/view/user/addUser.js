@@ -1,6 +1,6 @@
 ﻿import { userTable } from './userTable.js';
 import { setupModalData, showErrorModal } from '../../utility/dataModalUtility.js';
-import { createUserAsync, getUserTypeDropdown } from '../../services/userServices.js';
+import { addRoleToPermissionAsync, getUserTypeDropdown } from '../../services/userServices.js';
 import { getAllDepartmentsAsHtmlAsync } from '../../services/departmentServices.js';
 $(document).ready(function () {
     // Cache for dropdown options to avoid repeated server calls
@@ -64,7 +64,7 @@ $(document).ready(function () {
                 if (addUserDto.userType === '0') {
                     addUserDto.departmentId = '';
                 }
-                const addResult = await createUserAsync(JSON.stringify(addUserDto));
+                const addResult = await addRoleToPermissionAsync(JSON.stringify(addUserDto));
                 if (addResult.isSuccess) {
                     $('.modal').modal('hide');
                     userTable.ajax.reload(null, false);

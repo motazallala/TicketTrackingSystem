@@ -16,10 +16,10 @@
                                                                     , PermissionName.CreateProject.ToString()
                                                                     , PermissionName.EditProject.ToString()
                                                                     , PermissionName.DeleteProject.ToString());
-        canView = !permissionCheckResult[PermissionName.ViewProject.ToString()];
-        canAdd = !permissionCheckResult[PermissionName.CreateProject.ToString()];
-        canEdit = !permissionCheckResult[PermissionName.EditProject.ToString()];
-        canDelete = !permissionCheckResult[PermissionName.DeleteProject.ToString()];
+        canView = permissionCheckResult[PermissionName.ViewProject.ToString()];
+        canAdd = permissionCheckResult[PermissionName.CreateProject.ToString()];
+        canEdit = permissionCheckResult[PermissionName.EditProject.ToString()];
+        canDelete = permissionCheckResult[PermissionName.DeleteProject.ToString()];
 
     }
 }

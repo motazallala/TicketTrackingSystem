@@ -11,4 +11,5 @@ public interface IRoleService
     Task<Result<string>> SoftDeleteRoleAsync(string roleName);
     Task<Result<string>> UpdateRoleAsync(UpdateRoleDto updateRoleDto);
     Task<Result<RoleDto>> GetRoleById(Guid roleId);
+    Task<Result<string>> GetAllRolesAsHtmlAsync();
 }

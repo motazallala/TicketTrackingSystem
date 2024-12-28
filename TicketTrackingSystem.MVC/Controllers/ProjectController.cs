@@ -35,10 +35,10 @@ public class ProjectController : Controller
         );
 
 
-        var canView = !permissions[PermissionName.ViewProject.ToString()];
-        var canAdd = !permissions[PermissionName.CreateProject.ToString()];
-        var canEdit = !permissions[PermissionName.EditProject.ToString()];
-        var canDelete = !permissions[PermissionName.DeleteProject.ToString()];
+        var canView = permissions[PermissionName.ViewProject.ToString()];
+        var canAdd = permissions[PermissionName.CreateProject.ToString()];
+        var canEdit = permissions[PermissionName.EditProject.ToString()];
+        var canDelete = permissions[PermissionName.DeleteProject.ToString()];
 
         var response = new BaseResponse();
         var parameters = request.Parameters;
@@ -80,6 +80,7 @@ public class ProjectController : Controller
                                 Code = HttpStatusCode.InternalServerError,
                                 Description = result.ErrorMessage
                             });
+                            break;
                         }
                         response.IsSuccess = true;
                         response.Data = result.Value;

@@ -27,7 +27,7 @@
 <input type="hidden" id="canAdd" value="@(canAdd ? " true" : "false" )" />
 <input type="hidden" id="canEdit" value="@(canEdit ? "true" : "false")" />
 <input type="hidden" id="canDelete" value="@(canDelete ? "true" : "false")" />
-@if (!canAdd)
+@if (canAdd)
 {
 
     <div class="row">
@@ -36,7 +36,7 @@
         </div>
     </div>
 }
-@if (!canView)
+@if (canView)
 {
 
     <div class="row justify-content-center">
@@ -79,22 +79,22 @@
 @section Scripts {
     <script src="https://cdn.datatables.net/v/bs5/dt-2.1.8/af-2.7.0/b-3.2.0/b-colvis-3.2.0/b-html5-3.2.0/datatables.min.js"></script>
 
-    @if (!canView)
+    @if (canView)
     {
         <script type="module" src="~/view/department/departmenttable.js"></script>
         <script type="module" src="~/view/department/adddepartment.js"></script>
         <script type="module" src="~/view/department/deletedepartment.js"></script>
         <script type="module" src="~/view/department/editdepartment.js"></script>
     }
-    else if (!canAdd)
+    else if (canAdd)
     {
 
     }
-    else if (!canEdit)
+    else if (canEdit)
     {
 
     }
-    else if (!canDelete)
+    else if (canDelete)
     {
 
     }

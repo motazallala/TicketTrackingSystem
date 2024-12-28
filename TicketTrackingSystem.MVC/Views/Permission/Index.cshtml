@@ -1,7 +1,7 @@
 ﻿@inject IPermissionService _permissionService
 @inject IUserService _userService;
 @{
-    ViewData["Title"] = "Role";
+    ViewData["Title"] = "Permission";
     Dictionary<string, bool> permissionCheckResult;
     bool canView = false;
     bool canAdd = false;
@@ -12,14 +12,14 @@
 
         var user = await _userService.GetUserByClaim(User);
         var userId = user.Id;
-        permissionCheckResult = await _permissionService.HasPermissionAsync(userId, PermissionName.ViewRole.ToString()
-                                                                    , PermissionName.CreateRole.ToString()
-                                                                    , PermissionName.EditRole.ToString()
-                                                                    , PermissionName.DeleteRole.ToString());
-        canView = permissionCheckResult[PermissionName.ViewRole.ToString()];
-        canAdd = permissionCheckResult[PermissionName.CreateRole.ToString()];
-        canEdit = permissionCheckResult[PermissionName.EditRole.ToString()];
-        canDelete = permissionCheckResult[PermissionName.DeleteRole.ToString()];
+        permissionCheckResult = await _permissionService.HasPermissionAsync(userId, PermissionName.ViewPermission.ToString()
+                                                                    , PermissionName.CreatePermission.ToString()
+                                                                    , PermissionName.EditPermission.ToString()
+                                                                    , PermissionName.DeletePermission.ToString());
+        canView = permissionCheckResult[PermissionName.ViewPermission.ToString()];
+        canAdd = permissionCheckResult[PermissionName.CreatePermission.ToString()];
+        canEdit = permissionCheckResult[PermissionName.EditPermission.ToString()];
+        canDelete = permissionCheckResult[PermissionName.DeletePermission.ToString()];
 
     }
 }
@@ -29,9 +29,10 @@
 <input type="hidden" id="canDelete" value="@(canDelete ? "true" : "false")" />
 @if (canAdd)
 {
+
     <div class="row">
         <div class="col">
-            <button class="btn btn-primary" id="addButton">Add Role</button>
+            <button class="btn btn-primary" id="addBtn">Add Permission</button>
         </div>
     </div>
 }
@@ -45,6 +46,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Name</th>
+                        <th>Permissions</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -79,10 +81,9 @@
 
     @if (canView)
     {
-        <script type="module" src="~/view/role/roletable.js"></script>
-        <script type="module" src="~/view/role/addRole.js"></script> 
-        <script type="module" src="~/view/role/deleteRole.js"></script>
-        <script type="module" src="~/view/role/editRole.js"></script> 
+        <script type="module" src="~/view/permission/roleForPermissionTable.js"></script>
+        <script type="module" src="~/view/permission/addPermission.js"></script>
+        <script type="module" src="~/view/permission/deletePermission.js"></script>
     }
     else if (canAdd)
     {

@@ -1,11 +1,11 @@
-﻿const userServiceProxy = new Proxy({}, {
+﻿const permissionServiceProxy = new Proxy({}, {
     get: function (target, prop) {
         return function (...args) {
             const serializedArgs = args.map(arg =>
                 typeof arg === "object" ? JSON.stringify(arg) : arg
             );
 
-            return fetch('https://localhost:7264/user/call', {
+            return fetch('https://localhost:7264/permission/call', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -28,27 +28,12 @@
         };
     },
 });
-export const setRoleToUserAsync = (userId, roleId) =>
-    userServiceProxy.setroletouserasync(userId, roleId);
 
+export const addRoleToPermissionAsync = (CreatePermissionDto) =>
+    permissionServiceProxy.addroletopermissionasync(CreatePermissionDto);
+export const getAllPermissionsAsHtmlAsync = () =>
+    permissionServiceProxy.getallpermissionsashtmlasync();
+export const removeRoleFromPermissionAsync = (CreatePermissionDto) =>
+    permissionServiceProxy.removerolefrompermissionasync(CreatePermissionDto);
 
-
-export const addRoleToPermissionAsync = (createUserDto) =>
-    userServiceProxy.createuserasync(createUserDto);
-
-
-export const getUserTypeDropdown = () =>
-    userServiceProxy.getusertypedropdown();
-
-export const removeRoleFromUserAsync = (userId, roleId) =>
-    userServiceProxy.removerolefromuserasync(userId, roleId);
-
-export const deleteUserAsync = (userId) =>
-    userServiceProxy.deleteuserasync(userId);
-export const updateUserAsync = (updateUserDto) =>
-    userServiceProxy.updateuserasync(updateUserDto);
-export const getUserByIdasync = (userId) =>
-    userServiceProxy.getuserbyidasync(userId);
-
-export default userServiceProxy;
-
+export default permissionServiceProxy;

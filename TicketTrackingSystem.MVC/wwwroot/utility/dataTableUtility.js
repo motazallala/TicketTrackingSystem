@@ -3,6 +3,7 @@
     apiUrl,
     method,
     columns,
+    ordering = true,
     additionalParameters = null,
     failureCallback = null
 }) {
@@ -14,6 +15,7 @@
         autoWidth: true,
         processing: true, // Show processing indicator
         serverSide: true, // Enable server-side processing
+        ordering: ordering !== false,
         ajax: {
             url: apiUrl, // API endpoint
             type: "POST",
