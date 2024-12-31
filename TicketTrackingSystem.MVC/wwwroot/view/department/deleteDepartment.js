@@ -1,5 +1,5 @@
 ﻿import { departmentTable } from './departmentTable.js';
-import { setupModalData } from '../../utility/dataModalUtility.js';
+import { setupModalData, showErrorModal } from '../../utility/dataModalUtility.js';
 import { deleteDepartmentAsync } from '../../services/departmentServices.js';
 
 $(document).ready(function () {

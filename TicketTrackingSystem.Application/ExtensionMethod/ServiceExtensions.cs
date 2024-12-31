@@ -18,6 +18,7 @@ public static class ServiceExtensions
         Services.AddScoped<IDepartmentService, DepartmentService>();
         Services.AddScoped<IRoleService, RoleService>();
         Services.AddScoped<IProjectService, ProjectService>();
+        Services.AddScoped<ITicketService, TicketService>();
         Services.AddTransient<IUnitOfWork, UnitOfWork>();
         var config = new MapperConfiguration(cfg =>
         {

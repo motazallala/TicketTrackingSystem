@@ -125,7 +125,7 @@ public class RoleController : Controller
                                 Code = HttpStatusCode.Forbidden,
                                 Description = "You do not have permission to create roles."
                             });
-                            return Ok(response);
+                            break;
                         }
                         if (parameters.Length < 1 || string.IsNullOrEmpty(request.Parameters[0]?.ToString()))
                         {
@@ -175,7 +175,7 @@ public class RoleController : Controller
                                 Code = HttpStatusCode.Forbidden,
                                 Description = "You do not have permission to edit roles."
                             });
-                            return Ok(response);
+                            break;
                         }
                         if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
                         {
@@ -238,7 +238,7 @@ public class RoleController : Controller
                                 Code = HttpStatusCode.Forbidden,
                                 Description = "You do not have permission to delete roles."
                             });
-                            return Ok(response);
+                            break;
                         }
                         if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
                         {

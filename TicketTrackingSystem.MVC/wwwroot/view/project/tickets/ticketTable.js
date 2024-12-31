@@ -1,16 +1,28 @@
-﻿import { initializeDataTable } from '../../utility/dataTableUtility.js';
-import { setupModalData } from '../../utility/dataModalUtility.js';
+﻿import { initializeDataTable } from '../../../utility/dataTableUtility.js';
+import { setupModalData } from '../../../utility/dataModalUtility.js';
 
-let roleTable;
+let ticketTable;
 
 $(document).ready(function () {
-    roleTable = initializeDataTable({
-        tableId: '#roleTable',
-        apiUrl: 'https://localhost:7264/role/call',
-        method: 'getallrolespaginatedasync',
+    let projectId = $('#projectId').val();
+
+
+    ticketTable = initializeDataTable({
+        tableId: '#ticketTable',
+        apiUrl: 'https://localhost:7264/ticket/call',
+        method: 'getallticketpaginatedasync',
         columns: [
             { data: 'id', name: 'ID' },
-            { data: 'name', name: 'Name' },
+            { data: 'title', name: 'Title' },
+            { data: 'description', name: 'Description' },
+            { data: 'status', name: 'Status' },
+            { 
+                data: 'createdAt', 
+                name: 'CreatedAt',
+                render: function (data, type, row) {
+                    return new Date(data).toLocaleString();
+                }
+            },
             {
                 data: "id",
                 name: 'Actions',
@@ -41,13 +53,13 @@ $(document).ready(function () {
                 </button>`;
                     }
 
-                    // Optionally, you can add delete or other buttons based on permissions
-                    if (canDelete) {
-                        actionButtons += `
-                <button class="btn btn-danger btn-sm me-2 dt-delete">
-                    <i class="bi bi-trash-fill"></i> Delete
-                </button>`;
-                    }
+                //    // Optionally, you can add delete or other buttons based on permissions
+                //    if (canDelete) {
+                //        actionButtons += `
+                //<button class="btn btn-danger btn-sm me-2 dt-delete">
+                //    <i class="bi bi-trash-fill"></i> Delete
+                //</button>`;
+                //    }
 
                     // Close the div and return the HTML
                     actionButtons += `</div>`;
@@ -56,30 +68,46 @@ $(document).ready(function () {
                 }
             }
         ],
-        additionalParameters: null,
+        additionalParameters: [projectId],
         failureCallback: showErrorMessage
     });
 
     // Row click event handler
-    roleTable.on('click', '.dt-view', function () {
-        let data = roleTable.row($(this).parents('tr')).data();
+    ticketTable.on('click', '.dt-view', function () {
+        let data = ticketTable.row($(this).parents('tr')).data();
         const modalTitle = $('.modal .modal-title');
         const modalBody = $('#modelBody');
         const modalFooter = $('.modal .modal-footer');
 
-        const title = 'Role Details';
+        const title = 'Project Details';
         const bodyContent = `
              <div class="form-group">
                 <label for="name">ID :</label>
                 <input type="text" class="form-control" id="id-view" name="id" value="${data.id}" disabled>
             </div>
             <div class="form-group">
-                <label for="name">Name :</label>
-                <input type="text" class="form-control" id="name-view" name="name" value="${data.name}" disabled>
+                <label for="title">Title :</label>
+                <input type="text" class="form-control" id="title" name="title" value="${data.title}" disabled>
+            </div>
+            <div class="form-group">
+                <label for="description">Description :</label>
+                <input type="text" class="form-control" id="description" name="description" value="${data.description}" disabled>
+            </div>
+            <div class="form-group">
+                <label for="status">Status :</label>
+                <input type="text" class="form-control" id="status" name="status" value="${data.status}" disabled>
+            </div>
+            <div class="form-group">
+                <label for="createdAt">Created At :</label>
+                <input type="text" class="form-control" id="createdAt" name="createdAt" value="${new Date(data.createdAt).toLocaleString()}" disabled>
+            </div>
+            <div class="form-group">
+                <label for="message">Message :</label>
+                <textarea class="form-control" id="message" name="message" disabled>${data.message}</textarea>
             </div>
         `;
         const viewButton = `<button type="button" class="btn btn-default" onclick="$('#myModal').modal('hide')" data-dismiss="modal">Close</button>`;
-        const moreDetails = `<a class="btn btn-sm btn-primary dt-view" href="/Role/Details/${data.id}">View</a>`;
+        const moreDetails = `<a class="btn btn-sm btn-primary dt-view" href="/Project/Details/${data.id}">View</a>`;
         setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [viewButton, moreDetails]);
         $('#myModal').modal('show');
     });
@@ -103,4 +131,4 @@ $(document).ready(function () {
 });
 
 // Export the DataTable instance when it's ready
-export { roleTable };
+export { ticketTable };

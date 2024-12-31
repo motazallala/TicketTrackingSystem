@@ -27,11 +27,15 @@
 <input type="hidden" id="canAdd" value="@(canAdd ? "true" : "false" )" />
 <input type="hidden" id="canEdit" value="@(canEdit ? "true" : "false")" />
 <input type="hidden" id="canDelete" value="@(canDelete ? "true" : "false")" />
+@if (!canView && !canAdd && !canView && !canDelete)
+{
+    <h3>You Do <strong>NOT</strong> Have Any Permission In @ViewData["Title"] Page Contact The Admin ...</h3>
+}
 @if (canAdd)
 {
 
     <div class="row">
-        <div class="col">
+        <div class="col text-end">
             <button class="btn btn-primary" id="addBtn">Add Permission</button>
         </div>
     </div>

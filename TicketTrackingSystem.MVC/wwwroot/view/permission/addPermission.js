@@ -20,7 +20,7 @@ $(document).ready(function () {
             </div>
             <div class="form-group" id="permissionDropDown">
                 <label for="permissionIds">Permission :</label>
-                <select class="form-control" id="permissionIds" name="permissionIds" multiple>
+                <select class="form-select" size="19" aria-label="size 3 select example" id="permissionIds" name="permissionIds" multiple>
                 </select>
             </div>
         `;

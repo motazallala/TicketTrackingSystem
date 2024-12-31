@@ -7,12 +7,14 @@ using TicketTrackingSystem.Application.Interface;
 using TicketTrackingSystem.Common.Model;
 
 namespace TicketTrackingSystem.MVC.Controllers;
-public class UserController : Controller
+public class TicketController : Controller
 {
-    private readonly IUserService _userService;
     private readonly IPermissionService _permissionService;
-    public UserController(IUserService userService, IPermissionService permissionService)
+    private readonly IUserService _userService;
+    private readonly ITicketService _ticketService;
+    public TicketController(ITicketService ticketService, IUserService userService, IPermissionService permissionService)
     {
+        _ticketService = ticketService;
         _userService = userService;
         _permissionService = permissionService;
     }
@@ -21,27 +23,28 @@ public class UserController : Controller
         return View();
     }
 
-    [HttpPost("/user/call")]
+    [HttpPost("/ticket/call")]
     public async Task<IActionResult> CallService([FromBody] DynamicRequest request)
     {
         // Check necessary permissions
         var permissions = await CheckPermissionsAsync(
-            PermissionName.ViewUser.ToString(),
-            PermissionName.CreateUser.ToString(),
-            PermissionName.EditUser.ToString(),
-            PermissionName.DeleteUser.ToString()
+            PermissionName.ViewTicket.ToString(),
+            PermissionName.CreateTicket.ToString(),
+            PermissionName.EditTicket.ToString(),
+            PermissionName.DeleteTicket.ToString()
         );
 
-        var canView = permissions[PermissionName.ViewUser.ToString()];
-        var canAdd = permissions[PermissionName.CreateUser.ToString()];
-        var canEdit = permissions[PermissionName.EditUser.ToString()];
-        var canDelete = permissions[PermissionName.DeleteUser.ToString()];
+        var canView = permissions[PermissionName.ViewTicket.ToString()];
+        var canAdd = permissions[PermissionName.CreateTicket.ToString()];
+        var canEdit = permissions[PermissionName.EditTicket.ToString()];
+        var canDelete = permissions[PermissionName.DeleteTicket.ToString()];
 
         var response = new BaseResponse();
         var parameters = request.Parameters;
+
         switch (request.Method.ToLower())
         {
-            case "getalluserswithrolepaginatedasync":
+            case "getallticketpaginatedasync":
                 {
                     try
                     {
@@ -51,160 +54,23 @@ public class UserController : Controller
                             response.SetError(new ErrorMessage
                             {
                                 Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to view users."
+                                Description = "You do not have permission to view tickets"
                             });
                             break;
                         }
-                        if (parameters.Length < 1 || !(parameters[0] is JsonElement requestElement))
+
+                        if (parameters.Length < 2 || string.IsNullOrEmpty(parameters[0]?.ToString()) || string.IsNullOrEmpty(parameters[1]?.ToString()))
                         {
                             response.IsSuccess = false;
                             response.SetError(new ErrorMessage
                             {
                                 Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid pagination request data."
-                            });
-                            break;
-                        }
-                        var dataTablesRequest = JsonSerializer.Deserialize<DataTablesRequest>(requestElement.GetRawText(), new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-                        if (dataTablesRequest == null)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid DataTablesRequest format."
-                            });
-                            break;
-                        }
-                        var paginationResult = await _userService.GetAllUsersWithRolePaginatedAsync(dataTablesRequest);
-                        if (!paginationResult.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = paginationResult.ErrorMessage
-                            });
-                            break;
-                        }
-                        response.IsSuccess = true;
-                        response.Data = paginationResult.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-            case "getalluserswithrolewithconditionpaginatedasync":
-                {
-                    try
-                    {
-                        if (!canView)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to view users."
+                                Description = "Invalid parameters"
                             });
                             break;
                         }
 
-                        // Validate the number of parameters
-                        if (parameters.Length < 3 || !(parameters[0] is JsonElement requestElement) || !bool.TryParse(parameters[1].ToString(), out bool withRole) || string.IsNullOrEmpty(parameters[2]?.ToString()))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request parameters. Expected pagination request, withRole, and roleId."
-                            });
-                            break;
-                        }
-
-                        // Deserialize the DataTablesRequest
-                        var dataTablesRequest = JsonSerializer.Deserialize<DataTablesRequest>(requestElement.GetRawText(), new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-                        if (dataTablesRequest == null)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid DataTablesRequest format."
-                            });
-                            break;
-                        }
-                        var roleId = parameters[2].ToString();
-                        // Call the service method with the extracted parameters
-                        var paginationResult = await _userService.GetAllUsersWithRoleWithConditionPaginatedAsync(dataTablesRequest, withRole, roleId);
-                        if (!paginationResult.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = paginationResult.ErrorMessage
-                            });
-                            break;
-                        }
-
-                        // Success response
-                        response.IsSuccess = true;
-                        response.Data = paginationResult.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-            case "createuserasync":
-                {
-                    try
-                    {
-                        if (!canAdd)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to create users."
-                            });
-                            break;
-                        }
-                        //get create users dto and check if the parameters are valid and if yes serilze user
-                        if (parameters.Length < 1 || string.IsNullOrEmpty(request.Parameters[0]?.ToString()))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request data."
-                            });
-                            break;
-                        }
-                        var model = JsonSerializer.Deserialize<CreateUserDto>(parameters[0].ToString(), new JsonSerializerOptions
+                        var model = JsonSerializer.Deserialize<DataTablesRequest>(parameters[0].ToString(), new JsonSerializerOptions
                         {
                             PropertyNameCaseInsensitive = true
                         });
@@ -215,11 +81,16 @@ public class UserController : Controller
                             response.SetError(new ErrorMessage
                             {
                                 Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid CreateUserDto format."
+                                Description = "Invalid parameters"
                             });
                             break;
                         }
-                        var result = await _userService.CreateUserAsync(model);
+
+                        var projectId = Guid.Parse(parameters[1].ToString());
+                        var user = await _userService.GetUserByClaim(User);
+
+                        var result = await _ticketService.GetAllTicketForUserPaginatedAsync(model, projectId, user.Id);
+
                         if (!result.IsSuccess)
                         {
                             response.IsSuccess = false;
@@ -230,60 +101,7 @@ public class UserController : Controller
                             });
                             break;
                         }
-                        response.IsSuccess = true;
-                        response.Data = result.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
 
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-
-            case "removerolefromuserasync":
-                {
-                    try
-                    {
-                        if (!canDelete)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to delete users."
-                            });
-                            break;
-                        }
-                        if (parameters.Length < 2 || string.IsNullOrEmpty(parameters[1]?.ToString()) || string.IsNullOrEmpty(parameters[1]?.ToString()))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request parameters. Expected user id and role id."
-                            });
-                            break;
-                        }
-                        var userId = parameters[0].ToString();
-                        var roleId = parameters[1].ToString();
-                        var result = await _userService.RemoveRoleFromUserAsync(userId, roleId);
-                        if (!result.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = result.ErrorMessage
-                            });
-                            break;
-                        }
                         response.IsSuccess = true;
                         response.Data = result.Value;
                         break;
@@ -300,63 +118,46 @@ public class UserController : Controller
                     }
                 }
 
-            case "getusertypedropdown":
-                {
-                    response.IsSuccess = true;
-                    response.Data = _userService.GetUserTypeDropdown();
-                    break;
-                }
-
-            case "getprojectmembersasync":
+            case "getticketbyidasync":
                 {
                     try
                     {
                         if (!canView)
                         {
-                            response.IsSuccess = true;
+                            response.IsSuccess = false;
                             response.SetError(new ErrorMessage
                             {
                                 Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to view users."
+                                Description = "You do not have permission to view tickets"
                             });
                             break;
                         }
-                        if (parameters.Length < 3 || string.IsNullOrEmpty(parameters[0]?.ToString()) || !bool.TryParse(parameters[1].ToString(), out bool isMember) || string.IsNullOrEmpty(parameters[2]?.ToString()))
+
+                        if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
                         {
                             response.IsSuccess = false;
                             response.SetError(new ErrorMessage
                             {
                                 Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request parameters. Expected user id and role id."
+                                Description = "Invalid parameters"
                             });
                             break;
                         }
-                        var model = JsonSerializer.Deserialize<DataTablesRequest>(parameters[0].ToString(), new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true,
-                        });
-                        if (model is null)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid DataTablesRequest format."
-                            });
-                            break;
-                        }
-                        var projectId = Guid.Parse(parameters[2].ToString());
-                        var result = await _userService.GetProjectMembersAsync(model, isMember, projectId);
+
+                        var ticketId = Guid.Parse(parameters[0].ToString());
+                        var result = await _ticketService.GetTicketByIdAsync(ticketId);
+
                         if (!result.IsSuccess)
                         {
                             response.IsSuccess = false;
                             response.SetError(new ErrorMessage
                             {
-                                Code = HttpStatusCode.InternalServerError,
+                                Code = HttpStatusCode.NotFound,
                                 Description = result.ErrorMessage
                             });
                             break;
                         }
+
                         response.IsSuccess = true;
                         response.Data = result.Value;
                         break;
@@ -372,7 +173,70 @@ public class UserController : Controller
                         break;
                     }
                 }
-            case "setroletouserasync":
+
+            case "addticketasync":
+                {
+                    try
+                    {
+                        if (!canAdd)
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.Forbidden,
+                                Description = "You do not have permission to create tickets"
+                            });
+                            break;
+                        }
+
+                        if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.BadRequest,
+                                Description = "Invalid parameters"
+                            });
+                            break;
+                        }
+
+                        var ticketDto = JsonSerializer.Deserialize<CreateTicketDto>(parameters[0].ToString(), new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+                        var user = await _userService.GetUserByClaim(User);
+                        ticketDto.CreatorId = user.Id;
+
+                        var result = await _ticketService.AddTicketAsync(ticketDto);
+
+                        if (!result.IsSuccess)
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.InternalServerError,
+                                Description = result.ErrorMessage
+                            });
+                            break;
+                        }
+
+                        response.IsSuccess = true;
+                        response.Data = result.Value;
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        response.IsSuccess = false;
+                        response.SetError(new ErrorMessage
+                        {
+                            Code = HttpStatusCode.InternalServerError,
+                            Description = ex.Message
+                        });
+                        break;
+                    }
+                }
+
+            case "updateticketstatusasync":
                 {
                     try
                     {
@@ -382,23 +246,26 @@ public class UserController : Controller
                             response.SetError(new ErrorMessage
                             {
                                 Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to edit users."
+                                Description = "You do not have permission to edit tickets"
                             });
                             break;
                         }
-                        if (parameters.Length < 2 || string.IsNullOrEmpty(parameters[1]?.ToString()) || string.IsNullOrEmpty(parameters[1]?.ToString()))
+
+                        if (parameters.Length < 2 || string.IsNullOrEmpty(parameters[0]?.ToString()) || string.IsNullOrEmpty(parameters[1]?.ToString()))
                         {
                             response.IsSuccess = false;
                             response.SetError(new ErrorMessage
                             {
                                 Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request parameters. Expected user id and role id."
+                                Description = "Invalid parameters"
                             });
                             break;
                         }
-                        var userId = parameters[0].ToString();
-                        var roleId = parameters[1].ToString();
-                        var result = await _userService.SetRoleToUserAsync(userId, roleId);
+
+                        var ticketId = Guid.Parse(parameters[0].ToString());
+                        var status = int.Parse(parameters[1].ToString());
+                        var result = await _ticketService.UpdateTicketStatusAsync(ticketId, status);
+
                         if (!result.IsSuccess)
                         {
                             response.IsSuccess = false;
@@ -409,6 +276,7 @@ public class UserController : Controller
                             });
                             break;
                         }
+
                         response.IsSuccess = true;
                         response.Data = result.Value;
                         break;
@@ -425,30 +293,145 @@ public class UserController : Controller
                     }
                 }
 
-            case "deleteuserasync":
+            case "updateticketstageasync":
                 {
-                    if (!canDelete)
+                    try
+                    {
+                        if (!canEdit)
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.Forbidden,
+                                Description = "You do not have permission to edit tickets"
+                            });
+                            break;
+                        }
+
+                        if (parameters.Length < 2 || string.IsNullOrEmpty(parameters[0]?.ToString()) || string.IsNullOrEmpty(parameters[1]?.ToString()))
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.BadRequest,
+                                Description = "Invalid parameters"
+                            });
+                            break;
+                        }
+
+                        var ticketId = Guid.Parse(parameters[0].ToString());
+                        var stage = int.Parse(parameters[1].ToString());
+                        var result = await _ticketService.UpdateTicketStageAsync(ticketId, stage);
+
+                        if (!result.IsSuccess)
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.InternalServerError,
+                                Description = result.ErrorMessage
+                            });
+                            break;
+                        }
+
+                        response.IsSuccess = true;
+                        response.Data = result.Value;
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        response.IsSuccess = false;
+                        response.SetError(new ErrorMessage
+                        {
+                            Code = HttpStatusCode.InternalServerError,
+                            Description = ex.Message
+                        });
+                        break;
+                    }
+                }
+
+            case "updateticketmessageasync":
+                {
+                    try
+                    {
+                        if (!canEdit)
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.Forbidden,
+                                Description = "You do not have permission to edit tickets"
+                            });
+                            break;
+                        }
+
+                        if (parameters.Length < 2 || string.IsNullOrEmpty(parameters[0]?.ToString()) || string.IsNullOrEmpty(parameters[1]?.ToString()))
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.BadRequest,
+                                Description = "Invalid parameters"
+                            });
+                            break;
+                        }
+
+                        var ticketId = Guid.Parse(parameters[0].ToString());
+                        var message = parameters[1].ToString();
+                        var result = await _ticketService.UpdateTicketMessageAsync(ticketId, message);
+
+                        if (!result.IsSuccess)
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.InternalServerError,
+                                Description = result.ErrorMessage
+                            });
+                            break;
+                        }
+
+                        response.IsSuccess = true;
+                        response.Data = result.Value;
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        response.IsSuccess = false;
+                        response.SetError(new ErrorMessage
+                        {
+                            Code = HttpStatusCode.InternalServerError,
+                            Description = ex.Message
+                        });
+                        break;
+                    }
+                }
+
+            case "updateticketstatuswithautostageasync":
+                {
+                    if (!canEdit)
                     {
                         response.IsSuccess = false;
                         response.SetError(new ErrorMessage
                         {
                             Code = HttpStatusCode.Forbidden,
-                            Description = "You do not have permission to delete users."
+                            Description = "You do not have permission to edit tickets"
                         });
                         break;
                     }
-                    if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
+                    if (parameters.Length < 3 || string.IsNullOrEmpty(parameters[0]?.ToString()) || !(int.TryParse(parameters[1]?.ToString(), out int status)) || !(bool.TryParse(parameters[2]?.ToString(), out bool isFinished)))
                     {
                         response.IsSuccess = false;
                         response.SetError(new ErrorMessage
                         {
                             Code = HttpStatusCode.BadRequest,
-                            Description = "Invalid request data."
+                            Description = "Invalid parameters"
                         });
+
                         break;
                     }
-                    var userId = parameters[0].ToString();
-                    var result = await _userService.DeleteUserAsync(userId);
+                    var ticketId = Guid.Parse(parameters[0].ToString());
+                    var result = await _ticketService.UpdateTicketStatusWithAutoStageAsync(ticketId, status, isFinished);
                     if (!result.IsSuccess)
                     {
                         response.IsSuccess = false;
@@ -463,138 +446,27 @@ public class UserController : Controller
                     response.Data = result.Value;
                     break;
                 }
-
-            case "updateuserasync":
+            case "getticketstatusdropdown":
                 {
-                    try
-                    {
-                        if (!canEdit)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to edit users."
-                            });
-                            break;
-                        }
-                        if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request data."
-                            });
-                            break;
-                        }
-                        var model = JsonSerializer.Deserialize<UpdateUserDto>(parameters[0].ToString(), new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-                        if (model == null)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid UpdataUserDto format."
-                            });
-                            break;
-                        }
-                        var result = await _userService.UpdateUserAsync(model);
-                        if (!result.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = result.ErrorMessage
-                            });
-                            break;
-                        }
-                        response.IsSuccess = true;
-                        response.Data = result.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
+                    response.IsSuccess = true;
+                    response.Data = _ticketService.GetTicketStatusDropdown();
+                    break;
                 }
-
-            case "getuserbyidasync":
-                {
-                    try
-                    {
-                        if (!canView)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to view users."
-                            });
-                            break;
-                        }
-                        if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request data."
-                            });
-                            break;
-                        }
-                        var userId = parameters[0].ToString();
-                        var result = await _userService.GetUserByIdAsync(Guid.Parse(userId));
-                        if (!result.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = result.ErrorMessage
-                            });
-                            break;
-                        }
-                        response.IsSuccess = true;
-                        response.Data = result.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-
             default:
                 {
                     response.IsSuccess = false;
                     response.SetError(new ErrorMessage
                     {
-                        Code = HttpStatusCode.NotFound,
-                        Description = "Method not found."
+                        Code = HttpStatusCode.BadRequest,
+                        Description = "Invalid method"
                     });
                     break;
                 }
         }
+
         return Ok(response);
     }
+
 
     private async Task<Dictionary<string, bool>> CheckPermissionsAsync(params string[] permissionNames)
     {

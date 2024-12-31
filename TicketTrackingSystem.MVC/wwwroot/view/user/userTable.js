@@ -29,22 +29,42 @@ $(document).ready(function () {
                 orderable: false,
                 searchable: false,
                 render: function (data, type, row) {
-                    return `
-                        <div class="d-flex justify-content-center">
-                            <!-- Details Button -->
-                            <button  class="btn btn-primary btn-sm me-2 dt-view">
-                                <i class="bi bi-info-square-fill"></i> Details
-                            </button>
-                            <!-- Edit Button -->
-                            <button class="btn btn-warning btn-sm me-2 dt-edit">
-                                <i class="bi bi-pencil-square"></i> Edit
-                            </button>
-                            <!-- Delete Button -->
-                            <button class="btn btn-danger btn-sm dt-delete">
-                                <i class="bi bi-trash-fill"></i> Delete
-                            </button>
-                        </div>
-                    `;
+                    // Retrieve the values from the hidden inputs
+                    var canView = $('#canView').val() === "true";
+                    var canEdit = $('#canEdit').val() === "true";
+                    var canDelete = $('#canDelete').val() === "true";
+
+                    // Start building the action buttons HTML
+                    var actionButtons = `<div class="d-flex justify-content-center">`;
+
+                    // Add the 'Details' button if viewing is allowed
+                    if (canView) {
+                        actionButtons += `
+                <button class="btn btn-primary btn-sm me-2 dt-view">
+                    <i class="bi bi-info-square-fill"></i> Details
+                </button>`;
+                    }
+
+                    // Add the 'Edit' button if editing is allowed
+                    if (canEdit) {
+                        actionButtons += `
+                <button class="btn btn-warning btn-sm me-2 dt-edit">
+                    <i class="bi bi-pencil-square"></i> Edit
+                </button>`;
+                    }
+
+                    // Optionally, you can add delete or other buttons based on permissions
+                    if (canDelete) {
+                        actionButtons += `
+                <button class="btn btn-danger btn-sm me-2 dt-delete">
+                    <i class="bi bi-trash-fill"></i> Delete
+                </button>`;
+                    }
+
+                    // Close the div and return the HTML
+                    actionButtons += `</div>`;
+
+                    return actionButtons;
                 }
             }
 

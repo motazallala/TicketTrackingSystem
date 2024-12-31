@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using TicketTrackingSystem.Application.Dto;
 using TicketTrackingSystem.Application.Interface;
 using TicketTrackingSystem.Application.Model;
-using TicketTrackingSystem.Common.ExtensionMethod;
 using TicketTrackingSystem.Common.Model;
 using TicketTrackingSystem.Core.Model;
 using TicketTrackingSystem.DAL.Interface;
@@ -131,18 +130,6 @@ public class PermissionService : IPermissionService
                 .Distinct()
                 .CountAsync();
 
-            // Apply ordering
-            if (request.Order != null && request.Order.Any())
-            {
-                var order = request.Order.First();
-                var columnName = request.Columns[order.Column].Data;
-                var direction = order.Dir;
-
-                // Dynamically apply ordering
-                query = direction == "asc"
-                    ? query.OrderByDynamic(columnName, true)
-                    : query.OrderByDynamic(columnName, false);
-            }
 
             // Apply pagination and grouping
             var paginatedData = await query
@@ -161,6 +148,7 @@ public class PermissionService : IPermissionService
                                        Children = null
                                    })
                                    .Distinct() // Ensure permissions are not duplicated
+                                   .OrderBy(p => p.Name)
                                    .ToList()
                 })
                 .Skip(request.Start)
@@ -293,7 +281,7 @@ public class PermissionService : IPermissionService
 
             // Build HTML options for the dropdown
             var permissionsDropdown = string.Join(Environment.NewLine,
-                permissions.Select(d => $"<option value='{d.Id}'>{d.Name}</option>"));
+                permissions.OrderBy(x => x.Name).Select(d => $"<option value='{d.Id}'>{d.Name}</option>"));
 
             return Result<string>.Success(permissionsDropdown);
 

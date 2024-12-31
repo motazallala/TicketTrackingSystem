@@ -51,7 +51,7 @@ public class PermissionController : Controller
                                 Code = HttpStatusCode.Forbidden,
                                 Description = "You do not have permission to view this page."
                             });
-                            return Ok(response);
+                            break;
                         }
                         if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
                         {
@@ -75,7 +75,7 @@ public class PermissionController : Controller
                                 Code = HttpStatusCode.BadRequest,
                                 Description = "Invalid request."
                             });
-                            return Ok(response);
+                            break;
                         }
                         var result = await _permissionService.GetAllRolesWithPermissionPaginatedAsync(model);
                         if (!result.IsSuccess)

@@ -12,7 +12,7 @@
         return $(tableId).DataTable();
     }
     return $(tableId).DataTable({
-        autoWidth: true,
+
         processing: true, // Show processing indicator
         serverSide: true, // Enable server-side processing
         ordering: ordering !== false,

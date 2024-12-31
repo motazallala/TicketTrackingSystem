@@ -30,5 +30,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Children, opt => opt.MapFrom(src => src.Children))
             .ForMember(dest => dest.Parent, opt => opt.Condition(src => src.Parent != null))  // Avoid recursion when Parent is null
             .ReverseMap();
+
+        CreateMap<Ticket, TicketDto>().ReverseMap()
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
     }
 }

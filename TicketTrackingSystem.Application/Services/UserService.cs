@@ -406,4 +406,90 @@ public class UserService : IUserService
             return Result<string>.Failure(ex.Message);
         }
     }
+
+    public async Task<Result<DataTablesResponse<UserDto>>> GetProjectMembersAsync(DataTablesRequest request, bool isMember, Guid projectId)
+    {
+        try
+        {
+            var query = _unitOfWork.Users.GetAllAsQueryable();
+
+            if (isMember)
+            {
+                query = query.Where(m => m.ProjectMembers.Any(p => p.ProjectId == projectId)).AsNoTracking();
+            }
+            else
+            {
+                query = query.Where(u => !u.ProjectMembers.Any(p => p.ProjectId == projectId || !u.ProjectMembers.Any())).AsNoTracking();
+            }
+
+            if (!string.IsNullOrEmpty(request.Search?.Value))
+            {
+                var searchValue = request.Search.Value.ToLower();
+                query = query.Where(p => p.UserName.ToLower().Contains(searchValue) || p.Email.ToLower().Contains(searchValue) ||
+                                    p.FirstName.ToLower().Contains(searchValue) || p.LastName.ToLower().Contains(searchValue) ||
+                                    p.PhoneNumber.ToLower().Contains(searchValue));
+            }
+            //// Apply ordering
+            //if (request.Order != null && request.Order.Any())
+            //{
+            //    var order = request.Order.First();
+            //    var columnName = request.Columns[order.Column].Data;
+            //    var direction = order.Dir;
+            //    // Dynamically apply ordering
+            //    query = direction == "asc"
+            //        ? query.OrderByDynamic(columnName, true)
+            //        : query.OrderByDynamic(columnName, false);
+            //}
+
+            // Get the total count before pagination
+            var recordsTotal = await query.CountAsync();
+
+            var paginatedData = await query
+                .Include(r => r.Roles)
+                .ThenInclude(ur => ur.Role)
+                .Skip(request.Start)
+                .Take(request.Length)
+                .ToListAsync();
+            var projectDtos = _mapper.Map<IEnumerable<UserDto>>(paginatedData);
+            var response = new DataTablesResponse<UserDto>
+            {
+                Draw = request.Draw,
+                RecordsTotal = recordsTotal,
+                RecordsFiltered = recordsTotal,
+                Data = projectDtos
+            };
+            return Result<DataTablesResponse<UserDto>>.Success(response);
+        }
+        catch (Exception ex)
+        {
+
+            return Result<DataTablesResponse<UserDto>>.Failure(ex.Message);
+        }
+
+
+    }
+
+    //get the user stage from project member
+    public async Task<Result<string>> GetUserStageFromProjectMemberAsync(Guid userId, Guid projectId)
+    {
+        var projectMember = await _unitOfWork.ProjectMembers.GetSingleOrDefaultAsync(u => u.UserId == userId && u.ProjectId == projectId, false);
+        if (projectMember is null)
+        {
+            return Result<string>.Failure("User is not a member of this project");
+        }
+        if (projectMember.Stage.Equals(Stage.NoStage))
+        {
+            return Result<string>.Success("All Tickets");
+
+        }
+        else if (projectMember.Stage.Equals(Stage.Stage1))
+        {
+            return Result<string>.Success("Stage 1 Tickets");
+        }
+        else if (projectMember.Stage.Equals(Stage.Stage2))
+        {
+            return Result<string>.Success("Stage 2 Tickets");
+        }
+        return Result<string>.Failure("There is no Stage ");
+    }
 }

@@ -1,11 +1,11 @@
-﻿const projectServiceProxy = new Proxy({}, {
+﻿const ticketServiceProxy = new Proxy({}, {
     get: function (target, prop) {
         return function (...args) {
             const serializedArgs = args.map(arg =>
                 typeof arg === "object" ? JSON.stringify(arg) : arg
             );
 
-            return fetch('https://localhost:7264/project/call', {
+            return fetch('https://localhost:7264/ticket/call', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -29,17 +29,17 @@
     },
 });
 
-export const createProjectAsync = (createProjectDto) =>
-    projectServiceProxy.createprojectasync(createProjectDto);
-
-export const updateProjectAsync = (updateProjectDto) =>
-    projectServiceProxy.updateprojectasync(updateProjectDto);
-
-export const deleteProjectAsync = (projectId) =>
-    projectServiceProxy.deleteprojectasync(projectId);
-export const setUserForProjectAsync = (userId, projectId, stage) =>
-    projectServiceProxy.setuserforprojectasync(userId, projectId, stage);
-export const removeUserFromProjectAsync = (userId, projectId) =>
-    projectServiceProxy.removeuserfromprojectasync(userId, projectId);
-export const getStageDropdown = () =>
-    projectServiceProxy.getstagedropdown();
+export const getTicketByIdAsync = (ticketId) =>
+    ticketServiceProxy.getticketbyidasync(ticketId);
+export const addTicketAsync = (ticketDto) =>
+    ticketServiceProxy.addticketasync(ticketDto);
+export const updateTicketStatusAsync = (ticketDto) =>
+    ticketServiceProxy.updateticketstatusasync(ticketDto);
+export const updateTicketStageAsync = (ticketId, stage) =>
+    ticketServiceProxy.updateticketstageasync(ticketId, stage);
+export const updateTicketMessageAsync = (ticketId, message) =>
+    ticketServiceProxy.updateticketmessageasync(ticketId, message);
+export const updateTicketStatusWithAutoStageAsync = (ticketId, status, isFinished) =>
+    ticketServiceProxy.updateticketstatuswithautostageasync(ticketId, status, isFinished);
+export const getTicketStatusDropdown = () =>
+    ticketServiceProxy.getticketstatusdropdown();

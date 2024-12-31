@@ -15,12 +15,13 @@ public class AccountController : Controller
         _authService = authService;
         _signInService = signInService;
     }
-    public IActionResult Login()
+    public IActionResult Login(string returnUrl = null)
     {
+        ViewData["ReturnUrl"] = returnUrl;
         return View();
     }
     [HttpPost]
-    public async Task<IActionResult> LogIn(LoginDto model)
+    public async Task<IActionResult> LogIn(LoginDto model, string returnUrl = null)
     {
         if (!ModelState.IsValid)
         {
@@ -33,15 +34,8 @@ public class AccountController : Controller
         {
             ModelState.AddModelError("Error", result.ErrorMessage);
             return View();
-
         }
-        //if (!string.IsNullOrEmpty(result.Value.RefreshToken))
-        //{
-        //    SetRefreshTokenInCookie(result.Value.RefreshToken, result.Value.RefreshTokenExpiration);
-        //    SetJwtTokenInCookie(result.Value.JwtToken, result.Value.JwtExpiresOn);
 
-        //}
-        // Add Authentication Ticket
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, result.Value.UserId.ToString()),
@@ -56,12 +50,21 @@ public class AccountController : Controller
 
         var claimsIdentity = new ClaimsIdentity(claims, "Identity.Application");
 
-
         await HttpContext.SignInAsync("Identity.Application", new ClaimsPrincipal(claimsIdentity));
-        //check if user is admin and ignore 
 
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            return Redirect(returnUrl);
+        }
 
         return RedirectToAction("Index", "Home");
+    }
+
+    [HttpGet]
+    //AccessDenied view for unauthorized users
+    public IActionResult AccessDenied()
+    {
+        return View();
     }
 
     [HttpPost]

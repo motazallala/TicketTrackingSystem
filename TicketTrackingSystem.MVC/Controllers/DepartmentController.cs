@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Text.Json;
 using TicketTrackingSystem.Application.Dto;
@@ -7,6 +8,7 @@ using TicketTrackingSystem.Application.Interface;
 using TicketTrackingSystem.Common.Model;
 
 namespace TicketTrackingSystem.MVC.Controllers;
+[Authorize]
 public class DepartmentController : Controller
 {
     private readonly IPermissionService _permissionService;
@@ -19,8 +21,17 @@ public class DepartmentController : Controller
         _userService = userService;
         _departmentService = departmentService;
     }
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
+        // Check necessary permissions
+        var permissions = await CheckPermissionsAsync(
+            PermissionName.ViewDepartment.ToString()
+        );
+        var canView = permissions[PermissionName.ViewDepartment.ToString()];
+        if (!canView)
+        {
+            return Forbid();
+        }
         return View();
     }
 

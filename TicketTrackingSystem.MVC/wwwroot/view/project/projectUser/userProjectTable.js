@@ -1,58 +1,37 @@
-﻿import { initializeDataTable } from '../../utility/dataTableUtility.js';
-import { setupModalData } from '../../utility/dataModalUtility.js';
+﻿import { initializeDataTable } from '../../../utility/dataTableUtility.js';
+import { setupModalData } from '../../../utility/dataModalUtility.js';
 
-let roleTable;
+let userProjectTable;
 
 $(document).ready(function () {
-    roleTable = initializeDataTable({
-        tableId: '#roleTable',
-        apiUrl: 'https://localhost:7264/role/call',
-        method: 'getallrolespaginatedasync',
+    userProjectTable = initializeDataTable({
+        tableId: '#userProjectTable',
+        apiUrl: 'https://localhost:7264/projectforclient/call',
+        method: 'getalluserprojectsasync',
         columns: [
             { data: 'id', name: 'ID' },
             { data: 'name', name: 'Name' },
+            { data: 'description', name: 'Description' },
+            { 
+                data: 'createdAt', 
+                name: 'CreatedAt',
+                render: function (data, type, row) {
+                    return new Date(data).toLocaleString();
+                }
+            },
             {
                 data: "id",
                 name: 'Actions',
                 orderable: false,
                 searchable: false,
                 render: function (data, type, row) {
-                    // Retrieve the values from the hidden inputs
-                    var canView = $('#canView').val() === "true";
-                    var canEdit = $('#canEdit').val() === "true";
-                    var canDelete = $('#canDelete').val() === "true";
-
-                    // Start building the action buttons HTML
-                    var actionButtons = `<div class="d-flex justify-content-center">`;
-
-                    // Add the 'Details' button if viewing is allowed
-                    if (canView) {
-                        actionButtons += `
-                <button class="btn btn-primary btn-sm me-2 dt-view">
-                    <i class="bi bi-info-square-fill"></i> Details
-                </button>`;
-                    }
-
-                    // Add the 'Edit' button if editing is allowed
-                    if (canEdit) {
-                        actionButtons += `
-                <button class="btn btn-warning btn-sm me-2 dt-edit">
-                    <i class="bi bi-pencil-square"></i> Edit
-                </button>`;
-                    }
-
-                    // Optionally, you can add delete or other buttons based on permissions
-                    if (canDelete) {
-                        actionButtons += `
-                <button class="btn btn-danger btn-sm me-2 dt-delete">
-                    <i class="bi bi-trash-fill"></i> Delete
-                </button>`;
-                    }
-
-                    // Close the div and return the HTML
-                    actionButtons += `</div>`;
-
-                    return actionButtons;
+                    return `
+                        <div class="d-flex justify-content-center">
+                            <button class="btn btn-primary btn-sm me-2 dt-view">
+                                <i class="bi bi-info-square-fill"></i> Details
+                            </button>
+                        </div>
+                    `;
                 }
             }
         ],
@@ -61,13 +40,13 @@ $(document).ready(function () {
     });
 
     // Row click event handler
-    roleTable.on('click', '.dt-view', function () {
-        let data = roleTable.row($(this).parents('tr')).data();
+    userProjectTable.on('click', '.dt-view', function () {
+        let data = userProjectTable.row($(this).parents('tr')).data();
         const modalTitle = $('.modal .modal-title');
         const modalBody = $('#modelBody');
         const modalFooter = $('.modal .modal-footer');
 
-        const title = 'Role Details';
+        const title = 'Project Details';
         const bodyContent = `
              <div class="form-group">
                 <label for="name">ID :</label>
@@ -77,9 +56,13 @@ $(document).ready(function () {
                 <label for="name">Name :</label>
                 <input type="text" class="form-control" id="name-view" name="name" value="${data.name}" disabled>
             </div>
+            <div class="form-group">
+                <label for="description">Description :</label>
+                <input type="text" class="form-control" id="name-view" name="description" value="${data.description}" disabled>
+            </div>
         `;
         const viewButton = `<button type="button" class="btn btn-default" onclick="$('#myModal').modal('hide')" data-dismiss="modal">Close</button>`;
-        const moreDetails = `<a class="btn btn-sm btn-primary dt-view" href="/Role/Details/${data.id}">View</a>`;
+        const moreDetails = `<a class="btn btn-sm btn-primary dt-view" href="/Project/Tickets/${data.id}">View Project Tickets</a>`;
         setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [viewButton, moreDetails]);
         $('#myModal').modal('show');
     });
@@ -103,4 +86,4 @@ $(document).ready(function () {
 });
 
 // Export the DataTable instance when it's ready
-export { roleTable };
+export { userProjectTable };
