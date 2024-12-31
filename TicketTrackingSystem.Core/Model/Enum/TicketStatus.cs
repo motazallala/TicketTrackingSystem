@@ -8,4 +8,5 @@ public enum TicketStatus
     [Description("In Progress")]
     InProgress,
     Closed,
+    Rejected,
 }

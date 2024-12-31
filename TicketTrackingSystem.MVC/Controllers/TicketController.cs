@@ -44,6 +44,7 @@ public class TicketController : Controller
 
         switch (request.Method.ToLower())
         {
+
             case "getallticketpaginatedasync":
                 {
                     try
@@ -158,6 +159,70 @@ public class TicketController : Controller
                             break;
                         }
 
+                        response.IsSuccess = true;
+                        response.Data = result.Value;
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        response.IsSuccess = false;
+                        response.SetError(new ErrorMessage
+                        {
+                            Code = HttpStatusCode.InternalServerError,
+                            Description = ex.Message
+                        });
+                        break;
+                    }
+                }
+
+            case "updateticketwithautostageasync":
+                {
+                    try
+                    {
+                        if (!canEdit)
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.Forbidden,
+                                Description = "You do not have permission to edit tickets"
+                            });
+                            break;
+                        }
+                        if (parameters.Length < 4 || string.IsNullOrEmpty(parameters[0]?.ToString()) || !(bool.TryParse(parameters[2]?.ToString(), out bool isFinished)))
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.BadRequest,
+                                Description = "Invalid parameters"
+                            });
+                            break;
+                        }
+                        var ticketId = Guid.Parse(parameters[0].ToString());
+                        var status = parameters[1]?.ToString();
+                        if (status == null || (!status.Equals("accept") && !status.Equals("reject")))
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.BadRequest,
+                                Description = "The request does not have a accept or reject. \n\n You at lest need send a accept or null."
+                            });
+                            break;
+                        }
+                        var message = parameters[3].ToString();
+                        var result = await _ticketService.UpdateTicketWithAutoStageAsync(ticketId, status, isFinished, message);
+                        if (!result.IsSuccess)
+                        {
+                            response.IsSuccess = false;
+                            response.SetError(new ErrorMessage
+                            {
+                                Code = HttpStatusCode.InternalServerError,
+                                Description = result.ErrorMessage
+                            });
+                            break;
+                        }
                         response.IsSuccess = true;
                         response.Data = result.Value;
                         break;

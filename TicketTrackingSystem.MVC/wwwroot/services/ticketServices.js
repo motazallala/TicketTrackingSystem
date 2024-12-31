@@ -43,3 +43,6 @@ export const updateTicketStatusWithAutoStageAsync = (ticketId, status, isFinishe
     ticketServiceProxy.updateticketstatuswithautostageasync(ticketId, status, isFinished);
 export const getTicketStatusDropdown = () =>
     ticketServiceProxy.getticketstatusdropdown();
+
+export const updateTicketWithAutoStageAsync = (ticketId, status, isFinished, message) =>
+    ticketServiceProxy.updateticketwithautostageasync(ticketId, status, isFinished, message);

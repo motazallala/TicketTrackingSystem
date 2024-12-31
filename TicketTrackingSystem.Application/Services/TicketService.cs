@@ -182,6 +182,54 @@ public class TicketService : ITicketService
         }
     }
 
+    public async Task<Result<TicketDto>> UpdateTicketWithAutoStageAsync(Guid id, string status, bool isFinished, string message = null)
+    {
+        try
+        {
+            var ticket = await _unitOfWork.Tickets.GetByIdAsync(id);
+            if (ticket == null)
+            {
+                return Result<TicketDto>.Failure("Ticket not found");
+            }
+
+            if (isFinished)
+            {
+                if (status.Equals("accept"))
+                {
+                    ticket.Status = TicketStatus.Closed;
+                }
+                else
+                {
+                    ticket.Status = TicketStatus.Rejected;
+                }
+
+                ticket.Stage = Stage.NoStage;
+                ticket.Message = message;
+            }
+            else
+            {
+                if (ticket.Stage.Equals(Stage.Stage1))
+                {
+                    ticket.Status = TicketStatus.InProgress; // Explicitly cast the status to TicketStatus
+                    ticket.Stage = Stage.Stage2; // Explicitly cast the stage to Stage 
+                }
+                else
+                {
+                    return Result<TicketDto>.Failure("Ticket is in the Final stage you must to accept or reject.");
+                }
+            }
+
+            ticket.UpdatedAt = DateTime.Now;
+            _unitOfWork.Tickets.Update(ticket);
+            await _unitOfWork.CompleteAsync();
+            return Result<TicketDto>.Success(_mapper.Map<TicketDto>(ticket));
+        }
+        catch (Exception ex)
+        {
+            return Result<TicketDto>.Failure(ex.Message);
+        }
+    }
+
     public async Task<Result<TicketDto>> UpdateTicketStatusWithAutoStageAsync(Guid id, int status, bool isFinished)
     {
         try

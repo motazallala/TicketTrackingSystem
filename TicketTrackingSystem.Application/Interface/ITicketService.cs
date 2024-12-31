@@ -13,5 +13,6 @@ public interface ITicketService
     Task<Result<TicketDto>> UpdateTicketStageAsync(Guid id, int stage);
     Task<Result<TicketDto>> UpdateTicketMessageAsync(Guid id, string message);
     Task<Result<TicketDto>> UpdateTicketStatusWithAutoStageAsync(Guid id, int status, bool isFinished);
+    Task<Result<TicketDto>> UpdateTicketWithAutoStageAsync(Guid id, string status, bool isFinished, string message = null);
     string GetTicketStatusDropdown();
 }
