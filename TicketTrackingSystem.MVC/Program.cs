@@ -89,10 +89,7 @@ app.UseAuthorization();
 //    }
 //    await next();
 //});
-app.MapControllerRoute(
-   name: "Admin",
-  pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}"
-);
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
