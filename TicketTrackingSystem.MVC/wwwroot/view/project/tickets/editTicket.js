@@ -3,6 +3,8 @@ import { setupModalData, showErrorModal } from '../../../utility/dataModalUtilit
 import { updateTicketWithAutoStageAsync } from '../../../services/ticketServices.js';
 
 $(document).ready(function () {
+    // Getting the stage value
+    let inStage = $('#inStage').val(); // Assuming this is already available in your DOM
 
     ticketTable.on('click', '.dt-edit', async function () {
         let data = ticketTable.row($(this).parents('tr')).data();
@@ -11,16 +13,19 @@ $(document).ready(function () {
         const modalBody = $('#modelBody');
         const modalFooter = $('.modal .modal-footer');
 
-        // Modal content with just the checkbox and textarea (no dropdown)
+        // Modal content with checkbox, message container and placeholder for closing message
         const title = 'Edit Ticket';
         const bodyContent = `
-            <div class="form-group">
+            <div class="form-group" id="isFinishedContainer">
                 <input type="checkbox" id="isFinished" name="isFinished">
                 <label for="isFinished">Is Finished</label>
             </div>
             <div class="form-group" id="messageContainer" style="display: none;">
                 <label for="message">Message :</label>
                 <textarea class="form-control" id="message" name="message"></textarea>
+            </div>
+            <div class="form-group" id="closeMessageContainer" style="display: none;">
+                <p>Do you mark this as closed?</p>
             </div>
         `;
         const closeButton = `<button type="button" class="btn btn-default" onclick="$('#myModal').modal('hide')" data-dismiss="modal">Close</button>`;
@@ -29,22 +34,42 @@ $(document).ready(function () {
         setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [closeButton, acceptButton, rejectButton]);
 
         populateTicketForm(data);
-        $('#reject').hide();
+
         // Show modal
         $('#myModal').modal('show');
 
-        // Toggle message textarea and buttons based on the isFinished checkbox
-        $('#isFinished').on('change', function () {
-            if ($(this).is(':checked')) {
-                $('#messageContainer').fadeIn(); // Show textarea
-                $('#accept').text('Accept'); // Set Accept button text back to "Accept"
-                $('#reject').fadeIn(); // Show Reject button
-            } else {
-                $('#messageContainer').fadeOut(); // Hide textarea
-                $('#accept').text('Next'); // Change Accept button text to "Next"
-                $('#reject').fadeOut(); // Hide Reject button
-            }
-        });
+        // Handling based on the inStage value
+        if (inStage === 'Stage 1 Tickets' || inStage === 'All Tickets') {
+            // Show checkbox for Stage 1 Tickets or All Tickets
+            $('#isFinishedContainer').show();
+
+            // Initially hide message box and buttons until checkbox is checked
+            $('#messageContainer').hide();
+            $('#accept').hide();
+            $('#reject').hide();
+
+            // Toggle message textarea and buttons based on the isFinished checkbox
+            $('#isFinished').on('change', function () {
+                if ($(this).is(':checked')) {
+                    $('#messageContainer').fadeIn(); // Show textarea
+                    $('#accept').fadeIn().text('Accept'); // Show Accept button as "Accept"
+                    $('#reject').fadeIn(); // Show Reject button
+                } else {
+                    $('#messageContainer').fadeOut(); // Hide textarea
+                    $('#accept').fadeIn().text('Next'); // Hide Accept button
+                    $('#reject').fadeOut(); // Hide Reject button
+                }
+            });
+        } else if (inStage === 'Stage 2 Tickets') {
+            // Hide checkbox, message box, and reject button for Stage 2 Tickets
+            $('#isFinishedContainer').hide();
+            $('#messageContainer').hide();
+            $('#reject').hide();
+
+            // Show the closing message and change Accept button to "Solved"
+            $('#closeMessageContainer').fadeIn(); // Show "Do you mark this as closed?" message
+            $('#accept').fadeIn().text('Solved'); // Change Accept button text to "Solved"
+        }
 
         // Trigger the initial state of buttons and textarea when modal is loaded
         $('#isFinished').trigger('change');

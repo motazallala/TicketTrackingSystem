@@ -25,11 +25,6 @@ public class TicketTrackingSystemDbContext : IdentityDbContext<ApplicationUser, 
     {
         base.OnModelCreating(builder);
 
-        // Configure RolePermission relationship
-        builder.Entity<Permission>(rp =>
-        {
-            rp.HasOne(rp => rp.Parent).WithOne().HasForeignKey<Permission>(x => x.ParentId);
-        });
         builder.Entity<RolePermission>()
             .HasKey(rp => new { rp.RoleId, rp.PermissionId });
 

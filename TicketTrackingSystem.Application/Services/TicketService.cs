@@ -27,14 +27,19 @@ public class TicketService : ITicketService
         {
             var query = _unitOfWork.Tickets.GetAllAsQueryable().AsNoTracking();
             var user = await _unitOfWork.Users.GetByIdAsync(userId);
-            if (user.UserType.Equals(UserType.Client) || _unitOfWork.Users.IsInRole(user, "Admin"))
+            if (_unitOfWork.Users.IsInRole(user, "Admin"))
             {
                 query = query.Where(p => p.ProjectId == projectId);
+            }
+            else if (user.UserType.Equals(UserType.Client))
+            {
+                query = query.Where(p => p.CreatorId == userId && p.ProjectId == projectId);
             }
             else
             {
                 var member = await _unitOfWork.ProjectMembers.GetAllAsQueryable().FirstOrDefaultAsync(p => p.ProjectId == projectId && p.UserId == userId);
-                query = query.Where(p => p.Stage.Equals(member.Stage));
+                //in this line the bug
+                query = query.Where(p => p.Stage.Equals(member.Stage) && p.ProjectId == member.ProjectId);
             }
             if (!string.IsNullOrEmpty(request.Search?.Value))
             {
@@ -154,10 +159,6 @@ public class TicketService : ITicketService
             {
                 return Result<TicketDto>.Failure("User not found");
             }
-            if (!user.UserType.Equals(UserType.Client))
-            {
-                return Result<TicketDto>.Failure("Only clients can create tickets");
-            }
             var project = await _unitOfWork.Projects.GetByIdAsync(ticketDto.ProjectId);
             if (project == null)
             {
@@ -215,7 +216,9 @@ public class TicketService : ITicketService
                 }
                 else
                 {
-                    return Result<TicketDto>.Failure("Ticket is in the Final stage you must to accept or reject.");
+                    ticket.Status = TicketStatus.Closed;
+                    ticket.Stage = Stage.NoStage;
+                    ticket.Message = message;
                 }
             }
 

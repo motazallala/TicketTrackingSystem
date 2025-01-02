@@ -7,7 +7,7 @@ $(document).ready(function () {
         const modalTitle = $('.modal .modal-title');
         const modalBody = $('#modelBody');
         const modalFooter = $('.modal .modal-footer');
-        const title = 'Add Project';
+        const title = 'Add Ticket';
         const bodyContent = `
             <div class="form-group my-1">
                 <label for="title">Title :</label>

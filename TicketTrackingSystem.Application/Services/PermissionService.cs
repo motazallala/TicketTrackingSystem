@@ -88,6 +88,7 @@ public class PermissionService : IPermissionService
             if (role != null)
             {
                 // Get all RolePermissions for this role
+                //here i can add redis to cach the roles permissions
                 var rolePermissions = await _unitOfWork.RolesPermissions.GetAllAsync(rp => rp.RoleId == role.Id, ["Permission"]);
 
                 // Iterate over the requested permissions and check each one

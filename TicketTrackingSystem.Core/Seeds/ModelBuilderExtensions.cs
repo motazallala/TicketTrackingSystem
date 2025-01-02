@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using TicketTrackingSystem.Common.Model;
 using TicketTrackingSystem.Core.Model;
+using TicketTrackingSystem.Core.Model.Enum;
 
 namespace TicketTrackingSystem.Core.Seeds;
 public static class ModelBuilderExtensions
@@ -20,6 +21,7 @@ public static class ModelBuilderExtensions
                  NormalizedEmail = "MOTAZ@EXAMPLE.COM",  // Correct normalization
                  EmailConfirmed = true,
                  FirstName = "Motaz",
+                 UserType = UserType.Member,
                  LastName = "Allala",
                  SecurityStamp = Guid.NewGuid().ToString(),
                  PasswordHash = hasher.HashPassword(null, "123@qwE")
@@ -33,6 +35,7 @@ public static class ModelBuilderExtensions
                 NormalizedEmail = "SAMI@EXAMPLE.COM",  // Correct normalization
                 EmailConfirmed = true,
                 FirstName = "Sami",
+                UserType = UserType.Client,
                 LastName = "Subarna",
                 SecurityStamp = Guid.NewGuid().ToString(),
                 PasswordHash = hasher.HashPassword(null, "123@qwE")
@@ -46,6 +49,7 @@ public static class ModelBuilderExtensions
                 NormalizedEmail = "SAMIBA@EXAMPLE.COM",  // Correct normalization
                 EmailConfirmed = true,
                 FirstName = "Sami",
+                UserType = UserType.Member,
                 LastName = "Subarna",
                 SecurityStamp = Guid.NewGuid().ToString(),
                 PasswordHash = hasher.HashPassword(null, "123@qwE")
@@ -58,6 +62,7 @@ public static class ModelBuilderExtensions
                 Email = "samiDD@example.com",
                 NormalizedEmail = "SAMIDD@EXAMPLE.COM",  // Correct normalization
                 EmailConfirmed = true,
+                UserType = UserType.Member,
                 FirstName = "Sami",
                 LastName = "Subarna",
                 SecurityStamp = Guid.NewGuid().ToString(),

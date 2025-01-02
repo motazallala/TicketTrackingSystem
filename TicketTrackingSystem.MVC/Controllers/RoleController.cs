@@ -260,6 +260,7 @@ public class RoleController : Controller
                                 Code = HttpStatusCode.InternalServerError,
                                 Description = result.ErrorMessage
                             });
+                            break;
                         }
                         response.IsSuccess = true;
                         response.Data = result.Value;

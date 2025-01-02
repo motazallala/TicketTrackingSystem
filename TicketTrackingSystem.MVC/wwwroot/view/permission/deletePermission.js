@@ -11,9 +11,6 @@ $(document).on('click', '.permission-badge', async function () {
     const row = roleTable.row($(this).closest('tr')).data(); // Get the row data
     const roleName = row.name; // Extract the role name from the row data
 
-    // Debugging
-    console.log(`Role ID: ${roleId}, Role Name: ${roleName}, Permission ID: ${permissionId}, Permission Name: ${permissionName}`);
-
     // Modal elements
     const modalTitle = $('.modal .modal-title');
     const modalBody = $('#modelBody');
@@ -34,7 +31,7 @@ $(document).on('click', '.permission-badge', async function () {
     $('#myModal').modal('show');
     // Delete permission on click
     $('#deletePermission').off('click').on('click', async function () {
-        // Implement the delete permission logic here
+        // Implement the delete permission
         const result = await removeRoleFromPermissionAsync({ roleId, permissionId });
         if (result.isSuccess) {
             $('#myModal').modal('hide');
