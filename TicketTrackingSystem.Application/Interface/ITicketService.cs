@@ -6,17 +6,6 @@ namespace TicketTrackingSystem.Application.Interface;
 public interface ITicketService
 {
     /// <summary>
-    /// Retrieves a paginated list of tickets based on the provided DataTables request and project ID.
-    /// </summary>
-    /// <param name="request">The DataTables request containing pagination, sorting, and filtering information.</param>
-    /// <param name="projectId">The unique identifier of the project for which tickets are to be retrieved.</param>
-    /// <returns>
-    /// A Result object containing the paginated list of tickets wrapped in a DataTablesResponse object.
-    /// If the operation is successful, the Result.IsSuccess property will be true, and the Result.Data property will contain the paginated list of tickets.
-    /// If the operation fails, the Result.IsSuccess property will be false, and the Result.ErrorMessage property will contain the error message.
-    /// </returns>
-    Task<Result<DataTablesResponse<TicketDto>>> GetAllTicketPaginatedAsync(DataTablesRequest request, Guid projectId);
-    /// <summary>
     /// Retrieves a paginated list of tickets for a specific user based on the provided DataTables request and project ID.
     /// </summary>
     /// <param name="request">The DataTables request containing pagination, sorting, and filtering information.</param>
@@ -52,10 +41,8 @@ public interface ITicketService
     /// </returns>
     Task<Result<TicketDto>> AddTicketAsync(CreateTicketDto ticketDto);
 
-    Task<Result<TicketDto>> UpdateTicketStatusAsync(Guid id, int status);
-    Task<Result<TicketDto>> UpdateTicketStageAsync(Guid id, int stage);
-    Task<Result<TicketDto>> UpdateTicketMessageAsync(Guid id, string message);
-    Task<Result<TicketDto>> UpdateTicketStatusWithAutoStageAsync(Guid id, int status, bool isFinished);
-    Task<Result<TicketDto>> UpdateTicketWithAutoStageAsync(Guid id, string status, bool isFinished, string message = null);
+    Task<Result<TicketDto>> UpdateTicketWithAutoStageAsync(Guid id, string status, bool isFinished, Guid userId, string message = null);
+    Task<Result<DataTablesResponse<TicketDto>>> GetAllTicketForMemberPaginatedAsync(DataTablesRequest request, Guid projectId, Guid userId, bool reserved);
+    Task<Result<TicketDto>> AssignTicketToUserAsync(Guid ticketId, Guid userId);
     string GetTicketStatusDropdown();
 }

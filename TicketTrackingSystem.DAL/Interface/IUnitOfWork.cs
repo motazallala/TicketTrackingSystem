@@ -11,6 +11,8 @@ public interface IUnitOfWork : IDisposable
     IRoleRepository Roles { get; }
     ITicketRepository Tickets { get; }
     IUserRepository Users { get; }
+    ITicketHistoryRepository TicketHistory { get; }
+    ITicketMessageRepository TicketMessage { get; }
 
     int Complete();
     Task<int> CompleteAsync();

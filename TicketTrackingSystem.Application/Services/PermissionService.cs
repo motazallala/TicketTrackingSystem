@@ -263,6 +263,10 @@ public class PermissionService : IPermissionService
             {
                 return Result<CreateRolePermissionDto>.Failure($"Role with ID {removePermission.RoleId} does not have permission with ID {removePermission.PermissionId}.");
             }
+            if (rolePermissions.RoleId == Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"))
+            {
+                return Result<CreateRolePermissionDto>.Failure($"Permission with ID {removePermission.PermissionId} is required for the Admin role.");
+            }
             _unitOfWork.RolesPermissions.Remove(rolePermissions);
             await _unitOfWork.CompleteAsync();
             return Result<CreateRolePermissionDto>.Success(removePermission);

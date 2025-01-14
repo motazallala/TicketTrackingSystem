@@ -25,49 +25,7 @@ public static class ModelBuilderExtensions
                  LastName = "Allala",
                  SecurityStamp = Guid.NewGuid().ToString(),
                  PasswordHash = hasher.HashPassword(null, "123@qwE")
-             },
-            new ApplicationUser
-            {
-                Id = Guid.Parse("3a4c64d2-f842-4ac1-9809-4f3ae828b66e"), // Static GUID for user2
-                UserName = "samisubarna",
-                NormalizedUserName = "SAMISUBARNA",  // Correct normalization
-                Email = "sami@example.com",
-                NormalizedEmail = "SAMI@EXAMPLE.COM",  // Correct normalization
-                EmailConfirmed = true,
-                FirstName = "Sami",
-                UserType = UserType.Client,
-                LastName = "Subarna",
-                SecurityStamp = Guid.NewGuid().ToString(),
-                PasswordHash = hasher.HashPassword(null, "123@qwE")
-            },
-            new ApplicationUser
-            {
-                Id = Guid.Parse("9229F7AA-5B2F-4B72-BDB3-6F786A0C62BE"), // Static GUID for user3
-                UserName = "samisubarnaBA",
-                NormalizedUserName = "SAMISUBARNABA",  // Correct normalization
-                Email = "samiBA@example.com",
-                NormalizedEmail = "SAMIBA@EXAMPLE.COM",  // Correct normalization
-                EmailConfirmed = true,
-                FirstName = "Sami",
-                UserType = UserType.Member,
-                LastName = "Subarna",
-                SecurityStamp = Guid.NewGuid().ToString(),
-                PasswordHash = hasher.HashPassword(null, "123@qwE")
-            },
-            new ApplicationUser
-            {
-                Id = Guid.Parse("73A03B91-0B28-4838-9D48-C30B7ACE75A0"), // Static GUID for user4
-                UserName = "samisubarnaDD",
-                NormalizedUserName = "SAMISUBARNADD",  // Correct normalization
-                Email = "samiDD@example.com",
-                NormalizedEmail = "SAMIDD@EXAMPLE.COM",  // Correct normalization
-                EmailConfirmed = true,
-                UserType = UserType.Member,
-                FirstName = "Sami",
-                LastName = "Subarna",
-                SecurityStamp = Guid.NewGuid().ToString(),
-                PasswordHash = hasher.HashPassword(null, "123@qwE")
-            }
+             }
         );
     }
     public static void SeedRoles(this ModelBuilder builder)
@@ -78,24 +36,6 @@ public static class ModelBuilderExtensions
                 Id = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // Static GUID for Admin role
                 Name = "Admin",
                 NormalizedName = "ADMIN"
-            },
-            new Role
-            {
-                Id = Guid.Parse("E143EF8A-95C2-4359-B1B6-7FDE456B771F"),
-                Name = "BusinessAnalyses",
-                NormalizedName = "BUSINESSANAlYSES"
-            },
-            new Role
-            {
-                Id = Guid.Parse("DEB2A077-7A07-49F4-BDDA-3C7F95061D72"),
-                Name = "DevelopmentDepartment",
-                NormalizedName = "DEVElOPMENTDEPARTMENT"
-            },
-            new Role
-            {
-                Id = Guid.Parse("a1236e5d-42f3-4987-8cbf-6a2bca9f01a4"), // Static GUID for User role
-                Name = "User",
-                NormalizedName = "USER"
             }
         );
     }
@@ -108,21 +48,6 @@ public static class ModelBuilderExtensions
             {
                 UserId = Guid.Parse("d4d6e58f-8f94-4e8c-93c7-d048e24e2639"), // GUID for motazallala
                 RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57") // GUID for Admin role
-            },
-            new UserRole
-            {
-                UserId = Guid.Parse("3a4c64d2-f842-4ac1-9809-4f3ae828b66e"), // GUID for samisubarna
-                RoleId = Guid.Parse("a1236e5d-42f3-4987-8cbf-6a2bca9f01a4")  // GUID for User role
-            },
-            new UserRole
-            {
-                UserId = Guid.Parse("9229F7AA-5B2F-4B72-BDB3-6F786A0C62BE"), // Static GUID for user3
-                RoleId = Guid.Parse("E143EF8A-95C2-4359-B1B6-7FDE456B771F"),// GUID for BusinessAnalyses role
-            },
-            new UserRole
-            {
-                UserId = Guid.Parse("73A03B91-0B28-4838-9D48-C30B7ACE75A0"), // Static GUID for user4
-                RoleId = Guid.Parse("DEB2A077-7A07-49F4-BDDA-3C7F95061D72")// GUID for DevelopmentDepartment role
             }
 
         );
@@ -304,6 +229,31 @@ public static class ModelBuilderExtensions
                 Id = Guid.Parse("1A12F6F4-88FF-4AB6-9E44-013CBF5C1964"),
                 Name = PermissionName.CreateTicket.ToString(),
                 ParentId = Guid.Parse("B6F8C089-740E-4741-8456-6F8D99E9657A")
+            },
+
+            // Permissions for the Ticket History page
+            new Permission
+            {
+                Id = Guid.Parse("0334A2FC-4DC3-48AF-BF24-32F35CC192D8"),
+                Name = PermissionName.ViewTicketHistory.ToString()
+            },
+            new Permission
+            {
+                Id = Guid.Parse("15699509-04EB-40E5-A5D4-5EFFE8F339DD"),
+                Name = PermissionName.EditTicketHistory.ToString(),
+                ParentId = Guid.Parse("0334A2FC-4DC3-48AF-BF24-32F35CC192D8")
+            },
+            new Permission
+            {
+                Id = Guid.Parse("7B70FD1B-58E4-450A-B0CF-B99C040AC9A4"),
+                Name = PermissionName.DeleteTicketHistory.ToString(),
+                ParentId = Guid.Parse("0334A2FC-4DC3-48AF-BF24-32F35CC192D8")
+            },
+            new Permission
+            {
+                Id = Guid.Parse("EC43EEFF-88C2-4C22-AD71-71BA7F2CDA44"),
+                Name = PermissionName.CreateTicketHistory.ToString(),
+                ParentId = Guid.Parse("0334A2FC-4DC3-48AF-BF24-32F35CC192D8")
             }
         );
 
@@ -452,22 +402,6 @@ public static class ModelBuilderExtensions
             {
                 RoleId = Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // GUID for Admin role
                 PermissionId = Guid.Parse("1A12F6F4-88FF-4AB6-9E44-013CBF5C1964"), // GUID for CreateTicket permission
-            },
-
-            // BusinessAnalyses role permissions
-            new RolePermission
-            {
-                RoleId = Guid.Parse("E143EF8A-95C2-4359-B1B6-7FDE456B771F"), // GUID for BusinessAnalyses role
-                PermissionId = Guid.Parse("D19358C8-5CE7-4C13-8B37-EBFD676E8EB4"), // GUID for ViewUser permission
-            },
-
-            // DevelopmentDepartment role permissions
-
-            // User role permissions
-            new RolePermission
-            {
-                RoleId = Guid.Parse("a1236e5d-42f3-4987-8cbf-6a2bca9f01a4"), // GUID for User role
-                PermissionId = Guid.Parse("80418A92-7E17-4B3D-880A-42BF0DF503CB"), // GUID for EditProject permission
             }
         );
     }

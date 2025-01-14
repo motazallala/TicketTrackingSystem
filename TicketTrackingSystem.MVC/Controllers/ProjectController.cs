@@ -12,12 +12,14 @@ public class ProjectController : Controller
 {
     private readonly IProjectService _projectService;
     private readonly IPermissionService _permissionService;
+    private readonly ITicketService _ticketService;
     private readonly IUserService _userService;
-    public ProjectController(IProjectService projectService, IPermissionService permissionService, IUserService userService)
+    public ProjectController(IProjectService projectService, IPermissionService permissionService, IUserService userService, ITicketService ticketService)
     {
         _projectService = projectService;
         _permissionService = permissionService;
         _userService = userService;
+        _ticketService = ticketService;
     }
     public IActionResult Index()
     {
@@ -26,6 +28,7 @@ public class ProjectController : Controller
     public async Task<IActionResult> Details(Guid id)
     {
         var result = await _projectService.GetProjectByIdAsync(id);
+        //check if the user in the project as a member
         if (!result.IsSuccess)
         {
             return NotFound();
@@ -50,6 +53,17 @@ public class ProjectController : Controller
         return View(result.Value);
     }
 
+    [HttpGet("project/ticket/{ticketId}/messages")]
+    public async Task<IActionResult> Messages(Guid ticketId)
+    {
+        var result = await _ticketService.GetTicketByIdAsync(ticketId);
+        // check if the ticket is have history with the logged in user
+        if (!result.IsSuccess)
+        {
+            return NotFound();
+        }
+        return View(result.Value);
+    }
 
     [HttpPost("/project/call")]
     public async Task<IActionResult> CallService([FromBody] DynamicRequest request)

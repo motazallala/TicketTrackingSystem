@@ -1,6 +1,6 @@
 ﻿import { ticketTable } from './ticketTable.js';
 import { setupModalData, showErrorModal } from '../../../utility/dataModalUtility.js';
-import { updateTicketWithAutoStageAsync } from '../../../services/ticketServices.js';
+import { assignTicketToUserAsync } from '../../../services/ticketServices.js';
 
 $(document).ready(function () {
     // Getting the stage value
@@ -50,12 +50,10 @@ $(document).ready(function () {
 
             // Toggle message textarea and buttons based on the isFinished checkbox
             $('#isFinished').on('change', function () {
+
                 if ($(this).is(':checked')) {
-                    $('#messageContainer').fadeIn(); // Show textarea
                     $('#accept').fadeIn().text('Accept'); // Show Accept button as "Accept"
-                    $('#reject').fadeIn(); // Show Reject button
                 } else {
-                    $('#messageContainer').fadeOut(); // Hide textarea
                     $('#accept').fadeIn().text('Next'); // Hide Accept button
                     $('#reject').fadeOut(); // Hide Reject button
                 }
@@ -63,7 +61,6 @@ $(document).ready(function () {
         } else if (inStage === 'Stage 2 Tickets') {
             // Hide checkbox, message box, and reject button for Stage 2 Tickets
             $('#isFinishedContainer').hide();
-            $('#messageContainer').hide();
             $('#reject').hide();
 
             // Show the closing message and change Accept button to "Solved"
@@ -98,7 +95,7 @@ $(document).ready(function () {
     async function handleUpdateTicket(ticketId, status) {
         const editTicketStatusDto = gatherFormData(status);
 
-        const updateResult = await updateTicketWithAutoStageAsync(ticketId, editTicketStatusDto.ticketStatus, editTicketStatusDto.isFinished, editTicketStatusDto.message);
+        const updateResult = await assignTicketToUserAsync(ticketId, editTicketStatusDto.ticketStatus, editTicketStatusDto.isFinished, editTicketStatusDto.message);
 
         try {
             if (updateResult.isSuccess) {
@@ -117,10 +114,8 @@ $(document).ready(function () {
         // Set the checkbox state based on the `isFinished` field from data
         if (data.isFinished) {
             $('#isFinished').prop('checked', true); // Check the checkbox
-            $('#messageContainer').fadeIn(); // Show textarea if isFinished is true
         } else {
             $('#isFinished').prop('checked', false); // Uncheck the checkbox
-            $('#messageContainer').fadeOut(); // Hide textarea if isFinished is false
         }
 
         // Trigger checkbox change event to update buttons and message field visibility

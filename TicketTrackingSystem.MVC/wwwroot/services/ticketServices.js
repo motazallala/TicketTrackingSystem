@@ -31,18 +31,18 @@
 
 export const getTicketByIdAsync = (ticketId) =>
     ticketServiceProxy.getticketbyidasync(ticketId);
-export const addTicketAsync = (ticketDto) =>
-    ticketServiceProxy.addticketasync(ticketDto);
-export const updateTicketStatusAsync = (ticketDto) =>
-    ticketServiceProxy.updateticketstatusasync(ticketDto);
-export const updateTicketStageAsync = (ticketId, stage) =>
-    ticketServiceProxy.updateticketstageasync(ticketId, stage);
-export const updateTicketMessageAsync = (ticketId, message) =>
-    ticketServiceProxy.updateticketmessageasync(ticketId, message);
-export const updateTicketStatusWithAutoStageAsync = (ticketId, status, isFinished) =>
-    ticketServiceProxy.updateticketstatuswithautostageasync(ticketId, status, isFinished);
-export const getTicketStatusDropdown = () =>
-    ticketServiceProxy.getticketstatusdropdown();
+
+export const assignTicketToUserAsync = (ticketId) =>
+    ticketServiceProxy.assigntickettouserasync(ticketId);
 
 export const updateTicketWithAutoStageAsync = (ticketId, status, isFinished, message) =>
     ticketServiceProxy.updateticketwithautostageasync(ticketId, status, isFinished, message);
+
+export const addTicketAsync = (ticketDto) =>
+    ticketServiceProxy.addticketasync(ticketDto);
+
+export const getTicketStatusDropdown = () =>
+    ticketServiceProxy.getticketstatusdropdown();
+
+
+

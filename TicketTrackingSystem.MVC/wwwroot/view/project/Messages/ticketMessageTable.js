@@ -1,33 +1,23 @@
 ﻿import { initializeDataTable } from '../../../utility/dataTableUtility.js';
 import { setupModalData } from '../../../utility/dataModalUtility.js';
 
-let ticketTable;
+let ticketMessageTable;
 
 $(document).ready(function () {
-    let projectId = $('#projectId').val();
+    let ticketId = $('#ticketId').val();
 
 
-    ticketTable = initializeDataTable({
-        tableId: '#ticketTable',
-        apiUrl: 'https://localhost:7264/ticket/call',
-        method: 'getallticketpaginatedasync',
+    ticketMessageTable = initializeDataTable({
+        tableId: '#ticketMessageTable',
+        apiUrl: 'https://localhost:7264/ticketMessage/call',
+        method: 'getallticketmessagespaginatedasync',
         columns: [
             { data: 'id', name: 'ID' },
-            { data: 'title', name: 'Title' },
-            { data: 'description', name: 'Description' },
-            { 
-                data: 'status', 
-                name: 'Status',
-                render: function (data, type, row) {
-                    if (data === 'Assigned' || data === 'Returned') {
-                        return 'InProgress';
-                    }
-                    return data;
-                }
-            },
-            { 
-                data: 'createdAt', 
-                name: 'CreatedAt',
+            { data: 'content', name: 'Message' },
+            { data: 'stageAtTimeOfMessage', name: 'StageAtTimeOfMessageStageAtTimeOfMessage' },
+            {
+                data: 'createdAt',
+                name: 'SentAt',
                 render: function (data, type, row) {
                     return new Date(data).toLocaleString();
                 }
@@ -40,7 +30,12 @@ $(document).ready(function () {
                 render: function (data, type, row) {
                     // Retrieve the values from the hidden inputs
                     var canView = $('#canView').val() === "true";
-
+                    var canEdit = $('#canEdit').val() === "true";
+                    var canDelete = $('#canDelete').val() === "true";
+                    //remove this after adding the permission
+                    canDelete = true;
+                    canEdit = true;
+                    canView = true;
                     // Start building the action buttons HTML
                     var actionButtons = `<div class="d-flex justify-content-center">`;
 
@@ -51,6 +46,7 @@ $(document).ready(function () {
                     <i class="bi bi-info-square-fill"></i> Details
                 </button>`;
                     }
+
                     // Close the div and return the HTML
                     actionButtons += `</div>`;
 
@@ -58,23 +54,17 @@ $(document).ready(function () {
                 }
             }
         ],
-        additionalParameters: [projectId],
+        additionalParameters: [ticketId],
         failureCallback: showErrorMessage
     });
 
     // Row click event handler
-    ticketTable.on('click', '.dt-view', function () {
-        let data = ticketTable.row($(this).parents('tr')).data();
+    ticketMessageTable.on('click', '.dt-view', function () {
+        let data = ticketMessageTable.row($(this).parents('tr')).data();
         const modalTitle = $('.modal .modal-title');
         const modalBody = $('#modelBody');
         const modalFooter = $('.modal .modal-footer');
-        let status = ""; 
-        if (data.status === 'Assigned' || data.status === 'Returned') {
-            status = 'InProgress';
-        }
-        else {
-            status = data.status;
-        }
+
         const title = 'Project Details';
         const bodyContent = `
              <div class="form-group">
@@ -82,25 +72,16 @@ $(document).ready(function () {
                 <input type="text" class="form-control" id="id-view" name="id" value="${data.id}" disabled>
             </div>
             <div class="form-group">
-                <label for="title">Title :</label>
-                <input type="text" class="form-control" id="title" name="title" value="${data.title}" disabled>
+                <label for="content">Message :</label>
+                <textarea class="form-control" id="content" name="content" disabled>${data.content}</textarea>
             </div>
             <div class="form-group">
-                <label for="description">Description :</label>
-                <input type="text" class="form-control" id="description" name="description" value="${data.description}" disabled>
-            </div>
-            <div class="form-group">
-                <label for="status">Status :</label>
-                <input type="text" class="form-control" id="status" name="status" value="${status}" disabled>
-            </div>
-            <div class="form-group">
-                <label for="createdAt">Created At :</label>
+                <label for="createdAt">Sent At :</label>
                 <input type="text" class="form-control" id="createdAt" name="createdAt" value="${new Date(data.createdAt).toLocaleString()}" disabled>
             </div>
         `;
         const viewButton = `<button type="button" class="btn btn-default" onclick="$('#myModal').modal('hide')" data-dismiss="modal">Close</button>`;
-        const moreDetails = `<a class="btn btn-sm btn-primary dt-view" href="/project/ticket/${data.id}/messages">View Project Users</a>`;
-        setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [viewButton, moreDetails]);
+        setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [viewButton]);
         $('#myModal').modal('show');
     });
 
@@ -123,4 +104,4 @@ $(document).ready(function () {
 });
 
 // Export the DataTable instance when it's ready
-export { ticketTable };
+export { ticketMessageTable };

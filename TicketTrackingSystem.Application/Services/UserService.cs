@@ -332,18 +332,88 @@ public class UserService : IUserService
 
     public async Task<Result<string>> DeleteUserAsync(string userId)
     {
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user is null)
+        try
         {
-            return Result<string>.Failure("There is no user with this Id");
+            // Find the user
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null)
+            {
+                return Result<string>.Failure("There is no user with this Id");
+            }
+
+            // Prevent deletion of a specific admin
+            if (user.Id == Guid.Parse("d4d6e58f-8f94-4e8c-93c7-d048e24e2639"))
+            {
+                return Result<string>.Failure($"{user.UserName} is an Admin. You cannot delete it!");
+            }
+
+            // Check for dependent TicketHistory records
+            var hasTicketHistory = await _unitOfWork.TicketHistory.CheckItemExistenceAsync(th => th.UserId == user.Id);
+            if (hasTicketHistory)
+            {
+                return Result<string>.Failure("This user has associated ticket history. Delete or reassign those records first.");
+            }
+
+            // Check for dependent TicketHistory records
+            var hasTicketMessage = await _unitOfWork.TicketMessage.CheckItemExistenceAsync(th => th.UserId == user.Id);
+            if (hasTicketMessage)
+            {
+                return Result<string>.Failure("This user has associated ticket message. Delete or reassign those records first.");
+            }
+
+            // Attempt to delete the user
+            var result = await _userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                return Result<string>.Failure(string.Join("; ", result.Errors.Select(e => e.Description)));
+            }
+
+            return Result<string>.Success("User deleted successfully");
         }
-        var result = await _userManager.DeleteAsync(user);
-        if (!result.Succeeded)
+        catch (Exception ex)
         {
-            return Result<string>.Failure(string.Join("; ", result.Errors.Select(e => e.Description)));
+
+            return Result<string>.Failure($"An error occurred: {ex.Message}");
         }
-        return Result<string>.Success("User deleted successfully");
     }
+
+
+    public async Task<Result<string>> DeleteUserCascadeAsync(string userId)
+    {
+        try
+        {
+            // Find the user
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null)
+            {
+                return Result<string>.Failure("There is no user with this Id");
+            }
+
+            // Prevent deletion of a specific admin
+            if (user.Id == Guid.Parse("d4d6e58f-8f94-4e8c-93c7-d048e24e2639"))
+            {
+                return Result<string>.Failure($"{user.UserName} is an Admin. You cannot delete it!");
+            }
+
+            _unitOfWork.TicketHistory.DeleteAllHistoryForUser(user.Id);
+            _unitOfWork.TicketMessage.DeleteAllMessageForUser(user.Id);
+            await _unitOfWork.CompleteAsync();
+            // Attempt to delete the user
+            var result = await _userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                return Result<string>.Failure(string.Join("; ", result.Errors.Select(e => e.Description)));
+            }
+
+            return Result<string>.Success("User deleted successfully");
+        }
+        catch (Exception ex)
+        {
+
+            return Result<string>.Failure($"An error occurred: {ex.Message}");
+        }
+    }
+
 
     //update user
     public async Task<Result<string>> UpdateUserAsync(UpdateUserDto userDto)

@@ -464,6 +464,46 @@ public class UserController : Controller
                     break;
                 }
 
+            case "deleteusercascadeasync":
+                {
+                    if (!canDelete)
+                    {
+                        response.IsSuccess = false;
+                        response.SetError(new ErrorMessage
+                        {
+                            Code = HttpStatusCode.Forbidden,
+                            Description = "You do not have permission to delete users."
+                        });
+                        break;
+                    }
+                    if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
+                    {
+                        response.IsSuccess = false;
+                        response.SetError(new ErrorMessage
+                        {
+                            Code = HttpStatusCode.BadRequest,
+                            Description = "Invalid request data."
+                        });
+                        break;
+                    }
+                    var userId = parameters[0].ToString();
+                    var result = await _userService.DeleteUserCascadeAsync(userId);
+                    if (!result.IsSuccess)
+                    {
+                        response.IsSuccess = false;
+                        response.SetError(new ErrorMessage
+                        {
+                            Code = HttpStatusCode.InternalServerError,
+                            Description = result.ErrorMessage
+                        });
+                        break;
+                    }
+                    response.IsSuccess = true;
+                    response.Data = result.Value;
+                    break;
+                }
+
+
             case "updateuserasync":
                 {
                     try

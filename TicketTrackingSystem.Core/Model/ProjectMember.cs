@@ -9,5 +9,4 @@ public class ProjectMember
     public ApplicationUser User { get; set; }
     public DateTime? JoinDate { get; set; } = DateTime.Now;
     public Stage Stage { get; set; } = Stage.Stage1;
-    public UserType UserType { get; set; } = UserType.Client;
 }

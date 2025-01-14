@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TicketTrackingSystem.DAL.Implementation;
 
@@ -11,9 +12,11 @@ using TicketTrackingSystem.DAL.Implementation;
 namespace TicketTrackingSystem.DAL.Migrations
 {
     [DbContext(typeof(TicketTrackingSystemDbContext))]
-    partial class TicketTrackingSystemDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250113133252_removeRoles")]
+    partial class removeRoles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -293,7 +296,7 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Department", (string)null);
+                    b.ToTable("Department");
                 });
 
             modelBuilder.Entity("TicketTrackingSystem.Core.Model.Permission", b =>
@@ -317,7 +320,7 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.HasIndex("ParentId");
 
-                    b.ToTable("Permission", (string)null);
+                    b.ToTable("Permission");
 
                     b.HasData(
                         new
@@ -562,7 +565,7 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Project", (string)null);
+                    b.ToTable("Project");
                 });
 
             modelBuilder.Entity("TicketTrackingSystem.Core.Model.ProjectMember", b =>
@@ -583,7 +586,7 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ProjectMember", (string)null);
+                    b.ToTable("ProjectMember");
                 });
 
             modelBuilder.Entity("TicketTrackingSystem.Core.Model.Role", b =>
@@ -638,7 +641,7 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.HasIndex("PermissionId");
 
-                    b.ToTable("RolePermission", (string)null);
+                    b.ToTable("RolePermission");
 
                     b.HasData(
                         new
@@ -826,7 +829,7 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("Ticket", (string)null);
+                    b.ToTable("Ticket");
                 });
 
             modelBuilder.Entity("TicketTrackingSystem.Core.Model.TicketHistory", b =>
@@ -859,7 +862,7 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TicketHistory", (string)null);
+                    b.ToTable("TicketHistory");
                 });
 
             modelBuilder.Entity("TicketTrackingSystem.Core.Model.TicketMessage", b =>
@@ -897,7 +900,7 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TicketMessage", (string)null);
+                    b.ToTable("TicketMessage");
                 });
 
             modelBuilder.Entity("TicketTrackingSystem.Core.Model.UserRole", b =>

@@ -17,6 +17,8 @@ public class TicketTrackingSystemDbContext : IdentityDbContext<ApplicationUser, 
     public DbSet<Role> Role { get; set; }
     public DbSet<ApplicationUser> User { get; set; }
     public DbSet<UserRole> UserRole { get; set; }
+    public DbSet<TicketHistory> TicketHistory { get; set; }
+    public DbSet<TicketMessage> TicketMessage { get; set; }
     public TicketTrackingSystemDbContext(DbContextOptions options) : base(options)
     {
     }
@@ -25,20 +27,29 @@ public class TicketTrackingSystemDbContext : IdentityDbContext<ApplicationUser, 
     {
         base.OnModelCreating(builder);
 
-        builder.Entity<RolePermission>()
-            .HasKey(rp => new { rp.RoleId, rp.PermissionId });
+        builder.Entity<RolePermission>(rp =>
+        {
+            rp.HasKey(pk => new { pk.RoleId, pk.PermissionId });
+            rp.HasOne(x => x.Role).WithMany(x => x.RolePermissions).HasForeignKey(rp => rp.RoleId);
+            rp.HasOne(x => x.Permission).WithMany(x => x.RolePermissions).HasForeignKey(rp => rp.PermissionId);
+        });
 
-        builder.Entity<RolePermission>()
-            .HasOne(rp => rp.Role)
-            .WithMany(r => r.RolePermissions)
-            .HasForeignKey(rp => rp.RoleId);
-
-        builder.Entity<RolePermission>()
-            .HasOne(rp => rp.Permission)
-            .WithMany(r => r.RolePermissions)
-            .HasForeignKey(rp => rp.PermissionId);
+        builder.Entity<Department>(rp =>
+        {
+            //make the name and the description has a maximum length of 100
+            rp.Property(x => x.Name).HasMaxLength(100);
+            rp.Property(x => x.Description).HasMaxLength(500);
+        });
+        builder.Entity<Project>(rp =>
+        {
+            //make the name and the description has a maximum length of 100
+            rp.Property(x => x.Name).HasMaxLength(100);
+            rp.Property(x => x.Description).HasMaxLength(500);
+        });
         builder.Entity<ApplicationUser>(rp =>
         {
+            rp.Property(x => x.FirstName).HasMaxLength(100);
+            rp.Property(x => x.LastName).HasMaxLength(100);
             rp.HasOne(x => x.Department).WithMany(x => x.Employees).HasForeignKey(rp => rp.DepartmentId);
 
         });
@@ -50,6 +61,8 @@ public class TicketTrackingSystemDbContext : IdentityDbContext<ApplicationUser, 
         });
         builder.Entity<Ticket>(t =>
         {
+            t.Property(x => x.Title).HasMaxLength(100);
+            t.Property(x => x.Description).HasMaxLength(500);
             t.HasOne(x => x.Project).WithMany(x => x.Tickets).HasForeignKey(t => t.ProjectId);
             t.HasOne(p => p.Creator).WithMany(p => p.Tickets).HasForeignKey(fk => fk.CreatorId);
         });
@@ -70,12 +83,24 @@ public class TicketTrackingSystemDbContext : IdentityDbContext<ApplicationUser, 
                 .IsRequired();
 
         });
-        // Configure the self-referencing relationship for the Permission entity
-        builder.Entity<Permission>()
-            .HasOne(p => p.Parent)                // One Permission has one Parent
-            .WithMany(p => p.Children)            // One Permission can have many Children
-            .HasForeignKey(p => p.ParentId)       // Foreign key is ParentId
-            .OnDelete(DeleteBehavior.Restrict);   // Prevent cascading deletes
+
+        builder.Entity<TicketHistory>(th =>
+        {
+            th.HasOne(x => x.Ticket).WithMany(x => x.TicketHistories).HasForeignKey(th => th.TicketId).OnDelete(DeleteBehavior.Cascade);
+            th.HasOne(x => x.User).WithMany(x => x.TicketHistories).HasForeignKey(th => th.UserId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<TicketMessage>(th =>
+        {
+            th.Property(x => x.Content).HasMaxLength(500);
+            th.HasOne(x => x.Ticket).WithMany(x => x.TicketMessages).HasForeignKey(th => th.TicketId).OnDelete(DeleteBehavior.Cascade);
+            th.HasOne(x => x.User).WithMany(x => x.TicketMessages).HasForeignKey(th => th.UserId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Permission>(p =>
+        {
+            p.Property(x => x.Name).HasMaxLength(100);
+            p.HasOne(x => x.Parent).WithMany(x => x.Children).HasForeignKey(p => p.ParentId).OnDelete(DeleteBehavior.Restrict);
+        });
         builder.SeedUsers();
         builder.SeedRoles();
         builder.SeedUserRoles();

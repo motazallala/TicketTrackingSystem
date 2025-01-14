@@ -22,7 +22,7 @@ $(document).ready(function () {
         showUserDetailsModal(data);
     }).on('click', '.dt-assign', function () {
         const data = userMemberTable.row($(this).parents('tr')).data();
-        showAssignUserModal(data.id, data.userName);
+        showAssignUserModal(data.id, data.userName, data.userType);
     }).on('click', '.dt-removeAssign', function () {
         const data = userMemberTable.row($(this).parents('tr')).data();
         showRemoveUserModal(data.id, data.userName);
@@ -132,14 +132,31 @@ $(document).ready(function () {
         $('#myModal').modal('show');
     }
 
-    // Modal setup for assigning a user to a project
-    async function showAssignUserModal(userId, userName) {
-        try {
-            // Fetch dropdown options for stages from the server
-            const stageDropdown = await getStageDropdown();
 
-            const title = 'Assign Role';
-            const bodyContent = `
+
+
+    async function showAssignUserModal(userId, userName,userType) {
+
+        if (userType === 'Client') {
+            // Show a modal with a message for clients
+            const title = 'Information';
+            const bodyContent = `<p>Assign ${userName} to project.</p>`;
+            const confirmButton = `<button type="button" class="btn btn-primary" id="submitAssign">Yes</button>`;
+            const closeButton = `<button type="button" class="btn btn-default" data-dismiss="modal">No</button>`;
+            setupModalData($('.modal .modal-title'), $('#modelBody'), $('.modal .modal-footer'), title, bodyContent, [confirmButton,closeButton]);
+
+
+            $('#myModal').modal('show');
+            $('#submitAssign').off('click').on('click', async function () {
+                await handleUserAssignment(userId, projectId,0);
+            });
+        } else if (userType === 'Member') {
+            try {
+                // Fetch dropdown options for stages from the server
+                const stageDropdown = await getStageDropdown();
+
+                const title = 'Assign Role';
+                const bodyContent = `
                 <p>Assign a stage to ${userName}:</p>
                 <div class="form-group">
                     <label for="stageSelect">Stage</label>
@@ -148,21 +165,58 @@ $(document).ready(function () {
                     </select>
                 </div>
             `;
-            const confirmButton = `<button type="button" class="btn btn-primary" id="submitAssign">Yes</button>`;
-            const closeButton = `<button type="button" class="btn btn-default" data-dismiss="modal">No</button>`;
-            setupModalData($('.modal .modal-title'), $('#modelBody'), $('.modal .modal-footer'), title, bodyContent, [confirmButton, closeButton]);
+                const confirmButton = `<button type="button" class="btn btn-primary" id="submitAssign">Yes</button>`;
+                const closeButton = `<button type="button" class="btn btn-default" data-dismiss="modal">No</button>`;
+                setupModalData($('.modal .modal-title'), $('#modelBody'), $('.modal .modal-footer'), title, bodyContent, [confirmButton, closeButton]);
 
-            $('#myModal').modal('show');
+                $('#myModal').modal('show');
 
-            // Unbind previous events before binding a new one
-            $('#submitAssign').off('click').on('click', async function () {
-                const selectedStage = $('#stageSelect').val(); // Get the selected stage value
-                await handleUserAssignment(userId, projectId, selectedStage);
-            });
-        } catch (error) {
-            showErrorMessage({ code: '500', description: 'Error fetching stage dropdown.' });
+                // Unbind previous events before binding a new one
+                $('#submitAssign').off('click').on('click', async function () {
+                    const selectedStage = $('#stageSelect').val(); // Get the selected stage value
+                    await handleUserAssignment(userId, projectId, selectedStage);
+                });
+            } catch (error) {
+                showErrorMessage({ code: '500', description: 'Error fetching stage dropdown.' });
+            }
+        } else {
+            // Handle other cases if necessary
+            showErrorMessage({ code: '400', description: 'Invalid user type.' });
         }
     }
+
+
+    // Modal setup for assigning a user to a project
+    //async function showAssignUserModal(userId, userName) {
+    //    try {
+    //        // Fetch dropdown options for stages from the server
+    //        const stageDropdown = await getStageDropdown();
+
+    //        const title = 'Assign Role';
+    //        const bodyContent = `
+    //            <p>Assign a stage to ${userName}:</p>
+    //            <div class="form-group">
+    //                <label for="stageSelect">Stage</label>
+    //                <select class="form-control" id="stageSelect">
+    //                    ${stageDropdown.data}
+    //                </select>
+    //            </div>
+    //        `;
+    //        const confirmButton = `<button type="button" class="btn btn-primary" id="submitAssign">Yes</button>`;
+    //        const closeButton = `<button type="button" class="btn btn-default" data-dismiss="modal">No</button>`;
+    //        setupModalData($('.modal .modal-title'), $('#modelBody'), $('.modal .modal-footer'), title, bodyContent, [confirmButton, closeButton]);
+
+    //        $('#myModal').modal('show');
+
+    //        // Unbind previous events before binding a new one
+    //        $('#submitAssign').off('click').on('click', async function () {
+    //            const selectedStage = $('#stageSelect').val(); // Get the selected stage value
+    //            await handleUserAssignment(userId, projectId, selectedStage);
+    //        });
+    //    } catch (error) {
+    //        showErrorMessage({ code: '500', description: 'Error fetching stage dropdown.' });
+    //    }
+    //}
 
     // Modal setup for removing a user from the project
     async function showRemoveUserModal(userId, userName) {
@@ -176,7 +230,6 @@ $(document).ready(function () {
 
         // Unbind previous events before binding a new one
         $('#submitRemove').off('click').on('click', async function () {
-            debugger;
             await handleUserRemoval(userId, projectId);
         });
     }

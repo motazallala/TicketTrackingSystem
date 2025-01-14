@@ -94,9 +94,6 @@ public class RoleService : IRoleService
         var nonDeletableRoleIds = new List<Guid>
     {
         Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // Admin role ID
-        Guid.Parse("E143EF8A-95C2-4359-B1B6-7FDE456B771F"), // Business Analyses role ID
-        Guid.Parse("DEB2A077-7A07-49F4-BDDA-3C7F95061D72"), // Development Department role ID
-        Guid.Parse("a1236e5d-42f3-4987-8cbf-6a2bca9f01a4")  // User role ID
     };
 
         if (nonDeletableRoleIds.Contains(role.Id))

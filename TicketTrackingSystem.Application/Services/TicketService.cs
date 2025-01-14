@@ -21,6 +21,149 @@ public class TicketService : ITicketService
         _mapper = mapper;
     }
 
+    //assinge ticket to user 
+    public async Task<Result<TicketDto>> AssignTicketToUserAsync(Guid ticketId, Guid userId)
+    {
+        try
+        {
+            var ticket = await _unitOfWork.Tickets.GetByIdAsync(ticketId);
+            if (ticket == null)
+            {
+                return Result<TicketDto>.Failure("Ticket not found");
+            }
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return Result<TicketDto>.Failure("User not found");
+            }
+
+            var member = await _unitOfWork.ProjectMembers.GetAllAsQueryable().FirstOrDefaultAsync(p => p.ProjectId == ticket.ProjectId && p.UserId == userId);
+            if (member == null)
+            {
+                return Result<TicketDto>.Failure("User is not a member of the project");
+            }
+            if (ticket.Status.Equals(TicketStatus.Assigned))
+            {
+                return Result<TicketDto>.Failure("The Ticket is already taken.");
+            }
+            if (member.Stage.Equals(Stage.Stage1))
+            {
+                await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+                {
+                    UserId = user.Id,
+                    TicketId = ticket.Id,
+                    StageBeforeChange = ticket.Stage,
+                    StageAfterChange = Stage.Stage1
+                });
+                ticket.Status = TicketStatus.Assigned;
+                ticket.Stage = Stage.Stage1;
+            }
+            else if (member.Stage.Equals(Stage.Stage2))
+            {
+                await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+                {
+                    UserId = user.Id,
+                    TicketId = ticket.Id,
+                    StageBeforeChange = ticket.Stage,
+                    StageAfterChange = Stage.Stage2
+                });
+                ticket.Status = TicketStatus.Assigned;
+                ticket.Stage = Stage.Stage2;
+            }
+            else
+            {
+                return Result<TicketDto>.Failure("User is not in the stage one or two");
+            }
+
+            ticket.UpdatedAt = DateTime.UtcNow;
+            await _unitOfWork.CompleteAsync();
+            return Result<TicketDto>.Success(_mapper.Map<TicketDto>(ticket));
+        }
+        catch (Exception ex)
+        {
+            return Result<TicketDto>.Failure(ex.Message);
+        }
+    }
+    public async Task<Result<DataTablesResponse<TicketDto>>> GetAllTicketForMemberPaginatedAsync(DataTablesRequest request, Guid projectId, Guid userId, bool reserved)
+    {
+        try
+        {
+
+
+            var query = _unitOfWork.Tickets.GetAllAsQueryable().AsNoTracking();
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (_unitOfWork.Users.IsInRole(user, "Admin"))
+            {
+                query = query.Where(p => p.ProjectId == projectId);
+            }
+            else
+            {
+                var member = await _unitOfWork.ProjectMembers.GetAllAsQueryable().FirstOrDefaultAsync(p => p.ProjectId == projectId && p.UserId == userId);
+                if (!reserved)
+                {
+                    if (member.Stage.Equals(Stage.Stage1))
+                    {
+                        query = query.Where(p => p.Stage.Equals(member.Stage) && p.ProjectId == member.ProjectId && p.Status.Equals(TicketStatus.Pending));
+                    }
+                    else if (member.Stage.Equals(Stage.Stage2))
+                    {
+                        query = query.Where(p => p.Stage.Equals(member.Stage) && p.ProjectId == member.ProjectId && p.Status.Equals(TicketStatus.InProgress));
+                    }
+                    else
+                    {
+                        return Result<DataTablesResponse<TicketDto>>.Failure("The member is not in the stage one or two");
+                    }
+
+                }
+                else
+                {
+                    query = query.Where(p => p.Stage.Equals(member.Stage) && p.ProjectId == member.ProjectId && (p.Status.Equals(TicketStatus.Assigned) || p.Status.Equals(TicketStatus.Returned)) && p.TicketHistories.Any(u => u.UserId == user.Id));
+                }
+            }
+            if (!string.IsNullOrEmpty(request.Search?.Value))
+            {
+                var searchValue = request.Search.Value.ToLower();
+                query = query.Where(p => p.Title.ToLower().Contains(searchValue) || p.Description.ToLower().Contains(searchValue));
+            }
+
+
+            // Apply ordering
+            if (request.Order != null && request.Order.Any())
+            {
+                var order = request.Order.First();
+                var columnName = request.Columns[order.Column].Data;
+                var direction = order.Dir;
+
+                // Dynamically apply ordering
+                query = direction == "asc"
+                    ? query.OrderByDynamic(columnName, true)
+                    : query.OrderByDynamic(columnName, false);
+            }
+            // Get the total count before pagination
+            var recordsTotal = await query.CountAsync();
+            // Apply pagination
+            var paginatedData = await query
+                .Skip(request.Start)
+                .Take(request.Length)
+                .ToListAsync();
+            // Now project the roles separately in the mapping phase
+            var departmentDtos = _mapper.Map<IEnumerable<TicketDto>>(paginatedData);
+            var response = new DataTablesResponse<TicketDto>
+            {
+                Draw = request.Draw,
+                RecordsTotal = recordsTotal,
+                RecordsFiltered = recordsTotal,
+                Data = departmentDtos
+            };
+            return Result<DataTablesResponse<TicketDto>>.Success(response);
+        }
+        catch (Exception ex)
+        {
+
+            return Result<DataTablesResponse<TicketDto>>.Failure(ex.Message);
+        }
+    }
+
     public async Task<Result<DataTablesResponse<TicketDto>>> GetAllTicketForUserPaginatedAsync(DataTablesRequest request, Guid projectId, Guid userId)
     {
         try
@@ -83,56 +226,27 @@ public class TicketService : ITicketService
         }
     }
 
-    // get all paginated tickets
-    public async Task<Result<DataTablesResponse<TicketDto>>> GetAllTicketPaginatedAsync(DataTablesRequest request, Guid projectId)
-    {
-        try
-        {
-            var query = _unitOfWork.Tickets.GetAllAsQueryable().AsNoTracking().Where(p => p.ProjectId == projectId);
-            if (!string.IsNullOrEmpty(request.Search?.Value))
-            {
-                var searchValue = request.Search.Value.ToLower();
-                query = query.Where(p => p.Title.ToLower().Contains(searchValue) || p.Description.ToLower().Contains(searchValue));
-            }
-            // Apply ordering
-            if (request.Order != null && request.Order.Any())
-            {
-                var order = request.Order.First();
-                var columnName = request.Columns[order.Column].Data;
-                var direction = order.Dir;
-
-                // Dynamically apply ordering
-                query = direction == "asc"
-                    ? query.OrderByDynamic(columnName, true)
-                    : query.OrderByDynamic(columnName, false);
-            }
-            // Get the total count before pagination
-            var recordsTotal = await query.CountAsync();
-            // Apply pagination
-            var paginatedData = await query
-                .Skip(request.Start)
-                .Take(request.Length)
-                .ToListAsync();
-            // Now project the roles separately in the mapping phase
-            var departmentDtos = _mapper.Map<IEnumerable<TicketDto>>(paginatedData);
-            var response = new DataTablesResponse<TicketDto>
-            {
-                Draw = request.Draw,
-                RecordsTotal = recordsTotal,
-                RecordsFiltered = recordsTotal,
-                Data = departmentDtos
-            };
-            return Result<DataTablesResponse<TicketDto>>.Success(response);
-        }
-        catch (Exception ex)
-        {
-
-            return Result<DataTablesResponse<TicketDto>>.Failure(ex.Message);
-        }
-    }
 
     // get ticket by id
     public async Task<Result<TicketDto>> GetTicketByIdAsync(Guid id)
+    {
+        try
+        {
+            var ticket = await _unitOfWork.Tickets.GetByIdAsync(id);
+            if (ticket == null)
+            {
+                return Result<TicketDto>.Failure("Ticket not found");
+            }
+            var ticketDto = _mapper.Map<TicketDto>(ticket);
+            return Result<TicketDto>.Success(ticketDto);
+        }
+        catch (Exception ex)
+        {
+            return Result<TicketDto>.Failure(ex.Message);
+        }
+    }
+
+    public async Task<Result<TicketDto>> CheckIfUserHas(Guid id)
     {
         try
         {
@@ -183,11 +297,17 @@ public class TicketService : ITicketService
         }
     }
 
-    public async Task<Result<TicketDto>> UpdateTicketWithAutoStageAsync(Guid id, string status, bool isFinished, string message = null)
+    //new code
+    public async Task<Result<TicketDto>> UpdateTicketWithAutoStageAsync(Guid id, string status, bool isFinished, Guid userId, string message = null)
     {
         try
         {
             var ticket = await _unitOfWork.Tickets.GetByIdAsync(id);
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return Result<TicketDto>.Failure("User not found");
+            }
             if (ticket == null)
             {
                 return Result<TicketDto>.Failure("Ticket not found");
@@ -197,157 +317,119 @@ public class TicketService : ITicketService
             {
                 if (status.Equals("accept"))
                 {
-                    ticket.Status = TicketStatus.Closed;
+                    ticket.Status = TicketStatus.Completed;
                 }
                 else
                 {
+                    if (ticket.Status.Equals(TicketStatus.Returned))
+                    {
+                        return Result<TicketDto>.Failure("The returned tickets can not be rejected");
+                    }
                     ticket.Status = TicketStatus.Rejected;
                 }
 
+                await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+                {
+                    UserId = user.Id,
+                    TicketId = ticket.Id,
+                    StageBeforeChange = ticket.Stage,
+                    StageAfterChange = Stage.NoStage
+                });
+                if (ticket.Stage.Equals(Stage.Stage1))
+                {
+                    await _unitOfWork.TicketMessage.AddAsync(new TicketMessage
+                    {
+                        UserId = user.Id,
+                        TicketId = ticket.Id,
+                        StageAtTimeOfMessage = ticket.Stage,
+                        Content = message,
+                        IsVisibleToClient = true
+                    });
+                }
+                else
+                {
+                    await _unitOfWork.TicketMessage.AddAsync(new TicketMessage
+                    {
+                        UserId = user.Id,
+                        TicketId = ticket.Id,
+                        StageAtTimeOfMessage = ticket.Stage,
+                        Content = message
+                    });
+                }
                 ticket.Stage = Stage.NoStage;
-                ticket.Message = message;
             }
             else
             {
                 if (ticket.Stage.Equals(Stage.Stage1))
                 {
-                    ticket.Status = TicketStatus.InProgress; // Explicitly cast the status to TicketStatus
+                    await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+                    {
+                        UserId = user.Id,
+                        TicketId = ticket.Id,
+                        StageBeforeChange = ticket.Stage,
+                        StageAfterChange = Stage.Stage2
+                    });
+                    await _unitOfWork.TicketMessage.AddAsync(new TicketMessage
+                    {
+                        UserId = user.Id,
+                        TicketId = ticket.Id,
+                        StageAtTimeOfMessage = ticket.Stage,
+                        Content = message
+                    });
+
+                    if (ticket.Status.Equals(TicketStatus.Returned))
+                    {
+                        ticket.Status = TicketStatus.Returned; // Explicitly cast the status to TicketStatus 
+                    }
+                    else
+                    {
+                        ticket.Status = TicketStatus.InProgress;
+                    }
                     ticket.Stage = Stage.Stage2; // Explicitly cast the stage to Stage 
                 }
                 else
                 {
-                    ticket.Status = TicketStatus.Closed;
-                    ticket.Stage = Stage.NoStage;
-                    ticket.Message = message;
+                    if (status.Equals("returned"))
+                    {
+                        await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+                        {
+                            UserId = user.Id,
+                            TicketId = ticket.Id,
+                            StageBeforeChange = ticket.Stage,
+                            StageAfterChange = Stage.Stage1
+                        });
+                        await _unitOfWork.TicketMessage.AddAsync(new TicketMessage
+                        {
+                            UserId = user.Id,
+                            TicketId = ticket.Id,
+                            StageAtTimeOfMessage = ticket.Stage,
+                            Content = message
+                        });
+                        ticket.Status = TicketStatus.Returned;
+                        ticket.Stage = Stage.Stage1;
+                    }
+                    else
+                    {
+                        await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+                        {
+                            UserId = user.Id,
+                            TicketId = ticket.Id,
+                            StageBeforeChange = ticket.Stage,
+                            StageAfterChange = Stage.NoStage
+                        });
+                        await _unitOfWork.TicketMessage.AddAsync(new TicketMessage
+                        {
+                            UserId = user.Id,
+                            TicketId = ticket.Id,
+                            StageAtTimeOfMessage = ticket.Stage,
+                            Content = message
+                        });
+                        ticket.Status = TicketStatus.Completed;
+                        ticket.Stage = Stage.NoStage;
+                    }
                 }
             }
 
-            ticket.UpdatedAt = DateTime.Now;
-            _unitOfWork.Tickets.Update(ticket);
-            await _unitOfWork.CompleteAsync();
-            return Result<TicketDto>.Success(_mapper.Map<TicketDto>(ticket));
-        }
-        catch (Exception ex)
-        {
-            return Result<TicketDto>.Failure(ex.Message);
-        }
-    }
-
-    public async Task<Result<TicketDto>> UpdateTicketStatusWithAutoStageAsync(Guid id, int status, bool isFinished)
-    {
-        try
-        {
-            var ticket = await _unitOfWork.Tickets.GetByIdAsync(id);
-            if (ticket == null)
-            {
-                return Result<TicketDto>.Failure("Ticket not found");
-            }
-
-            // Check if the status value is valid
-            if (!Enum.IsDefined(typeof(TicketStatus), status))
-            {
-                return Result<TicketDto>.Failure("Invalid status value");
-            }
-            if (ticket.Stage.Equals(Stage.Stage1))
-            {
-                ticket.Status = (TicketStatus)status; // Explicitly cast the status to TicketStatus
-                ticket.Stage = Stage.Stage2; // Explicitly cast the stage to Stage
-
-            }
-            else if (ticket.Stage.Equals(Stage.Stage2))
-            {
-                if (isFinished)
-                {
-                    ticket.Status = TicketStatus.Closed;
-                    ticket.Stage = Stage.NoStage; // Explicitly cast the stage to Stage
-
-                }
-                else
-                {
-                    ticket.Status = (TicketStatus)status; // Explicitly cast the status to TicketStatus
-                    ticket.Stage = Stage.Stage2; // Explicitly cast the stage to Stage
-                }
-            }
-            else
-            {
-                return Result<TicketDto>.Failure("Ticket is already closed");
-            }
-
-            ticket.UpdatedAt = DateTime.Now;
-            _unitOfWork.Tickets.Update(ticket);
-            await _unitOfWork.CompleteAsync();
-            return Result<TicketDto>.Success(_mapper.Map<TicketDto>(ticket));
-        }
-        catch (Exception ex)
-        {
-            return Result<TicketDto>.Failure(ex.Message);
-        }
-    }
-    // update ticket status
-    public async Task<Result<TicketDto>> UpdateTicketStatusAsync(Guid id, int status)
-    {
-        try
-        {
-            var ticket = await _unitOfWork.Tickets.GetByIdAsync(id);
-            if (ticket == null)
-            {
-                return Result<TicketDto>.Failure("Ticket not found");
-            }
-
-            // Check if the status value is valid
-            if (!Enum.IsDefined(typeof(TicketStatus), status))
-            {
-                return Result<TicketDto>.Failure("Invalid status value");
-            }
-
-            ticket.Status = (TicketStatus)status; // Explicitly cast the status to TicketStatus
-            ticket.UpdatedAt = DateTime.Now;
-            _unitOfWork.Tickets.Update(ticket);
-            await _unitOfWork.CompleteAsync();
-            return Result<TicketDto>.Success(_mapper.Map<TicketDto>(ticket));
-        }
-        catch (Exception ex)
-        {
-            return Result<TicketDto>.Failure(ex.Message);
-        }
-    }
-    // update ticket stage
-    public async Task<Result<TicketDto>> UpdateTicketStageAsync(Guid id, int stage)
-    {
-        try
-        {
-            var ticket = await _unitOfWork.Tickets.GetByIdAsync(id);
-            if (ticket == null)
-            {
-                return Result<TicketDto>.Failure("Ticket not found");
-            }
-            // Check if the stage value is valid
-            if (!Enum.IsDefined(typeof(Stage), stage))
-            {
-                return Result<TicketDto>.Failure("Invalid stage value");
-            }
-            ticket.Stage = (Stage)stage; // Explicitly cast the stage to Stage
-            ticket.UpdatedAt = DateTime.Now;
-            _unitOfWork.Tickets.Update(ticket);
-            await _unitOfWork.CompleteAsync();
-            return Result<TicketDto>.Success(_mapper.Map<TicketDto>(ticket));
-        }
-        catch (Exception ex)
-        {
-            return Result<TicketDto>.Failure(ex.Message);
-        }
-    }
-    // update ticket message
-    public async Task<Result<TicketDto>> UpdateTicketMessageAsync(Guid id, string message)
-    {
-        try
-        {
-            var ticket = await _unitOfWork.Tickets.GetByIdAsync(id);
-            if (ticket == null)
-            {
-                return Result<TicketDto>.Failure("Ticket not found");
-            }
-            ticket.Message = message;
             ticket.UpdatedAt = DateTime.Now;
             _unitOfWork.Tickets.Update(ticket);
             await _unitOfWork.CompleteAsync();

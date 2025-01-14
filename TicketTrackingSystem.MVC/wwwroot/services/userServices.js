@@ -45,6 +45,9 @@ export const removeRoleFromUserAsync = (userId, roleId) =>
 
 export const deleteUserAsync = (userId) =>
     userServiceProxy.deleteuserasync(userId);
+
+export const deleteUserCascadeAsync = (userId) =>
+    userServiceProxy.deleteusercascadeasync(userId);
 export const updateUserAsync = (updateUserDto) =>
     userServiceProxy.updateuserasync(updateUserDto);
 export const getUserByIdasync = (userId) =>

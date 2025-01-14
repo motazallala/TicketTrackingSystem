@@ -4,9 +4,11 @@ namespace TicketTrackingSystem.Core.Model.Enum;
 
 public enum TicketStatus
 {
-    New,
+    Pending,
     [Description("In Progress")]
     InProgress,
-    Closed,
+    Completed,
     Rejected,
+    Returned,
+    Assigned,
 }

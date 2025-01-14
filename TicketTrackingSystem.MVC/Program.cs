@@ -47,8 +47,6 @@ builder.Services.AddAuthentication().AddCookie("Identity.Application", options =
 
 builder.Services.AddCustomServices();
 
-
-
 //////////////////////////////////////////
 
 
@@ -78,7 +76,7 @@ app.UseSession();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-//app.UseAuthentication();
+app.UseAuthentication();
 app.UseAuthorization();
 //app.Use(async (context, next) =>
 //{

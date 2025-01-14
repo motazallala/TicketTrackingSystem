@@ -266,6 +266,29 @@ public class ProjectService : IProjectService
         var htmlString = new System.Text.StringBuilder();
         foreach (var item in stage)
         {
+            if (item.Text == "NoStage")
+            {
+                continue;
+            }
+            htmlString.Append($"<option value='{item.Value}'>{item.Text}</option>");
+        }
+        return htmlString.ToString();
+    }
+    public string GetStageDropdown(string memberType)
+    {
+        var stage = Enum.GetValues(typeof(Stage)).Cast<Stage>().Select(v => new SelectListItem
+        {
+            Value = ((int)v).ToString(),
+            Text = v.ToString()
+        }).ToList();
+
+        var htmlString = new System.Text.StringBuilder();
+        foreach (var item in stage)
+        {
+            if (memberType == "Member" && item.Text == "NoStage")
+            {
+                continue;
+            }
             htmlString.Append($"<option value='{item.Value}'>{item.Text}</option>");
         }
         return htmlString.ToString();

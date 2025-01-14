@@ -6,7 +6,6 @@ public class TicketDto
     public string Description { get; set; }
     public DateTime CreatedAt { get; set; }
     public string Status { get; set; }
-    public string? Message { get; set; }
 
 }
 public class CreateTicketDto
@@ -15,5 +14,4 @@ public class CreateTicketDto
     public Guid ProjectId { get; set; }
     public string Title { get; set; }
     public string Description { get; set; }
-
 }

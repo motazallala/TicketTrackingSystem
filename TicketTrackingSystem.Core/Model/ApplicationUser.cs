@@ -13,5 +13,7 @@ public class ApplicationUser : IdentityUser<Guid>
     public virtual ICollection<Ticket> Tickets { get; set; }
     public virtual ICollection<ProjectMember> ProjectMembers { get; set; }
     public virtual ICollection<UserRole> Roles { get; set; }
+    public virtual ICollection<TicketHistory> TicketHistories { get; set; }
+    public virtual ICollection<TicketMessage> TicketMessages { get; set; }
 
 }

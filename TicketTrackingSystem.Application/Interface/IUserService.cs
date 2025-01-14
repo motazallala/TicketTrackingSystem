@@ -19,4 +19,5 @@ public interface IUserService
     Task<Result<string>> UpdateUserAsync(UpdateUserDto userDto);
     Task<Result<DataTablesResponse<UserDto>>> GetProjectMembersAsync(DataTablesRequest request, bool isMember, Guid projectId);
     Task<Result<string>> GetUserStageFromProjectMemberAsync(Guid userId, Guid projectId);
+    Task<Result<string>> DeleteUserCascadeAsync(string userId);
 }

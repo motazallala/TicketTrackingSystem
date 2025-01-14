@@ -125,4 +125,5 @@ public interface IProjectService
     /// If the operation fails, an empty string is returned.
     /// </returns>
     string GetStageDropdown();
+    string GetStageDropdown(string memberType);
 }

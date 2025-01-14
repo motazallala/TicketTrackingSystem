@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TicketTrackingSystem.DAL.Implementation;
 
@@ -11,9 +12,11 @@ using TicketTrackingSystem.DAL.Implementation;
 namespace TicketTrackingSystem.DAL.Migrations
 {
     [DbContext(typeof(TicketTrackingSystemDbContext))]
-    partial class TicketTrackingSystemDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250105084307_AddTicketHistory")]
+    partial class AddTicketHistory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -198,7 +201,7 @@ namespace TicketTrackingSystem.DAL.Migrations
                         {
                             Id = new Guid("d4d6e58f-8f94-4e8c-93c7-d048e24e2639"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e0ae3d16-211c-4e4c-ad39-8ef7abd414c6",
+                            ConcurrencyStamp = "af140bb3-76ad-4ace-961b-f9903dc81f79",
                             Email = "motaz@example.com",
                             EmailConfirmed = true,
                             FirstName = "Motaz",
@@ -206,9 +209,9 @@ namespace TicketTrackingSystem.DAL.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "MOTAZ@EXAMPLE.COM",
                             NormalizedUserName = "MOTAZALLALA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEC4rbB0kJErTL3qYgb0iwMKNWlAEf7zQ+1erCC4sPt9DgIjd7tpn8InB0xFP5aung==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPjeF8zd70p3b4KfhPjLZJcZrs95SFMHiWaA0ZFY9aDcWMMSgoFeAp/LfIgJwkHBSw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "92644de3-404d-4242-92c1-7355e2c51625",
+                            SecurityStamp = "c2b7c6ff-daaf-49c8-b795-48d25c4449d6",
                             TwoFactorEnabled = false,
                             UserName = "motazallala",
                             UserType = 1
@@ -217,7 +220,7 @@ namespace TicketTrackingSystem.DAL.Migrations
                         {
                             Id = new Guid("3a4c64d2-f842-4ac1-9809-4f3ae828b66e"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "afac6002-11f1-481d-981d-9dc635da3380",
+                            ConcurrencyStamp = "f903371f-0e8c-4c7c-976a-b5be6f8dc1f4",
                             Email = "sami@example.com",
                             EmailConfirmed = true,
                             FirstName = "Sami",
@@ -225,9 +228,9 @@ namespace TicketTrackingSystem.DAL.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "SAMI@EXAMPLE.COM",
                             NormalizedUserName = "SAMISUBARNA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHVywKMgCNV8f8S2/4Y2z2IvNhzd261AQzBshNoB7HZePOamkQo3GhqX1LnI+Xb1JQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFyNGWk7VVx49OV+b0mRdIjCULYCPyNnOEO/V7bhFMb1KFjI/cpi2julWOSPF5UffQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "db127288-dde4-4683-85b8-19be8bab9047",
+                            SecurityStamp = "9da80b12-5241-4f54-93de-b501759f4c0f",
                             TwoFactorEnabled = false,
                             UserName = "samisubarna",
                             UserType = 0
@@ -236,7 +239,7 @@ namespace TicketTrackingSystem.DAL.Migrations
                         {
                             Id = new Guid("9229f7aa-5b2f-4b72-bdb3-6f786a0c62be"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9dcfdbf9-3738-4b87-9fbb-ddc146f48c1e",
+                            ConcurrencyStamp = "8e4df19c-d334-4723-8131-d694829c899b",
                             Email = "samiBA@example.com",
                             EmailConfirmed = true,
                             FirstName = "Sami",
@@ -244,9 +247,9 @@ namespace TicketTrackingSystem.DAL.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "SAMIBA@EXAMPLE.COM",
                             NormalizedUserName = "SAMISUBARNABA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIPFOsF0Or0ZCZHfQA71ItVp5TTgd8glf5e4m/lXgR1hC5oc078XyFmd5P8Ne17Hag==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEO09/sOCXg5RKqcVmKpvKlqzbqLUUcZfBJv6gk67KBLMFzw7iVHN7f7aetug5r8PCA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "d13b2efc-6065-471d-a0f4-3a0d69ff591f",
+                            SecurityStamp = "3a37353c-4b83-4592-be42-95fe26cfa507",
                             TwoFactorEnabled = false,
                             UserName = "samisubarnaBA",
                             UserType = 1
@@ -255,7 +258,7 @@ namespace TicketTrackingSystem.DAL.Migrations
                         {
                             Id = new Guid("73a03b91-0b28-4838-9d48-c30b7ace75a0"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "2c4ecce3-bd5c-40b4-bbf9-bd25fad0de98",
+                            ConcurrencyStamp = "7642f153-1586-456b-9c74-cc4aa6981933",
                             Email = "samiDD@example.com",
                             EmailConfirmed = true,
                             FirstName = "Sami",
@@ -263,9 +266,9 @@ namespace TicketTrackingSystem.DAL.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "SAMIDD@EXAMPLE.COM",
                             NormalizedUserName = "SAMISUBARNADD",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDyGSAjpeE0iVC7OWi2iZJSbTTuWxBWYR7EKe8BoLas3cMMFuf0A8sbvsZ7PuGG7aQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMlZio2fFQLiALjLrTprzmCi+Wm6XkBssXENR4zNrvg6llQvSE5vqtWUT2SLZxLeTw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "5642fbd8-9718-4448-9df5-7c717f1573cc",
+                            SecurityStamp = "fc33f6e9-5c6b-484d-b42d-5abeaea015bd",
                             TwoFactorEnabled = false,
                             UserName = "samisubarnaDD",
                             UserType = 1
@@ -293,7 +296,7 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Department", (string)null);
+                    b.ToTable("Department");
                 });
 
             modelBuilder.Entity("TicketTrackingSystem.Core.Model.Permission", b =>
@@ -317,7 +320,7 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.HasIndex("ParentId");
 
-                    b.ToTable("Permission", (string)null);
+                    b.ToTable("Permission");
 
                     b.HasData(
                         new
@@ -562,7 +565,7 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Project", (string)null);
+                    b.ToTable("Project");
                 });
 
             modelBuilder.Entity("TicketTrackingSystem.Core.Model.ProjectMember", b =>
@@ -583,7 +586,7 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ProjectMember", (string)null);
+                    b.ToTable("ProjectMember");
                 });
 
             modelBuilder.Entity("TicketTrackingSystem.Core.Model.Role", b =>
@@ -623,6 +626,27 @@ namespace TicketTrackingSystem.DAL.Migrations
                             Name = "Admin",
                             NormalizedName = "ADMIN",
                             isDeleted = false
+                        },
+                        new
+                        {
+                            Id = new Guid("e143ef8a-95c2-4359-b1b6-7fde456b771f"),
+                            Name = "BusinessAnalyses",
+                            NormalizedName = "BUSINESSANAlYSES",
+                            isDeleted = false
+                        },
+                        new
+                        {
+                            Id = new Guid("deb2a077-7a07-49f4-bdda-3c7f95061d72"),
+                            Name = "DevelopmentDepartment",
+                            NormalizedName = "DEVElOPMENTDEPARTMENT",
+                            isDeleted = false
+                        },
+                        new
+                        {
+                            Id = new Guid("a1236e5d-42f3-4987-8cbf-6a2bca9f01a4"),
+                            Name = "User",
+                            NormalizedName = "USER",
+                            isDeleted = false
                         });
                 });
 
@@ -638,7 +662,7 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.HasIndex("PermissionId");
 
-                    b.ToTable("RolePermission", (string)null);
+                    b.ToTable("RolePermission");
 
                     b.HasData(
                         new
@@ -780,6 +804,16 @@ namespace TicketTrackingSystem.DAL.Migrations
                         {
                             RoleId = new Guid("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"),
                             PermissionId = new Guid("1a12f6f4-88ff-4ab6-9e44-013cbf5c1964")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("e143ef8a-95c2-4359-b1b6-7fde456b771f"),
+                            PermissionId = new Guid("d19358c8-5ce7-4c13-8b37-ebfd676e8eb4")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("a1236e5d-42f3-4987-8cbf-6a2bca9f01a4"),
+                            PermissionId = new Guid("80418a92-7e17-4b3d-880a-42bf0df503cb")
                         });
                 });
 
@@ -826,7 +860,7 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("Ticket", (string)null);
+                    b.ToTable("Ticket");
                 });
 
             modelBuilder.Entity("TicketTrackingSystem.Core.Model.TicketHistory", b =>
@@ -841,46 +875,13 @@ namespace TicketTrackingSystem.DAL.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int>("StageAfterChange")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsVisibleToClient")
+                        .HasColumnType("bit");
 
-                    b.Property<int>("StageBeforeChange")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("TicketId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TicketId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("TicketHistory", (string)null);
-                });
-
-            modelBuilder.Entity("TicketTrackingSystem.Core.Model.TicketMessage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Content")
+                    b.Property<string>("Message")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsVisibleToClient")
-                        .HasColumnType("bit");
 
                     b.Property<int>("StageAtTimeOfMessage")
                         .HasColumnType("int");
@@ -897,7 +898,7 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TicketMessage", (string)null);
+                    b.ToTable("TicketHistory");
                 });
 
             modelBuilder.Entity("TicketTrackingSystem.Core.Model.UserRole", b =>
@@ -919,6 +920,21 @@ namespace TicketTrackingSystem.DAL.Migrations
                         {
                             UserId = new Guid("d4d6e58f-8f94-4e8c-93c7-d048e24e2639"),
                             RoleId = new Guid("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57")
+                        },
+                        new
+                        {
+                            UserId = new Guid("3a4c64d2-f842-4ac1-9809-4f3ae828b66e"),
+                            RoleId = new Guid("a1236e5d-42f3-4987-8cbf-6a2bca9f01a4")
+                        },
+                        new
+                        {
+                            UserId = new Guid("9229f7aa-5b2f-4b72-bdb3-6f786a0c62be"),
+                            RoleId = new Guid("e143ef8a-95c2-4359-b1b6-7fde456b771f")
+                        },
+                        new
+                        {
+                            UserId = new Guid("73a03b91-0b28-4838-9d48-c30b7ace75a0"),
+                            RoleId = new Guid("deb2a077-7a07-49f4-bdda-3c7f95061d72")
                         });
                 });
 
@@ -1053,25 +1069,6 @@ namespace TicketTrackingSystem.DAL.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TicketTrackingSystem.Core.Model.TicketMessage", b =>
-                {
-                    b.HasOne("TicketTrackingSystem.Core.Model.Ticket", "Ticket")
-                        .WithMany("TicketMessages")
-                        .HasForeignKey("TicketId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("TicketTrackingSystem.Core.Model.ApplicationUser", "User")
-                        .WithMany("TicketMessages")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Ticket");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("TicketTrackingSystem.Core.Model.UserRole", b =>
                 {
                     b.HasOne("TicketTrackingSystem.Core.Model.Role", "Role")
@@ -1098,8 +1095,6 @@ namespace TicketTrackingSystem.DAL.Migrations
                     b.Navigation("Roles");
 
                     b.Navigation("TicketHistories");
-
-                    b.Navigation("TicketMessages");
 
                     b.Navigation("Tickets");
                 });
@@ -1133,8 +1128,6 @@ namespace TicketTrackingSystem.DAL.Migrations
             modelBuilder.Entity("TicketTrackingSystem.Core.Model.Ticket", b =>
                 {
                     b.Navigation("TicketHistories");
-
-                    b.Navigation("TicketMessages");
                 });
 #pragma warning restore 612, 618
         }

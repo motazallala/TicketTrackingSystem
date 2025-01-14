@@ -20,6 +20,10 @@ public class UnitOfWork : IUnitOfWork
 
     public IRoleRepository Roles { get; private set; }
 
+    public ITicketHistoryRepository TicketHistory { get; private set; }
+
+    public ITicketMessageRepository TicketMessage { get; private set; }
+
     private readonly TicketTrackingSystemDbContext _context;
     public UnitOfWork(TicketTrackingSystemDbContext context)
     {
@@ -32,6 +36,8 @@ public class UnitOfWork : IUnitOfWork
         RolesPermissions = new RolePermissionRepository(_context);
         Permissions = new PermissionRepository(_context);
         Roles = new RoleRepository(_context);
+        TicketHistory = new TicketHistoryRepository(_context);
+        TicketMessage = new TicketMessageRepository(_context);
     }
 
     public int Complete()
