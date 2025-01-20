@@ -43,6 +43,11 @@ public interface ITicketService
 
     Task<Result<TicketDto>> UpdateTicketWithAutoStageAsync(Guid id, string status, bool isFinished, Guid userId, string message = null);
     Task<Result<DataTablesResponse<TicketDto>>> GetAllTicketForMemberPaginatedAsync(DataTablesRequest request, Guid projectId, Guid userId, bool reserved);
-    Task<Result<TicketDto>> AssignTicketToUserAsync(Guid ticketId, Guid userId);
+    Task<Result<TicketDto>> RemoveTicketFromUserAsync(Guid ticketId, Guid userId);
     string GetTicketStatusDropdown();
+    Task<string> GetAllFreeMembersDropdownAsync(Guid projectId, Guid userId);
+    Task<Result<TicketDto>> AssignTicketToUserAsync(Guid ticketId, Guid userId, DateTime estimationTime);
+    Task<Result<bool>> CheckEstimatedCompletionDateAsync(Guid ticketId);
+    Task<Result<bool>> SetEstimatedCompletionDateForReassignTicketAsync(Guid ticketId, Guid userId, DateTime estimationTime);
+    Task<Result<TicketDto>> ReAssignTicketAsync(Guid ticketId, Guid userId);
 }

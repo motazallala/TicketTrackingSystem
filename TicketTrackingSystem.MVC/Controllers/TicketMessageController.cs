@@ -79,6 +79,88 @@ public class TicketMessageController : Controller
                     response.Data = result.Value;
                     break;
                 }
+
+            case "getallnotseenmessageforticketasync":
+                {
+                    if (string.IsNullOrEmpty(parameters[0]?.ToString()))
+                    {
+                        response.IsSuccess = false;
+                        response.SetError(new ErrorMessage
+                        {
+                            Code = HttpStatusCode.BadRequest,
+                            Description = "Invalid parameters."
+                        });
+                        break;
+                    }
+                    var ticketId = Guid.Parse(parameters[0].ToString());
+                    if (!User.Identity.IsAuthenticated)
+                    {
+                        response.IsSuccess = false;
+                        response.SetError(new ErrorMessage
+                        {
+                            Code = HttpStatusCode.Unauthorized,
+                            Description = "You are not authenticated."
+                        });
+                        break;
+                    }
+                    var user = await _userService.GetUserByClaim(User);
+                    var result = await _ticketMessageService.GetAllNotSeenMessageForTicketAsync(ticketId, user.Id);
+                    if (!result.IsSuccess)
+                    {
+                        response.IsSuccess = false;
+                        response.SetError(new ErrorMessage
+                        {
+                            Code = HttpStatusCode.BadRequest,
+                            Description = result.ErrorMessage
+                        });
+                        break;
+                    }
+                    response.IsSuccess = true;
+                    response.Data = result.Value;
+                    break;
+                }
+
+            case "makemessageseenasync":
+                {
+                    if (string.IsNullOrEmpty(parameters[0]?.ToString()))
+                    {
+                        response.IsSuccess = false;
+                        response.SetError(new ErrorMessage
+                        {
+                            Code = HttpStatusCode.BadRequest,
+                            Description = "Invalid parameters."
+                        });
+                        break;
+                    }
+                    var messageId = Guid.Parse(parameters[0].ToString());
+                    if (!User.Identity.IsAuthenticated)
+                    {
+                        response.IsSuccess = false;
+                        response.SetError(new ErrorMessage
+                        {
+                            Code = HttpStatusCode.Unauthorized,
+                            Description = "You are not authenticated."
+                        });
+                        break;
+                    }
+                    var user = await _userService.GetUserByClaim(User);
+                    var result = await _ticketMessageService.MakeMessageSeenAsync(messageId, user.Id);
+                    if (!result.IsSuccess)
+                    {
+                        response.IsSuccess = false;
+                        response.SetError(new ErrorMessage
+                        {
+                            Code = HttpStatusCode.BadRequest,
+                            Description = result.ErrorMessage
+                        });
+                        break;
+                    }
+                    response.IsSuccess = true;
+                    response.Data = result.Value;
+                    break;
+
+                }
+
             default:
                 {
                     response.IsSuccess = false;

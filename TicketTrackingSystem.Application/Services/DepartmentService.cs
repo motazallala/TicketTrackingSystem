@@ -130,10 +130,6 @@ public class DepartmentService : IDepartmentService
         }
 
     }
-    public async Task<bool> GetDepartmentAsync()
-    {
-        throw new NotImplementedException();
-    }
     public async Task<Result<string>> GetAllDepartmentsAsHtmlAsync()
     {
 

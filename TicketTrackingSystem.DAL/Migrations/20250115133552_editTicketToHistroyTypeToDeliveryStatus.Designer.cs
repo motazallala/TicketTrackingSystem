@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TicketTrackingSystem.DAL.Implementation;
 
@@ -11,9 +12,11 @@ using TicketTrackingSystem.DAL.Implementation;
 namespace TicketTrackingSystem.DAL.Migrations
 {
     [DbContext(typeof(TicketTrackingSystemDbContext))]
-    partial class TicketTrackingSystemDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250115133552_editTicketToHistroyTypeToDeliveryStatus")]
+    partial class editTicketToHistroyTypeToDeliveryStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

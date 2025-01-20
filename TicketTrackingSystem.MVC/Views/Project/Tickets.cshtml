@@ -151,7 +151,10 @@
             if (canView)
             {
                 <script type="module" src="~/view/project/tickets/ticketTable.js"></script>
-                <script type="module" src="~/view/project/tickets/membertickettable/membertickettable.js"></script>
+                if (user.UserType.Equals(UserType.Member))
+                {
+                    <script type="module" src="~/view/project/tickets/membertickettable/memberTicketTable.js"></script>
+                }
 
             }
             if (canAdd)
@@ -164,8 +167,11 @@
                 <script type="module" src="~/view/project/tickets/editTicket.js"></script>
                 if (user.UserType.Equals(UserType.Member))
                 {
+
                     <script type="module" src="~/view/project/tickets/membertickettable/editmemberticket.js"></script>
                     <script type="module" src="~/view/project/tickets/membertickettable/assignmemberticket.js"></script>
+                    <script type="module" src="~/view/project/tickets/membertickettable/removeAssignMemberTicket.js"></script>
+                    <script type="module" src="~/view/project/tickets/membertickettable/reAssignMemberTicket.js"></script>
                 }
             }
             if (canDelete)

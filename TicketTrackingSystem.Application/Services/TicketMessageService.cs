@@ -99,4 +99,75 @@ public class TicketMessageService : ITicketMessageService
         }
 
     }
+
+
+
+    public async Task<Result<int>> GetAllNotSeenMessageForTicketAsync(Guid ticketId, Guid userId)
+    {
+        try
+        {
+            var ticket = await _unitOfWork.Tickets.GetByIdAsync(ticketId);
+            var member = await _unitOfWork.ProjectMembers.GetAllAsQueryable().AsNoTracking().Include(p => p.User).FirstOrDefaultAsync(p => p.UserId == userId);
+            if (member == null)
+            {
+                return Result<int>.Failure("Member not found");
+            }
+            if (ticket == null)
+            {
+                return Result<int>.Failure("Ticket not found");
+            }
+            var query = _unitOfWork.TicketMessage.GetAllAsQueryable().AsNoTracking().Where(p => p.TicketId == ticketId);
+
+            //message for client
+            if (member.User.UserType.Equals(UserType.Client))
+            {
+                query = query.Where(p => (p.StageAtTimeOfMessage.Equals(Stage.Stage1) || p.StageAtTimeOfMessage.Equals(Stage.NoStage)) && p.IsVisibleToClient);
+            }
+            // message for member on stage 2
+            else if (member.User.UserType.Equals(UserType.Member) && member.Stage.Equals(Stage.Stage2))
+            {
+                query = query.Where(p => p.StageAtTimeOfMessage.Equals(Stage.Stage2) || p.StageAtTimeOfMessage.Equals(Stage.Stage1) && !p.IsVisibleToClient);
+            }
+            // All Messages for member on stage 1 and user with no stage
+            else if (member.User.UserType.Equals(UserType.Member) && member.Stage.Equals(Stage.Stage1) || member.Stage.Equals(Stage.NoStage))
+            {
+                // this is for Future if there any change on message for member on stage 1
+                query = query;
+            }
+            // otherwise the user is not a member or client
+            else
+            {
+                return Result<int>.Failure("User Is Not A Member Or Client");
+            }
+            var messages = await query.Where(p => p.UserId != member.UserId && !p.IsSeen).CountAsync();
+            return Result<int>.Success(messages);
+        }
+        catch (Exception ex)
+        {
+            return Result<int>.Failure($"Something went wrong : {ex.Message}");
+        }
+    }
+
+    public async Task<Result<bool>> MakeMessageSeenAsync(Guid messageId, Guid userId)
+    {
+        try
+        {
+            var message = await _unitOfWork.TicketMessage.GetByIdAsync(messageId);
+            if (message == null)
+            {
+                return Result<bool>.Failure("Message not found");
+            }
+            if (message.UserId != userId)
+            {
+                message.IsSeen = true;
+                _unitOfWork.TicketMessage.Update(message);
+                await _unitOfWork.CompleteAsync();
+            }
+            return Result<bool>.Success(true);
+        }
+        catch (Exception ex)
+        {
+            return Result<bool>.Failure($"Something went wrong : {ex.Message}");
+        }
+    }
 }

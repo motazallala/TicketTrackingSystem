@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
+using TicketTrackingSystem.Application.Hangfire.Services;
 using TicketTrackingSystem.Application.Interface;
 using TicketTrackingSystem.Application.Mappers;
 using TicketTrackingSystem.Application.Services;
@@ -27,6 +28,7 @@ public static class ServiceExtensions
         });
         var mapper = config.CreateMapper();
         Services.AddSingleton(mapper);
+        Services.AddScoped<ITicketJobsService, TicketJobsService>();
         return Services;
     }
 }

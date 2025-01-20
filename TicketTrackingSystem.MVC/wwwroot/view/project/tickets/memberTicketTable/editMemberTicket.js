@@ -1,20 +1,11 @@
 ﻿import { memberTicketTable } from './memberTicketTable.js';
 import { setupModalData, showErrorModal } from '../../../../utility/dataModalUtility.js';
-import { updateTicketWithAutoStageAsync } from '../../../../services/ticketServices.js';
+import { updateTicketWithAutoStageAsync, checkEstimatedCompletionDateAsync, setEstimatedCompletionDateForReassignTicketAsync } from '../../../../services/ticketServices.js';
 
 $(document).ready(function () {
-    let inStage = $('#inStage').val() || 'All Tickets'; // Add default value
+    let inStage = $('#inStage').val() || 'All Tickets';
 
-    $(document).on('click', '.dt-edit', async function () {
-        const row = memberTicketTable.row($(this).closest('tr'));
-        if (!row) return;
-        
-        const data = row.data();
-        if (!data) {
-            showErrorModal('Could not retrieve ticket data.');
-            return;
-        }
-
+    function showEditModal(data) {
         const modalTitle = $('.modal .modal-title');
         const modalBody = $('#modelBody');
         const modalFooter = $('.modal .modal-footer');
@@ -25,25 +16,66 @@ $(document).ready(function () {
                 <p>You can describe the fix or the notes on this ticket.</p>
             </div>
             <div class="form-check form-switch" id="isFinishedContainer">
-              <input class="form-check-input" type="checkbox" role="switch" id="isFinished" name="isFinished">
-              <label class="form-check-label" for="isFinished">Are This Ticket Finished Reviewing And You Whant To Accept - Reject ?</label>
+                <input class="form-check-input" type="checkbox" role="switch" id="isFinished" name="isFinished">
+                <label class="form-check-label" for="isFinished">Is This Ticket Finished Reviewing And You Want To Accept/Reject?</label>
             </div>
             <div class="form-group" id="messageContainer">
-                <label for="message" id="messageLabel">Message :</label>
+                <label for="message" id="messageLabel">Message:</label>
                 <textarea class="form-control" id="message" name="message" style="height: 200px;"></textarea>
             </div>
         `;
-        const closeButton = `<button type="button" class="btn btn-default" onclick="$('#myModal').modal('hide')" data-dismiss="modal">Close</button>`;
+        const closeButton = `<button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>`;
         const acceptButton = `<button type="button" class="btn btn-success" id="accept">Accept</button>`;
         const rejectButton = `<button type="button" class="btn btn-danger" id="reject">Reject</button>`;
         const returnButton = `<button type="button" class="btn btn-warning" id="returnTicket" style="display: none;">Returned</button>`;
 
         setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [closeButton, acceptButton, rejectButton, returnButton]);
 
+        setupModalHandlers(data);
         populateTicketForm(data);
 
         $('#myModal').modal('show');
+    }
 
+    function showDateTimeModal(ticketId) {
+        const modalTitle = $('.modal .modal-title');
+        const modalBody = $('#modelBody');
+        const modalFooter = $('.modal .modal-footer');
+
+        const title = 'Schedule Ticket Processing';
+        const bodyContent = `
+            <div class="form-group">
+                <label for="scheduledDateTime">Select Date and Time:</label>
+                <input type="datetime-local" class="form-control" id="scheduledDateTime" name="scheduledDateTime">
+            </div>
+        `;
+
+        const closeButton = `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>`;
+        const confirmButton = `<button type="button" class="btn btn-primary" id="confirmDateTime">Confirm</button>`;
+
+        setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [closeButton, confirmButton]);
+
+        // Handle datetime confirmation
+        $('#confirmDateTime').off('click').on('click', async function () {
+            const scheduledDateTime = $('#scheduledDateTime').val();
+            if (!scheduledDateTime) {
+                showErrorModal('Please select a date and time.');
+                return;
+            }
+
+            let result = await setEstimatedCompletionDateForReassignTicketAsync(ticketId, scheduledDateTime);
+            if (result.isSuccess) {
+                $('#myModal').modal('hide');
+            }
+            else {
+                showErrorModal(result?.error?.description || 'Update failed.');
+            }
+        });
+
+        $('#myModal').modal('show');
+    }
+
+    function setupModalHandlers(data) {
         // Clear any existing event handlers
         $('#isFinished').off('change');
         $('#accept').off('click');
@@ -60,13 +92,13 @@ $(document).ready(function () {
                 if ($(this).is(':checked')) {
                     $('#accept').fadeIn().text('Accept');
                     if (data.status !== 'Returned') {
-                        $('#reject').fadeIn(); // Show Reject button
+                        $('#reject').fadeIn();
                     }
-                    $('#messageLabel').html('<strong>Message For The Client :</strong>');
+                    $('#messageLabel').html('<strong>Message For The Client:</strong>');
                 } else {
                     $('#accept').fadeIn().text('Next');
                     $('#reject').fadeOut();
-                    $('#messageLabel').html('<strong>Message For The Next Stage :</strong>');
+                    $('#messageLabel').html('<strong>Message For The Next Stage:</strong>');
                 }
             });
         } else if (inStage === 'Stage 2 Tickets') {
@@ -79,9 +111,10 @@ $(document).ready(function () {
 
         $('#isFinished').trigger('change');
 
-        // Event handlers
+        // Set up button handlers
         $('#accept').on('click', async function () {
             if (data.id) {
+                $('#myModal').modal('hide');
                 await handleUpdateTicket(data.id, 'accept');
             }
         });
@@ -97,17 +130,17 @@ $(document).ready(function () {
                 await handleUpdateTicket(data.id, 'returned');
             }
         });
-    });
+    }
 
     function gatherFormData(status) {
         return {
             ticketStatus: status,
             isFinished: $('#isFinished').is(':checked'),
-            message: $('#message').val() || ''  // Ensure message is never undefined
+            message: $('#message').val() || ''
         };
     }
 
-    async function handleUpdateTicket(ticketId, status) {
+    async function handleUpdateTicket(ticketId, status, scheduledDateTime = null) {
         try {
             const editTicketStatusDto = gatherFormData(status);
 
@@ -120,7 +153,8 @@ $(document).ready(function () {
                 ticketId,
                 editTicketStatusDto.ticketStatus,
                 editTicketStatusDto.isFinished,
-                editTicketStatusDto.message
+                editTicketStatusDto.message,
+                scheduledDateTime
             );
 
             if (updateResult && updateResult.isSuccess) {
@@ -140,16 +174,37 @@ $(document).ready(function () {
     function populateTicketForm(data) {
         if (!data) return;
 
-        // Safely set the checkbox state
         const isFinished = data.isFinished || false;
         $('#isFinished').prop('checked', isFinished);
 
-        // If there's a message field in the data, populate it
         if (data.message) {
             $('#message').val(data.message);
         }
 
-        // Trigger change event to update UI state
         $('#isFinished').trigger('change');
     }
+
+    // Main click handler for edit button
+    $(document).on('click', '.dt-edit', async function () {
+        const row = memberTicketTable.row($(this).closest('tr'));
+        if (!row) return;
+
+        const data = row.data();
+        if (!data) {
+            showErrorModal('Could not retrieve ticket data.');
+            return;
+        }
+
+        // Check ticket availability
+        const result = await checkEstimatedCompletionDateAsync(data.id);
+
+        if (result.isSuccess) {
+            if (result.data === false) {
+                showDateTimeModal(data.id);
+                return;
+            }
+        }
+
+        showEditModal(data);
+    });
 });

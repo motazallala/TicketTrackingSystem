@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TicketTrackingSystem.DAL.Implementation;
 
@@ -11,9 +12,11 @@ using TicketTrackingSystem.DAL.Implementation;
 namespace TicketTrackingSystem.DAL.Migrations
 {
     [DbContext(typeof(TicketTrackingSystemDbContext))]
-    partial class TicketTrackingSystemDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250115080737_changeSeedAndModifyTicketAndHistoryAndMessage")]
+    partial class changeSeedAndModifyTicketAndHistoryAndMessage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -198,7 +201,7 @@ namespace TicketTrackingSystem.DAL.Migrations
                         {
                             Id = new Guid("d4d6e58f-8f94-4e8c-93c7-d048e24e2639"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5312a080-0429-454a-8cba-2cc53508e322",
+                            ConcurrencyStamp = "019c87f5-a2e1-4d40-9e78-07d432654d48",
                             Email = "motaz@example.com",
                             EmailConfirmed = true,
                             FirstName = "Motaz",
@@ -206,9 +209,9 @@ namespace TicketTrackingSystem.DAL.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "MOTAZ@EXAMPLE.COM",
                             NormalizedUserName = "MOTAZALLALA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEL6fJpwruRnHddwGlZjEoVwmYu3P7K8FDgU5kSUKOxlYI7YLEidggJD0DK3ilUWfyQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECjfupPJzuoIN+9mc4dA01oGH3s+vR2u7jx40yxDLJOwgraLjPk6+nyETMGDX1IoYA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "1f2a5167-0305-4a69-8ee5-04c866225d61",
+                            SecurityStamp = "818ecdb4-2c9b-4e3f-8d11-0078a751fe41",
                             TwoFactorEnabled = false,
                             UserName = "motazallala",
                             UserType = 1
@@ -740,9 +743,6 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.Property<Guid>("CreatorId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int?>("DeliveryStatus")
-                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .IsRequired()

@@ -32,9 +32,17 @@
 export const getTicketByIdAsync = (ticketId) =>
     ticketServiceProxy.getticketbyidasync(ticketId);
 
-export const assignTicketToUserAsync = (ticketId) =>
-    ticketServiceProxy.assigntickettouserasync(ticketId);
+export const removeTicketFromUserAsync = (ticketId) =>
+    ticketServiceProxy.removeticketfromuserasync(ticketId);
 
+//export const assignTicketToUserAsync = (ticketId) =>
+//    ticketServiceProxy.assigntickettouserasync(ticketId);
+export const assignTicketToUserAsync = (ticketId, estimationTime) =>
+    ticketServiceProxy.assigntickettouserasync(ticketId, estimationTime);
+
+
+export const setEstimatedCompletionDateForReassignTicketAsync = (ticketId, estimationTime) =>
+    ticketServiceProxy.setestimatedcompletiondateforreassignticketasync(ticketId, estimationTime);
 export const updateTicketWithAutoStageAsync = (ticketId, status, isFinished, message) =>
     ticketServiceProxy.updateticketwithautostageasync(ticketId, status, isFinished, message);
 
@@ -44,5 +52,11 @@ export const addTicketAsync = (ticketDto) =>
 export const getTicketStatusDropdown = () =>
     ticketServiceProxy.getticketstatusdropdown();
 
+export const getAllFreeMembersDropdownAsync = (projectId) =>
+    ticketServiceProxy.getallfreemembersdropdownasync(projectId);
 
+export const checkEstimatedCompletionDateAsync = (ticketId) =>
+    ticketServiceProxy.checkestimatedcompletiondateasync(ticketId);
 
+export const reAssignTicketAsync = (ticketId, userId) =>
+    ticketServiceProxy.reassignticketasync(ticketId, userId);

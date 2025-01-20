@@ -16,4 +16,5 @@ public class TicketMessage : BaseEntity<Guid>
     public Stage StageAtTimeOfMessage { get; set; }
 
     public bool IsVisibleToClient { get; set; } = false;
+    public bool IsSeen { get; set; } = false;
 }

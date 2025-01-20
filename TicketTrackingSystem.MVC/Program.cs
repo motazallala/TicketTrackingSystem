@@ -1,6 +1,8 @@
+using Hangfire;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TicketTrackingSystem.Application.ExtensionMethod;
+using TicketTrackingSystem.Application.Hangfire.Services;
 using TicketTrackingSystem.Common.Model;
 using TicketTrackingSystem.Core.Model;
 using TicketTrackingSystem.DAL.Implementation;
@@ -8,6 +10,12 @@ using TicketTrackingSystem.DAL.Implementation;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 // Add services to the container.
+builder.Services.AddHangfire(config =>
+{
+    config.UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+builder.Services.AddHangfireServer();
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<TicketTrackingSystemDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -78,6 +86,12 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseHangfireDashboard("/hangfire");
+using (var scope = app.Services.CreateScope())
+{
+    var ticketJobsService = scope.ServiceProvider.GetRequiredService<ITicketJobsService>();
+    ticketJobsService.ConfigureRecurringJobs();
+}
 //app.Use(async (context, next) =>
 //{
 //    var token = context.Session.GetString("jwtToken");

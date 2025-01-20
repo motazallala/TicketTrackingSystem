@@ -1,5 +1,6 @@
 ﻿import { initializeDataTable } from '../../../utility/dataTableUtility.js';
 import { setupModalData } from '../../../utility/dataModalUtility.js';
+import { makeMessageSeenAsync } from '../../../services/ticketMessageService.js';
 
 let ticketMessageTable;
 
@@ -13,7 +14,7 @@ $(document).ready(function () {
         method: 'getallticketmessagespaginatedasync',
         columns: [
             { data: 'id', name: 'ID' },
-            { data: 'content', name: 'Message' },
+            //{ data: 'content', name: 'Message' },
             { data: 'stageAtTimeOfMessage', name: 'StageAtTimeOfMessageStageAtTimeOfMessage' },
             {
                 data: 'createdAt',
@@ -59,8 +60,17 @@ $(document).ready(function () {
     });
 
     // Row click event handler
-    ticketMessageTable.on('click', '.dt-view', function () {
+    ticketMessageTable.on('click', '.dt-view', async function () {
         let data = ticketMessageTable.row($(this).parents('tr')).data();
+        // getAllNotSeenMessageForTicketAsync and get the count of not seen messages
+        let notSeenMessageResult = await makeMessageSeenAsync(data.id);
+        try {
+            if (!notSeenMessageResult.isSuccess) 
+                showErrorModal(updateResult.error.description);
+        } catch (e) {
+            showErrorModal('There is an error that happened!');
+        }
+
         const modalTitle = $('.modal .modal-title');
         const modalBody = $('#modelBody');
         const modalFooter = $('.modal .modal-footer');

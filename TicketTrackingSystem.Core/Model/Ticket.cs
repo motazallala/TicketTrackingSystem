@@ -11,6 +11,9 @@ public class Ticket : BaseEntity<Guid>
     public TicketStatus Status { get; set; } = TicketStatus.Pending;
     public Stage Stage { get; set; } = Stage.Stage1;
     public Guid ProjectId { get; set; }
+    public Guid? AssignedToId { get; set; }
+    public virtual ApplicationUser AssignedTo { get; set; }
+    public DeliveryStatus? DeliveryStatus { get; set; }
     public virtual Project Project { get; set; }
     public Guid CreatorId { get; set; }
     public virtual ApplicationUser Creator { get; set; }

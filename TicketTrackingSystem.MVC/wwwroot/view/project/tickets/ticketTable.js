@@ -1,11 +1,11 @@
 ﻿import { initializeDataTable } from '../../../utility/dataTableUtility.js';
-import { setupModalData } from '../../../utility/dataModalUtility.js';
+import { setupModalData, showErrorModal } from '../../../utility/dataModalUtility.js';
+import { getAllNotSeenMessageForTicketAsync } from '../../../services/ticketMessageService.js';
 
 let ticketTable;
 
 $(document).ready(function () {
     let projectId = $('#projectId').val();
-
 
     ticketTable = initializeDataTable({
         tableId: '#ticketTable',
@@ -63,8 +63,22 @@ $(document).ready(function () {
     });
 
     // Row click event handler
-    ticketTable.on('click', '.dt-view', function () {
+    ticketTable.on('click', '.dt-view', async function () {
         let data = ticketTable.row($(this).parents('tr')).data();
+        // getAllNotSeenMessageForTicketAsync and get the count of not seen messages
+        let notSeenMessageResult = await getAllNotSeenMessageForTicketAsync(data.id);
+        let notSeenMessageCount = 0;
+        try {
+            if (notSeenMessageResult.isSuccess) {
+                notSeenMessageCount = notSeenMessageResult.data;
+            } else {
+                showErrorModal(updateResult.error.description);
+            }
+        } catch (e) {
+            showErrorModal('There is an error that happened!');
+        }
+
+
         const modalTitle = $('.modal .modal-title');
         const modalBody = $('#modelBody');
         const modalFooter = $('.modal .modal-footer');
@@ -99,7 +113,7 @@ $(document).ready(function () {
             </div>
         `;
         const viewButton = `<button type="button" class="btn btn-default" onclick="$('#myModal').modal('hide')" data-dismiss="modal">Close</button>`;
-        const moreDetails = `<a class="btn btn-sm btn-primary dt-view" href="/project/ticket/${data.id}/messages">View Project Users</a>`;
+        const moreDetails = `<a class="btn btn-sm btn-primary dt-view" href="/project/ticket/${data.id}/messages">View Ticket Message (${notSeenMessageCount})</a>`;
         setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [viewButton, moreDetails]);
         $('#myModal').modal('show');
     });

@@ -1,10 +1,10 @@
 ﻿import { memberTicketTable } from './memberTicketTable.js';
 import { setupModalData, showErrorModal } from '../../../../utility/dataModalUtility.js';
-import { assignTicketToUserAsync } from '../../../../services/ticketServices.js';
+import { removeTicketFromUserAsync } from '../../../../services/ticketServices.js';
 
 $(document).ready(function () {
     // Handling "Assign to Me" action (assuming `reserved` is false in this case)
-    memberTicketTable.on('click', '.dt-assign', function () {
+    memberTicketTable.on('click', '.dt-removeAssign', function () {
         let data = memberTicketTable.row($(this).parents('tr')).data(); // Get row data
 
         const modalTitle = $('.modal .modal-title');
@@ -12,40 +12,35 @@ $(document).ready(function () {
         const modalFooter = $('.modal .modal-footer');
 
         // Modal content with a note and comment field
-        const title = 'Assign Ticket to Me';
+        const title = 'Remove Assign Ticket From Me';
         const bodyContent = `
-            <div class="form-group my-1">
-                <p>Are you sure you want to assign this ticket to yourself?</p>
-            </div>
-            <div class="form-group my-1">
-                <label for="estimationTime">Estimation Time :</label>
-                <input type="datetime-local" class="form-control" id="estimationTime" name="estimationTime">
+            <div class="form-group">
+                <p>Are you sure you want to remove assign this ticket from you?</p>
             </div>
         `;
         const closeButton = `<button type="button" class="btn btn-default" onclick="$('#myModal').modal('hide')" data-dismiss="modal">Close</button>`;
-        const assignButton = `<button type="button" class="btn btn-success" id="assignTicket">Assign to Me</button>`;
+        const removeAssignButton = `<button type="button" class="btn btn-success" id="removeAssignTicket">Remove Assign From Me</button>`;
 
         // Setup modal with title, content, and buttons
-        setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [closeButton, assignButton]);
+        setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [closeButton, removeAssignButton]);
 
         // Show the modal
         $('#myModal').modal('show');
 
         // Assign button click handler
-        $('#assignTicket').on('click', async function () {
+        $('#removeAssignTicket').on('click', async function () {
 
             // Call the function to handle assignment
-            let estimationTime = $('#estimationTime').val();
-            await handleAssignTicket(data.id, estimationTime);
+            await handleRemoveAssignTicket(data.id);
         });
     });
 
     // Function to handle ticket assignment
-    async function handleAssignTicket(ticketId, estimationTime) {
+    async function handleRemoveAssignTicket(ticketId) {
         try {
             // Placeholder backend request for assigning the ticket
             // Replace this with your actual logic for assigning a ticket
-            const assignResult = await assignTicketToUserAsync(ticketId, estimationTime);
+            const assignResult = await removeTicketFromUserAsync(ticketId);
 
             if (assignResult.isSuccess) {
                 // Close the modal and reload the DataTable
