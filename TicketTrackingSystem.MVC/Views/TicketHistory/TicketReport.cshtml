@@ -1,0 +1,114 @@
+﻿@inject IPermissionService _permissionService
+@inject IUserService _userService;
+@{
+    ViewData["Title"] = "Ticket Report";
+    Dictionary<string, bool> permissionCheckResult;
+    bool canView = false;
+    bool canAdd = false;
+    bool canEdit = false;
+    bool canDelete = false;
+
+}
+@if (User.Identity.IsAuthenticated)
+{
+
+    var user = await _userService.GetUserByClaim(User);
+    var userId = user.Id;
+    permissionCheckResult = await _permissionService.HasPermissionAsync(userId, PermissionName.ViewRole.ToString()
+                                                                , PermissionName.CreateRole.ToString()
+                                                                , PermissionName.EditRole.ToString()
+                                                                , PermissionName.DeleteRole.ToString());
+    canView = permissionCheckResult[PermissionName.ViewRole.ToString()];
+    canAdd = permissionCheckResult[PermissionName.CreateRole.ToString()];
+    canEdit = permissionCheckResult[PermissionName.EditRole.ToString()];
+    canDelete = permissionCheckResult[PermissionName.DeleteRole.ToString()];
+
+    <input type="hidden" id="canView" value="@(canView ? "true" : "false")" />
+    <input type="hidden" id="canAdd" value="@(canAdd ? "true" : "false" )" />
+    <input type="hidden" id="canEdit" value="@(canEdit ? "true" : "false")" />
+    <input type="hidden" id="canDelete" value="@(canDelete ? "true" : "false")" />
+    @if (!canView && !canAdd && !canView && !canDelete)
+    {
+        <h3>You Do <strong>NOT</strong> Have Any Permission In @ViewData["Title"] Page Contact The Admin ...</h3>
+    }
+    @if (canView)
+    {
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label>Stage Filter:</label>
+                <select id="stageFilter" class="form-select">
+                    <option value="">All Stages</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label>Delivery Status Filter:</label>
+                <select id="deliveryStatusFilter" class="form-select">
+                    <option value="">All Statuses</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col">
+                <table id="reportTable" class="table table-striped table-bordered " cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>TicketId</th>
+                            <th>Title</th>
+                            <th>DeliveryStatusFrom</th>
+                            <th>AssignedFrom</th>
+                            <th>StageFrom</th>
+                            <th>DeliveryStatusTo</th>
+                            <th>AssignedTo</th>
+                            <th>StageTo</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    }
+}
+
+<!-- Modal -->
+<div id="myModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header" id="modalHeader">
+                <h4 class="modal-title" id="modalTitle">Row information</h4>
+            </div>
+            <div class="modal-body" id="modelBody">
+            </div>
+            <div class="modal-footer" id="modal-footer-data">
+            </div>
+        </div>
+
+    </div>
+</div>
+@section Style {
+    <link href="https://cdn.datatables.net/v/bs5/dt-2.1.8/af-2.7.0/b-3.2.0/b-colvis-3.2.0/b-html5-3.2.0/datatables.min.css" rel="stylesheet">
+
+}
+@section Scripts {
+    <script src="https://cdn.datatables.net/v/bs5/dt-2.1.8/af-2.7.0/b-3.2.0/b-colvis-3.2.0/b-html5-3.2.0/datatables.min.js"></script>
+
+    @{
+        if (canView)
+        {
+            <script type="module" src="~/view/tickethistory/reportTable.js"></script>
+        }
+        if (canAdd)
+        {
+
+        }
+        if (canEdit)
+        {
+
+        }
+        if (canDelete)
+        {
+
+        }
+    }
+}

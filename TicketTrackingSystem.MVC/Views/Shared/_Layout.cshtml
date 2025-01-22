@@ -88,6 +88,12 @@
 
                         // <a class="list-group-item list-group-item-action list-group-item-light p-3" asp-controller="Ticket" asp-action="Index">Tickets</a>
                     }
+                    //need to change
+                    if (viewRole)
+                    {
+                        <a class="list-group-item list-group-item-action list-group-item-light p-3" asp-controller="TicketHistory" asp-action="TicketReport">Ticket Report</a>
+
+                    }
                 }
             </div>
         </div>

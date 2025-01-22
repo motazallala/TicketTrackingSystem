@@ -230,6 +230,30 @@ public static class ModelBuilderExtensions
                 Name = PermissionName.CreateTicket.ToString(),
                 ParentId = Guid.Parse("B6F8C089-740E-4741-8456-6F8D99E9657A")
             },
+            // Permissions for the Ticket Message page
+            new Permission
+            {
+                Id = Guid.Parse("3E353A51-E46D-446C-A385-38D8F6DDEB79"),
+                Name = PermissionName.ViewTicketMessage.ToString()
+            },
+            new Permission
+            {
+                Id = Guid.Parse("607AA269-DA9E-498C-9CE6-9CF380583542"),
+                Name = PermissionName.EditTicketMessage.ToString(),
+                ParentId = Guid.Parse("3E353A51-E46D-446C-A385-38D8F6DDEB79")
+            },
+            new Permission
+            {
+                Id = Guid.Parse("4C93EC77-B8A5-4B58-AA26-1D854E81B666"),
+                Name = PermissionName.DeleteTicketMessage.ToString(),
+                ParentId = Guid.Parse("3E353A51-E46D-446C-A385-38D8F6DDEB79")
+            },
+            new Permission
+            {
+                Id = Guid.Parse("AD7C90EB-083D-4A09-B99E-6BD25E30C5B3"),
+                Name = PermissionName.CreateTicketMessage.ToString(),
+                ParentId = Guid.Parse("3E353A51-E46D-446C-A385-38D8F6DDEB79")
+            },
 
             // Permissions for the Ticket History page
             new Permission
@@ -254,6 +278,31 @@ public static class ModelBuilderExtensions
                 Id = Guid.Parse("EC43EEFF-88C2-4C22-AD71-71BA7F2CDA44"),
                 Name = PermissionName.CreateTicketHistory.ToString(),
                 ParentId = Guid.Parse("0334A2FC-4DC3-48AF-BF24-32F35CC192D8")
+            },
+
+            // Permissions for the Ticket Report page
+            new Permission
+            {
+                Id = Guid.Parse("200A2920-D8FD-4D10-9FF9-30A6156A5879"),
+                Name = PermissionName.ViewTicketReport.ToString()
+            },
+            new Permission
+            {
+                Id = Guid.Parse("8DC4DDC3-C1E4-4E32-A1E0-508BAA89B3DB"),
+                Name = PermissionName.EditTicketReport.ToString(),
+                ParentId = Guid.Parse("200A2920-D8FD-4D10-9FF9-30A6156A5879")
+            },
+            new Permission
+            {
+                Id = Guid.Parse("6170D82B-9E6F-41DB-9BCF-C4C265BF0F37"),
+                Name = PermissionName.DeleteTicketReport.ToString(),
+                ParentId = Guid.Parse("200A2920-D8FD-4D10-9FF9-30A6156A5879")
+            },
+            new Permission
+            {
+                Id = Guid.Parse("6D774C98-7BD9-40A4-A735-2C433C1F2D03"),
+                Name = PermissionName.CreateTicketReport.ToString(),
+                ParentId = Guid.Parse("200A2920-D8FD-4D10-9FF9-30A6156A5879")
             }
         );
 

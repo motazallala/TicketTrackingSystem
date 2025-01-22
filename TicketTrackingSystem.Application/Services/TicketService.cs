@@ -52,41 +52,45 @@ public class TicketService : ITicketService
             {
                 return Result<TicketDto>.Failure("User is already assigned to another ticket");
             }
-
+            //get the last history of the ticket
+            var lastHistory = await _unitOfWork.TicketHistory.GetAllAsQueryable()
+                                                             .Where(p => p.TicketId == ticket.Id && p.HistoryType.Equals(HistoryType.Assignment))
+                                                             .OrderByDescending(p => p.Date)
+                                                             .FirstOrDefaultAsync();
             if (member.Stage.Equals(Stage.Stage1))
             {
                 if (ticket.Status.Equals(TicketStatus.Returned) && !ticket.AssignedToId.HasValue)
                 {
-                    await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
-                    {
-                        UserId = ticket.CreatorId,
-                        TicketId = ticket.Id,
-                        StageBeforeChange = ticket.Stage,
-                        StageAfterChange = Stage.Stage1,
-                        HistoryType = HistoryType.Assignment,
-                        AssignedToId = user.Id,
-                        EstimatedCompletionDate = estimationTime,
-
-
-                    });
+                    lastHistory.AssignedToId = user.Id;
+                    lastHistory.EstimatedCompletionDate = estimationTime;
                     ticket.Status = TicketStatus.Returned;
                     ticket.AssignedToId = user.Id;
                     ticket.Stage = Stage.Stage1;
+                    _unitOfWork.TicketHistory.Update(lastHistory);
                 }
                 else
                 {
-                    await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+                    if (lastHistory is null)
                     {
-                        UserId = ticket.CreatorId,
-                        TicketId = ticket.Id,
-                        StageBeforeChange = ticket.Stage,
-                        StageAfterChange = Stage.Stage1,
-                        HistoryType = HistoryType.Assignment,
-                        AssignedToId = user.Id,
-                        EstimatedCompletionDate = estimationTime,
+                        await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+                        {
+                            UserId = ticket.CreatorId,
+                            TicketId = ticket.Id,
+                            StageBeforeChange = ticket.Stage,
+                            StageAfterChange = Stage.Stage1,
+                            HistoryType = HistoryType.Assignment,
+                            AssignedToId = user.Id,
+                            EstimatedCompletionDate = estimationTime,
 
 
-                    });
+                        });
+                    }
+                    else
+                    {
+                        lastHistory.AssignedToId = user.Id;
+                        lastHistory.EstimatedCompletionDate = estimationTime;
+                        _unitOfWork.TicketHistory.Update(lastHistory);
+                    }
                     ticket.Status = TicketStatus.Assigned;
                     ticket.AssignedToId = user.Id;
                     ticket.Stage = Stage.Stage1;
@@ -95,11 +99,7 @@ public class TicketService : ITicketService
             }
             else if (member.Stage.Equals(Stage.Stage2))
             {
-                //get the last history of the ticket
-                var lastHistory = await _unitOfWork.TicketHistory.GetAllAsQueryable()
-                                                                 .Where(p => p.TicketId == ticket.Id && p.HistoryType.Equals(HistoryType.Assignment))
-                                                                 .OrderByDescending(p => p.Date)
-                                                                 .FirstOrDefaultAsync();
+
                 //make sure the last history is not null
                 if (lastHistory == null)
                 {
@@ -111,17 +111,8 @@ public class TicketService : ITicketService
                 }
                 if (ticket.Status.Equals(TicketStatus.Returned) && !ticket.AssignedToId.HasValue)
                 {
-                    //add new history to the ticket
-                    await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
-                    {
-                        UserId = lastHistory.UserId,
-                        TicketId = ticket.Id,
-                        StageBeforeChange = ticket.Stage,
-                        StageAfterChange = Stage.Stage2,
-                        HistoryType = HistoryType.Assignment,
-                        EstimatedCompletionDate = estimationTime,
-                        AssignedToId = member.UserId
-                    });
+                    lastHistory.AssignedToId = user.Id;
+                    lastHistory.EstimatedCompletionDate = estimationTime;
                     ticket.Status = TicketStatus.Returned;
                     ticket.AssignedToId = member.UserId;
                     ticket.Stage = Stage.Stage2;
@@ -130,11 +121,11 @@ public class TicketService : ITicketService
                 {
                     lastHistory.AssignedToId = member.UserId;
                     lastHistory.EstimatedCompletionDate = estimationTime;
-                    _unitOfWork.TicketHistory.Update(lastHistory);
                     ticket.Status = TicketStatus.Assigned;
                     ticket.AssignedToId = member.UserId;
                     ticket.Stage = Stage.Stage2;
                 }
+                _unitOfWork.TicketHistory.Update(lastHistory);
             }
             else
             {
@@ -142,6 +133,7 @@ public class TicketService : ITicketService
             }
 
             ticket.UpdatedAt = DateTime.UtcNow;
+            _unitOfWork.Tickets.Update(ticket);
             await _unitOfWork.CompleteAsync();
             return Result<TicketDto>.Success(_mapper.Map<TicketDto>(ticket));
         }
@@ -168,7 +160,11 @@ public class TicketService : ITicketService
         {
             return Result<TicketDto>.Failure("User is not a member of the project");
         }
-
+        //get the last history of the ticket
+        var lastHistory = await _unitOfWork.TicketHistory.GetAllAsQueryable()
+                                                         .Where(p => p.TicketId == ticket.Id && p.HistoryType.Equals(HistoryType.Assignment))
+                                                         .OrderByDescending(p => p.Date)
+                                                         .FirstOrDefaultAsync();
         if (member.Stage.Equals(Stage.Stage1))
         {
             if (ticket.Status.Equals(TicketStatus.Assigned))
@@ -189,12 +185,14 @@ public class TicketService : ITicketService
             {
                 await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
                 {
-                    UserId = ticket.CreatorId,
+                    UserId = lastHistory.UserId,
                     TicketId = ticket.Id,
                     StageBeforeChange = ticket.Stage,
                     StageAfterChange = Stage.Stage1,
                     HistoryType = HistoryType.Assignment,
+                    ParentId = lastHistory.ParentId
                 });
+                lastHistory.ParentId = null;
                 ticket.Status = TicketStatus.Returned;
                 ticket.AssignedToId = null;
                 ticket.Stage = Stage.Stage1;
@@ -203,11 +201,7 @@ public class TicketService : ITicketService
         }
         else if (member.Stage.Equals(Stage.Stage2))
         {
-            //get the last history of the ticket
-            var lastHistory = await _unitOfWork.TicketHistory.GetAllAsQueryable()
-                                                             .Where(p => p.TicketId == ticket.Id && p.HistoryType.Equals(HistoryType.Assignment))
-                                                             .OrderByDescending(p => p.Date)
-                                                             .FirstOrDefaultAsync();
+
             //make sure the last history is not null
             if (lastHistory == null)
             {
@@ -227,7 +221,9 @@ public class TicketService : ITicketService
                     StageBeforeChange = ticket.Stage,
                     StageAfterChange = Stage.Stage2,
                     HistoryType = HistoryType.Assignment,
+                    ParentId = lastHistory.ParentId
                 });
+                lastHistory.ParentId = null;
                 ticket.Status = TicketStatus.InProgress;
                 ticket.AssignedToId = null;
                 ticket.Stage = Stage.Stage2;
@@ -242,8 +238,10 @@ public class TicketService : ITicketService
                     StageBeforeChange = ticket.Stage,
                     StageAfterChange = Stage.Stage2,
                     HistoryType = HistoryType.Assignment,
+                    ParentId = lastHistory.ParentId
                 });
-                ticket.Status = TicketStatus.Assigned;
+                lastHistory.ParentId = null;
+                ticket.Status = TicketStatus.Returned;
                 ticket.AssignedToId = null;
                 ticket.Stage = Stage.Stage2;
 
@@ -255,6 +253,8 @@ public class TicketService : ITicketService
         }
 
         ticket.UpdatedAt = DateTime.UtcNow;
+        _unitOfWork.TicketHistory.Update(lastHistory);
+        _unitOfWork.Tickets.Update(ticket);
         await _unitOfWork.CompleteAsync();
         return Result<TicketDto>.Success(_mapper.Map<TicketDto>(ticket));
 
@@ -573,6 +573,7 @@ public class TicketService : ITicketService
                             StageAfterChange = Stage.Stage2,
                             HistoryType = HistoryType.Assignment,
                             AssignedToId = lastHistory.UserId,
+                            ParentId = lastHistory.Id
                         });
                         ticket.AssignedToId = lastHistory.UserId;
                         ticket.DeliveryStatus = null;
@@ -589,10 +590,12 @@ public class TicketService : ITicketService
                             StageAfterChange = Stage.Stage2,
                             HistoryType = HistoryType.Assignment,
                             AssignedToId = null,
+                            ParentId = lastHistory.Id
 
                         });
                         ticket.Status = TicketStatus.InProgress;
                         ticket.AssignedToId = null;
+                        ticket.DeliveryStatus = null;
                     }
                     ticket.Stage = Stage.Stage2;
                 }
@@ -611,6 +614,7 @@ public class TicketService : ITicketService
                             StageAfterChange = Stage.Stage1,
                             HistoryType = HistoryType.Assignment,
                             AssignedToId = lastHistory.UserId,
+                            ParentId = lastHistory.Id
                         });
                         //log the change of the stage
                         await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
@@ -692,6 +696,10 @@ public class TicketService : ITicketService
             {
                 lastHistory.DeliveryStatus = DeliveryStatus.Late;
             }
+            if (!lastHistory.EstimatedCompletionDate.HasValue)
+            {
+                lastHistory.DeliveryStatus = null;
+            }
             var ticket = await _unitOfWork.Tickets.GetByIdAsync(ticketId);
             if (ticket == null)
             {
@@ -720,9 +728,11 @@ public class TicketService : ITicketService
                 StageAfterChange = lastHistory.StageAfterChange,
                 HistoryType = HistoryType.Assignment,
                 AssignedToId = user.Id,
+                ParentId = lastHistory.ParentId
             });
             ticket.AssignedToId = user.Id;
             ticket.DeliveryStatus = null;
+            lastHistory.ParentId = null;
             _unitOfWork.Tickets.Update(ticket);
             _unitOfWork.TicketHistory.Update(lastHistory);
             await _unitOfWork.CompleteAsync();

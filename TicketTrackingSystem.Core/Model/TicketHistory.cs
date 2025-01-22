@@ -11,7 +11,7 @@ public class TicketHistory : BaseEntity<Guid>
     public HistoryType HistoryType { get; set; }
     public DeliveryStatus? DeliveryStatus { get; set; }
     public bool IsOverdue => EstimatedCompletionDate.HasValue &&
-                            EstimatedCompletionDate.Value < DateTime.UtcNow &&
+                            EstimatedCompletionDate.Value < DateTime.Now &&
                             HistoryType == HistoryType.Assignment;
     public Stage? StageBeforeChange { get; set; }
     public Stage? StageAfterChange { get; set; }
@@ -19,4 +19,7 @@ public class TicketHistory : BaseEntity<Guid>
     public DateTime Date { get; set; } = DateTime.UtcNow;
     public Guid TicketId { get; set; }
     public virtual Ticket Ticket { get; set; }
+
+    public Guid? ParentId { get; set; }
+    public virtual TicketHistory Parent { get; set; }
 }

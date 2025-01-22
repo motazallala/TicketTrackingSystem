@@ -22,9 +22,14 @@
             contentType: "application/json",
             data: function (d) {
                 const parameters = [d]; // Default DataTables request object
-                if (additionalParameters) {
-                    parameters.push(...additionalParameters); // Append additional parameters if provided
-                }   
+                if (typeof additionalParameters === "function") {
+                    parameters.push(...additionalParameters());
+                }
+                else {
+                    if (additionalParameters) {
+                        parameters.push(...additionalParameters); // Append additional parameters if provided
+                    }   
+                }
                 return JSON.stringify({
                     Method: method, // Method to call in the backend
                     Parameters: [...parameters] // Sending the entire DataTables request object as the first parameter

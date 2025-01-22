@@ -21,6 +21,7 @@ public static class ServiceExtensions
         Services.AddScoped<IProjectService, ProjectService>();
         Services.AddScoped<ITicketService, TicketService>();
         Services.AddScoped<ITicketMessageService, TicketMessageService>();
+        Services.AddScoped<ITicketHistoryService, TicketHistoryService>();
         Services.AddTransient<IUnitOfWork, UnitOfWork>();
         var config = new MapperConfiguration(cfg =>
         {

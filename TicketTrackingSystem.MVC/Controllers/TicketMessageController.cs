@@ -22,6 +22,17 @@ public class TicketMessageController : Controller
     [HttpPost("/ticketMessage/call")]
     public async Task<IActionResult> CallService([FromBody] DynamicRequest request)
     {
+        var permissions = await CheckPermissionsAsync(
+            PermissionName.ViewTicket.ToString(),
+            PermissionName.CreateTicket.ToString(),
+            PermissionName.EditTicket.ToString(),
+            PermissionName.DeleteTicket.ToString()
+        );
+
+        var canView = permissions[PermissionName.ViewTicket.ToString()];
+        var canAdd = permissions[PermissionName.CreateTicket.ToString()];
+        var canEdit = permissions[PermissionName.EditTicket.ToString()];
+        var canDelete = permissions[PermissionName.DeleteTicket.ToString()];
         var response = new BaseResponse();
         var parameters = request.Parameters;
         switch (request.Method.ToLower())

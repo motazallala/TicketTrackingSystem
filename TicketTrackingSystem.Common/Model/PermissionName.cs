@@ -36,9 +36,19 @@ public enum PermissionName
     DeleteTicket,
     CreateTicket,
 
+    ViewTicketMessage,
+    EditTicketMessage,
+    DeleteTicketMessage,
+    CreateTicketMessage,
+
     ViewTicketHistory,
     EditTicketHistory,
     DeleteTicketHistory,
-    CreateTicketHistory
+    CreateTicketHistory,
+
+    ViewTicketReport,
+    EditTicketReport,
+    DeleteTicketReport,
+    CreateTicketReport
 }
 
