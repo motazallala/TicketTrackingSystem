@@ -348,7 +348,7 @@ public class UserService : IUserService
             }
 
             // Check for dependent TicketHistory records
-            var hasTicketHistory = await _unitOfWork.TicketHistory.CheckItemExistenceAsync(th => th.UserId == user.Id);
+            var hasTicketHistory = await _unitOfWork.TicketHistory.CheckItemExistenceAsync(th => th.UserId == user.Id || th.AssignedToId == user.Id);
             if (hasTicketHistory)
             {
                 return Result<string>.Failure("This user has associated ticket history. Delete or reassign those records first.");

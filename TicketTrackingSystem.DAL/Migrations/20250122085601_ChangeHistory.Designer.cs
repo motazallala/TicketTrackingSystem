@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TicketTrackingSystem.DAL.Implementation;
 
@@ -11,9 +12,11 @@ using TicketTrackingSystem.DAL.Implementation;
 namespace TicketTrackingSystem.DAL.Migrations
 {
     [DbContext(typeof(TicketTrackingSystemDbContext))]
-    partial class TicketTrackingSystemDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250122085601_ChangeHistory")]
+    partial class ChangeHistory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -198,7 +201,7 @@ namespace TicketTrackingSystem.DAL.Migrations
                         {
                             Id = new Guid("d4d6e58f-8f94-4e8c-93c7-d048e24e2639"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9787d334-fe74-44af-b3ef-349f11658256",
+                            ConcurrencyStamp = "b102f3e0-c857-44c5-9a0f-2d0ac2736f31",
                             Email = "motaz@example.com",
                             EmailConfirmed = true,
                             FirstName = "Motaz",
@@ -206,9 +209,9 @@ namespace TicketTrackingSystem.DAL.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "MOTAZ@EXAMPLE.COM",
                             NormalizedUserName = "MOTAZALLALA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGO5FNQK/MR7x1lphXI9ziLKopsYMiARQx0Eds/YEWCTvGNyFd4Hu4DVSoVb4fWmag==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJLzlv7w4cOLywpScCXyvF8J+hg0A11R3hNii7aMe/xkmuFPxhWgefGiPCR2p546gA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "046f6f97-ad43-4f73-9f30-74d5d96cfee3",
+                            SecurityStamp = "4615aa72-382f-4928-9b4b-98b2f20854ea",
                             TwoFactorEnabled = false,
                             UserName = "motazallala",
                             UserType = 1
@@ -880,8 +883,6 @@ namespace TicketTrackingSystem.DAL.Migrations
 
                     b.HasIndex("AssignedToId");
 
-                    b.HasIndex("ParentId");
-
                     b.HasIndex("TicketId");
 
                     b.HasIndex("UserId");
@@ -1076,10 +1077,6 @@ namespace TicketTrackingSystem.DAL.Migrations
                         .WithMany()
                         .HasForeignKey("AssignedToId");
 
-                    b.HasOne("TicketTrackingSystem.Core.Model.TicketHistory", "Parent")
-                        .WithMany("Children")
-                        .HasForeignKey("ParentId");
-
                     b.HasOne("TicketTrackingSystem.Core.Model.Ticket", "Ticket")
                         .WithMany("TicketHistories")
                         .HasForeignKey("TicketId")
@@ -1093,8 +1090,6 @@ namespace TicketTrackingSystem.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("AssignedTo");
-
-                    b.Navigation("Parent");
 
                     b.Navigation("Ticket");
 
@@ -1183,11 +1178,6 @@ namespace TicketTrackingSystem.DAL.Migrations
                     b.Navigation("TicketHistories");
 
                     b.Navigation("TicketMessages");
-                });
-
-            modelBuilder.Entity("TicketTrackingSystem.Core.Model.TicketHistory", b =>
-                {
-                    b.Navigation("Children");
                 });
 #pragma warning restore 612, 618
         }

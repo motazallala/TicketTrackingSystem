@@ -22,4 +22,6 @@ public class TicketHistory : BaseEntity<Guid>
 
     public Guid? ParentId { get; set; }
     public virtual TicketHistory Parent { get; set; }
+    public virtual ICollection<TicketHistory> Children { get; set; }
+    public ActionName? ActionName { get; set; }
 }

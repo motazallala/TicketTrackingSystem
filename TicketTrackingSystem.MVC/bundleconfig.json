@@ -4,5 +4,17 @@
     "inputFiles": [
       "wwwroot/js/bottomScript.js"
     ]
+  },
+  {
+    "outputFileName": "wwwroot/css/site.min.css",
+    "inputFiles": [
+      "wwwroot/css/site.css"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/view/project/projectTable.min.js",
+    "inputFiles": [
+      "wwwroot/view/project/projectTable.js"
+    ]
   }
 ]

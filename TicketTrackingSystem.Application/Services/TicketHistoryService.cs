@@ -16,194 +16,271 @@ public class TicketHistoryService : ITicketHistoryService
     }
 
 
-    public async Task<Result<DataTablesResponse<TicketHistoryReportDto>>> GetAllTicketHistoryForReportAsync(DataTablesRequest request, string stageFilter = null, string deliveryStatusFilter = null)
+    //public async Task<Result<DataTablesResponse<TicketHistoryReportDto>>> GetAllTicketHistoryForReportAsync(
+    //    DataTablesRequest request,
+    //    string stageFilter = null,
+    //    string deliveryStatusFilter = null)
+    //{
+    //    try
+    //    {
+    //        // Base query for child histories with children
+    //        var query = _unitOfWork.TicketHistory.GetAllAsQueryable().Where(p => p.HistoryType == HistoryType.Assignment)
+    //            .Include(h => h.Ticket)
+    //            .Include(h => h.AssignedTo)
+    //            .Include(h => h.User)
+    //            .Include(h => h.Children)
+    //                .ThenInclude(c => c.AssignedTo)
+    //            .Include(h => h.Children)
+    //                .ThenInclude(c => c.User)
+    //            .Where(h => h.ParentId == null) // Only child histories
+    //            .AsNoTracking();
+
+    //        // Apply global search
+    //        if (!string.IsNullOrEmpty(request.Search?.Value))
+    //        {
+    //            var searchValue = request.Search.Value.ToLower();
+    //            query = query.Where(h =>
+    //                h.Ticket.Title.ToLower().Contains(searchValue) ||
+    //                h.Ticket.AssignedTo.UserName.ToLower().Contains(searchValue) ||
+    //                h.User.UserName.ToLower().Contains(searchValue)
+    //            );
+    //        }
+
+
+    //        if (!string.IsNullOrEmpty(stageFilter) && Enum.TryParse<Stage>(stageFilter, true, out var stageEnum))
+    //        {
+    //            if (!string.IsNullOrEmpty(deliveryStatusFilter) &&
+    //                Enum.TryParse<DeliveryStatus>(deliveryStatusFilter, true, out var deliveryStatusEnum))
+    //            {
+    //                if (stageEnum.Equals(Stage.Stage1))
+    //                {
+    //                    query = query.Where(h => h.StageAfterChange == Stage.Stage1 && h.DeliveryStatus.Equals(deliveryStatusEnum));
+    //                }
+    //                else
+    //                {
+    //                    query = query.Where(h => h.Children.Any(c => c.StageAfterChange == Stage.Stage2 && c.DeliveryStatus.Equals(deliveryStatusEnum)));
+    //                }
+    //            }
+    //            else
+    //            {
+    //                if (stageEnum.Equals(Stage.Stage1))
+    //                {
+    //                    query = query.Where(h => h.StageAfterChange == Stage.Stage1);
+    //                }
+    //                else
+    //                {
+    //                    query.Where(h => h.Children.Any(c => c.StageAfterChange == Stage.Stage2));
+    //                }
+    //            }
+
+    //        }
+    //        else
+    //        {
+    //            if (!string.IsNullOrEmpty(deliveryStatusFilter) &&
+    //                Enum.TryParse<DeliveryStatus>(deliveryStatusFilter, true, out var deliveryStatusEnumx))
+    //            {
+    //                query = query.Where(h => h.DeliveryStatus == deliveryStatusEnumx &&
+    //                                      h.Children.Any(c => c.DeliveryStatus == deliveryStatusEnumx));
+    //            }
+    //        }
+
+    //        // Get counts
+    //        var recordsTotal = await _unitOfWork.TicketHistory.GetAllAsQueryable().Where(p => p.HistoryType == HistoryType.Assignment).CountAsync(h => h.ParentId == null);
+    //        var recordsFiltered = await query.CountAsync();
+
+
+    //        // Apply pagination
+    //        var paginatedData = await query
+    //            .OrderBy(c => c.Date)
+    //            .Skip(request.Start)
+    //            .Take(request.Length)
+    //            .ToListAsync();
+
+    //        // Map to DTOs
+    //        var dtos = new List<TicketHistoryReportDto>();
+    //        foreach (var parent in paginatedData)
+    //        {
+    //            // Create entry for child with children
+    //            if (parent.Children.Any())
+    //            {
+    //                foreach (var child in parent.Children)
+    //                {
+    //                    dtos.Add(new TicketHistoryReportDto
+    //                    {
+    //                        TicketId = parent.Ticket.Id,
+    //                        Title = parent.Ticket.Title,
+    //                        DeliveryStatusFrom = parent.DeliveryStatus?.ToString() ?? "N/A",
+    //                        AssignedFrom = parent.AssignedTo?.UserName ?? "N/A",
+    //                        StageFrom = parent.StageAfterChange.ToString(),
+    //                        DeliveryStatusTo = child.DeliveryStatus?.ToString() ?? "N/A",
+    //                        AssignedTo = child.AssignedTo?.UserName ?? "N/A",
+    //                        StageTo = child.StageAfterChange.ToString()
+    //                    });
+    //                }
+    //            }
+    //            // Create entry for child without children
+    //            else
+    //            {
+    //                dtos.Add(new TicketHistoryReportDto
+    //                {
+    //                    TicketId = parent.Ticket.Id,
+    //                    Title = parent.Ticket.Title,
+    //                    DeliveryStatusFrom = parent.DeliveryStatus?.ToString() ?? "N/A",
+    //                    AssignedFrom = parent.AssignedTo?.UserName ?? "N/A",
+    //                    StageFrom = parent.StageAfterChange.ToString(),
+    //                    DeliveryStatusTo = "N/A",
+    //                    AssignedTo = parent.StageBeforeChange.Equals(Stage.Stage2) ? parent.User.UserName : "N/A",
+    //                    StageTo = parent.StageBeforeChange.Equals(Stage.Stage2) ? parent.StageBeforeChange.ToString() : "N/A"
+    //                });
+    //            }
+    //        }
+
+    //        return Result<DataTablesResponse<TicketHistoryReportDto>>.Success(new DataTablesResponse<TicketHistoryReportDto>
+    //        {
+    //            Draw = request.Draw,
+    //            RecordsTotal = recordsTotal,
+    //            RecordsFiltered = recordsFiltered,
+    //            Data = dtos
+    //        });
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return Result<DataTablesResponse<TicketHistoryReportDto>>.Failure($"Error: {ex.Message}");
+    //    }
+    //}
+
+
+    public async Task<Result<DataTablesResponse<TicketHistoryReportDto>>> GetAllTicketHistoryForReportAsync(
+    DataTablesRequest request,
+    string stageFilter = null,
+    string deliveryStatusFilter = null)
     {
         try
         {
-            // Base query with required includes
-            var query = _unitOfWork.Tickets.GetAllAsQueryable()
-                .Include(t => t.AssignedTo) // Include AssignedTo for Ticket
-                .Include(t => t.TicketHistories) // Include TicketHistories
-                    .ThenInclude(h => h.AssignedTo) // Include AssignedTo for TicketHistory
-                .Include(t => t.TicketHistories)
-                    .ThenInclude(h => h.User) // Include User for TicketHistory
-                .Include(t => t.TicketHistories)
-                    .ThenInclude(h => h.Parent) // Include Parent for TicketHistory
+            // Base query for child histories with children
+            var query = _unitOfWork.TicketHistory.GetAllAsQueryable().Where(p => p.HistoryType == HistoryType.Assignment && p.ActionName != ActionName.Reassign)
+                .Include(h => h.Ticket)
+                .Include(h => h.AssignedTo)
+                .Include(h => h.User)
+                .Include(h => h.Parent)
+                    .ThenInclude(c => c.User)
+                .Include(h => h.Parent)
+                    .ThenInclude(c => c.AssignedTo)
                 .AsNoTracking();
 
-            // Apply global search using WhereIf
+            // Apply global search
             if (!string.IsNullOrEmpty(request.Search?.Value))
             {
                 var searchValue = request.Search.Value.ToLower();
-                query = query.Where(t =>
-                    t.AssignedTo != null && t.AssignedTo.UserName.ToLower().Contains(searchValue) ||
-                    t.TicketHistories.Any(h => h.User.UserName.ToLower().Contains(searchValue))
+                query = query.Where(h =>
+                    h.Ticket.Title.ToLower().Contains(searchValue) ||
+                    h.Ticket.AssignedTo.UserName.ToLower().Contains(searchValue) ||
+                    h.User.UserName.ToLower().Contains(searchValue)
                 );
             }
 
-            if (string.IsNullOrEmpty(stageFilter) && string.IsNullOrEmpty(deliveryStatusFilter))
+
+            if (!string.IsNullOrEmpty(stageFilter) && Enum.TryParse<Stage>(stageFilter, true, out var stageEnum))
             {
-                // No filters applied
-                query = query;
+                if (!string.IsNullOrEmpty(deliveryStatusFilter) &&
+                    Enum.TryParse<DeliveryStatus>(deliveryStatusFilter, true, out var deliveryStatusEnum))
+                {
+                    if (stageEnum.Equals(Stage.Stage1))
+                    {
+                        query = query.Where(h => h.StageBeforeChange == Stage.Stage1 && h.Parent.DeliveryStatus.Equals(deliveryStatusEnum));
+                    }
+                    else
+                    {
+                        query = query.Where(h => h.StageAfterChange == Stage.Stage2 && h.DeliveryStatus.Equals(deliveryStatusEnum));
+                    }
+                }
+                else
+                {
+                    if (stageEnum.Equals(Stage.Stage1))
+                    {
+                        query = query.Where(h => h.StageBeforeChange == Stage.Stage1);
+                    }
+                    else
+                    {
+                        query.Where(h => h.StageAfterChange == Stage.Stage2);
+                    }
+                }
+
             }
             else
             {
-                // Parse the stageFilter and deliveryStatusFilter if provided
-                if (!string.IsNullOrEmpty(stageFilter))
+                if (!string.IsNullOrEmpty(deliveryStatusFilter) &&
+                    Enum.TryParse<DeliveryStatus>(deliveryStatusFilter, true, out var deliveryStatusEnumx))
                 {
-                    Enum.TryParse(stageFilter, true, out Stage stageEnum);
-                    query = query.Where(t => t.TicketHistories.Any(h =>
-                        h.StageAfterChange == stageEnum || h.StageBeforeChange == stageEnum));
-                }
-
-                if (!string.IsNullOrEmpty(deliveryStatusFilter))
-                {
-                    Enum.TryParse(deliveryStatusFilter, true, out DeliveryStatus deliveryStatusEnum);
-                    query = query.Where(t => t.TicketHistories.Where(c => c.HistoryType.Equals(HistoryType.Assignment))
-                    .OrderByDescending(h => h.Date)
-                    .FirstOrDefault().DeliveryStatus == deliveryStatusEnum
-                    );
+                    query = query.Where(h => h.Parent.DeliveryStatus == deliveryStatusEnumx &&
+                                          h.DeliveryStatus == deliveryStatusEnumx);
                 }
             }
 
+            // Get counts
+            var recordsTotal = await _unitOfWork.TicketHistory.GetAllAsQueryable().Where(p => p.HistoryType == HistoryType.Assignment && p.ActionName != ActionName.Reassign).CountAsync();
+            var recordsFiltered = await query.CountAsync();
 
-
-            // Get total count before applying filters
-            var recordsTotal = await query.CountAsync();
-
-            // Select latest history for each ticket
-            var ticketHistoriesWithLatest = query.Select(ticket => new
-            {
-                Ticket = ticket,
-                LatestHistory = ticket.TicketHistories
-                    .Where(c => c.HistoryType.Equals(HistoryType.Assignment))
-                    .OrderByDescending(h => h.Date)
-                    .Select(h => new
-                    {
-                        History = h,
-                        AssignedTo = h.AssignedTo, // Include AssignedTo navigation property
-                        User = h.User, // Include User navigation property
-                        Parent = h.Parent // Include Parent navigation property
-                    })
-                    .FirstOrDefault() // Get the latest history for the ticket
-            });
 
             // Apply pagination
-            var paginatedData = await ticketHistoriesWithLatest
+            var paginatedData = await query
+                .OrderByDescending(c => c.Date)
                 .Skip(request.Start)
                 .Take(request.Length)
                 .ToListAsync();
 
             // Map to DTOs
-            var ticketHistoryReportDtos = paginatedData.Select(x =>
+            var dtos = new List<TicketHistoryReportDto>();
+            foreach (var child in paginatedData)
             {
-                var ticket = x.Ticket;
-                var lastHistory = x.LatestHistory?.History; // Access the History property
-                var parentHistory = lastHistory?.Parent; // Access the Parent property
-
-                if (lastHistory == null)
+                // Create entry for child with children
+                if (child.Parent is not null)
                 {
-                    return new TicketHistoryReportDto
-                    {
-                        TicketId = ticket.Id,
-                        Title = ticket.Title,
-                    };
-                }
 
-                if (lastHistory.StageAfterChange == Stage.Stage2)
-                {
-                    if (x.LatestHistory.AssignedTo == null)
+                    dtos.Add(new TicketHistoryReportDto
                     {
-                        return new TicketHistoryReportDto
-                        {
-                            TicketId = ticket.Id,
-                            Title = ticket.Title,
-                            DeliveryStatusFrom = parentHistory?.DeliveryStatus.ToString(),
-                            AssignedFrom = x.LatestHistory.User.UserName,
-                            StageFrom = parentHistory?.StageAfterChange.ToString(),
-                            AssignedTo = "Not Set Yet.",
-                            DeliveryStatusTo = "Not Set Yet.",
-                            StageTo = lastHistory.StageAfterChange.ToString(),
-                        };
-                    }
-                    else
-                    {
-                        return new TicketHistoryReportDto
-                        {
-                            TicketId = ticket.Id,
-                            Title = ticket.Title,
-                            DeliveryStatusFrom = parentHistory?.DeliveryStatus.ToString(),
-                            AssignedFrom = x.LatestHistory.User.UserName,
-                            StageFrom = parentHistory?.StageAfterChange.ToString(),
-                            AssignedTo = x.LatestHistory.AssignedTo?.UserName,
-                            DeliveryStatusTo = lastHistory.DeliveryStatus.HasValue ? lastHistory.DeliveryStatus.ToString() : "Pending...",
-                            StageTo = lastHistory.StageAfterChange.ToString(),
-                        };
-                    }
+                        TicketId = child.Ticket.Id,
+                        Title = child.Ticket.Title,
+                        DeliveryStatusFrom = child.Parent.DeliveryStatus?.ToString() ?? "N/A",
+                        AssignedFrom = child.Parent.AssignedTo?.UserName ?? "N/A",
+                        StageFrom = child.Parent.StageAfterChange.ToString(),
+                        DeliveryStatusTo = child.DeliveryStatus?.ToString() ?? "N/A",
+                        AssignedTo = child.AssignedTo?.UserName ?? "N/A",
+                        StageTo = child.StageAfterChange.ToString(),
+                    });
                 }
+                // Create entry for child without children
                 else
                 {
-                    if (parentHistory == null)
-                    {
-                        if (!ticket.Stage.Equals(Stage.NoStage))
-                        {
-                            return new TicketHistoryReportDto
-                            {
-                                TicketId = ticket.Id,
-                                Title = ticket.Title,
-                                DeliveryStatusFrom = lastHistory.AssignedTo != null ? lastHistory.DeliveryStatus.HasValue ? lastHistory.DeliveryStatus.ToString() : "Pending..." : "Within user to take the ticket",
-                                AssignedFrom = lastHistory.AssignedTo != null ? lastHistory.AssignedTo?.UserName : "Not Set Yet.",
-                                StageFrom = lastHistory.StageBeforeChange.ToString(),
-                                AssignedTo = "Not Set Yet.",
-                                DeliveryStatusTo = "Not Set Yet.",
-                                StageTo = "Not Set Yet.",
-                            };
-                        }
-                        else
-                        {
-                            return new TicketHistoryReportDto
-                            {
-                                TicketId = ticket.Id,
-                                Title = ticket.Title,
-                                DeliveryStatusFrom = "The Ticket is finished.",
-                                AssignedFrom = lastHistory.AssignedTo != null ? lastHistory.AssignedTo?.UserName : "Not Set Yet.",
-                                StageFrom = lastHistory.StageBeforeChange.ToString(),
-                                AssignedTo = "Not Set Yet.",
-                                DeliveryStatusTo = "Not Set Yet.",
-                                StageTo = "Not Set Yet.",
-                            };
-                        }
-                    }
-                    return new TicketHistoryReportDto
-                    {
-                        TicketId = ticket.Id,
-                        Title = ticket.Title,
-                        DeliveryStatusFrom = lastHistory.DeliveryStatus.HasValue ? lastHistory.DeliveryStatus.ToString() : "Pending...",
-                        AssignedFrom = x.LatestHistory?.AssignedTo?.UserName,
-                        StageFrom = lastHistory.StageAfterChange.ToString(),
-                        AssignedTo = x.LatestHistory?.User.UserName,
-                        DeliveryStatusTo = !ticket.Stage.Equals(Stage.NoStage) ? "Waiting step one to finish." : parentHistory.DeliveryStatus.ToString(),
-                        StageTo = parentHistory?.StageAfterChange.ToString(),
-                    };
-                }
-            }).ToList();
 
-            // Prepare response
-            var response = new DataTablesResponse<TicketHistoryReportDto>
+                    dtos.Add(new TicketHistoryReportDto
+                    {
+                        TicketId = child.Ticket.Id,
+                        Title = child.Ticket.Title,
+                        DeliveryStatusFrom = child.DeliveryStatus?.ToString() ?? "N/A",
+                        AssignedFrom = child.AssignedTo?.UserName ?? "N/A",
+                        StageFrom = child.StageAfterChange.ToString(),
+                        DeliveryStatusTo = "N/A",
+                        AssignedTo = "N/A",
+                        StageTo = "N/A"
+                    });
+                }
+            }
+
+            return Result<DataTablesResponse<TicketHistoryReportDto>>.Success(new DataTablesResponse<TicketHistoryReportDto>
             {
                 Draw = request.Draw,
                 RecordsTotal = recordsTotal,
-                RecordsFiltered = recordsTotal, // Update if filtering logic is added
-                Data = ticketHistoryReportDtos
-            };
-
-            return Result<DataTablesResponse<TicketHistoryReportDto>>.Success(response);
+                RecordsFiltered = recordsFiltered,
+                Data = dtos
+            });
         }
         catch (Exception ex)
         {
-            return Result<DataTablesResponse<TicketHistoryReportDto>>.Failure($"Something went wrong: {ex.Message}");
+            return Result<DataTablesResponse<TicketHistoryReportDto>>.Failure($"Error: {ex.Message}");
         }
     }
+
     public string GetDeliveryStatusDropdown()
     {
         var deliveryStatus = Enum.GetValues(typeof(DeliveryStatus)).Cast<DeliveryStatus>().Select(v => new SelectListItem
@@ -225,10 +302,10 @@ public class TicketHistoryReportDto
 {
     public Guid TicketId { get; set; }
     public string Title { get; set; }
-    public string? DeliveryStatusFrom { get; set; } = "Not Set Yet.";
-    public string? AssignedFrom { get; set; } = "Not Set Yet.";
-    public string? StageFrom { get; set; } = "Not Set Yet.";
-    public string? DeliveryStatusTo { get; set; } = "Not Set Yet.";
-    public string? AssignedTo { get; set; } = "Not Set Yet.";
-    public string? StageTo { get; set; } = "Not Set Yet.";
+    public string? DeliveryStatusFrom { get; set; }
+    public string? AssignedFrom { get; set; }
+    public string? StageFrom { get; set; }
+    public string? DeliveryStatusTo { get; set; }
+    public string? AssignedTo { get; set; }
+    public string? StageTo { get; set; }
 }

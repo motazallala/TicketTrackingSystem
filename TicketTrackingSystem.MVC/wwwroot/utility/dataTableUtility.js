@@ -40,7 +40,6 @@
             },
             dataFilter: function (jsonString) {
                 const json = JSON.parse(jsonString);
-
                 if (!json.isSuccess) {
                     // Call the failure callback function if it's provided
                     if (failureCallback) {

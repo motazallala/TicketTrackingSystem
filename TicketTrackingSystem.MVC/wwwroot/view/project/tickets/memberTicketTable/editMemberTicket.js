@@ -133,10 +133,19 @@ $(document).ready(function () {
     }
 
     function gatherFormData(status) {
+        let isFinishedChecked = false;
+        if (inStage === 'Stage 2 Tickets' && status ==='accept') {
+            isFinishedChecked = true;
+        }
+        else {
+            isFinishedChecked = $('#isFinished').is(':checked');
+        }
+        const messageText = $('#message').val() || '';
+
         return {
             ticketStatus: status,
-            isFinished: $('#isFinished').is(':checked'),
-            message: $('#message').val() || ''
+            isFinished: isFinishedChecked,
+            message: messageText
         };
     }
 
