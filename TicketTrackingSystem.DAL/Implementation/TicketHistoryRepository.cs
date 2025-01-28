@@ -12,7 +12,7 @@ public class TicketHistoryRepository : Repository<TicketHistory>, ITicketHistory
 
     public void DeleteAllHistoryForUser(Guid userId)
     {
-        var history = _context.TicketHistory.Where(x => x.UserId == userId || x.AssignedToId == userId);
+        var history = _context.TicketHistory.Where(x => x.AssignedToId == userId);
         _context.TicketHistory.RemoveRange(history);
     }
 }

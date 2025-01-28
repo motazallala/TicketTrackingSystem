@@ -15,7 +15,7 @@ public class TicketRepository : Repository<Ticket>, ITicketRepository
     {
         var ticket = await _context.Ticket.Include(c => c.TicketHistories).SingleOrDefaultAsync(v => v.Id == ticketId);
         ticket.DeliveryStatus = DeliveryStatus.Late;
-        var lastHistory = ticket.TicketHistories.Where(c => c.HistoryType == HistoryType.Assignment).OrderByDescending(p => p.Date).FirstOrDefault();
+        var lastHistory = ticket.TicketHistories.OrderByDescending(p => p.Date).FirstOrDefault();
         lastHistory.DeliveryStatus = DeliveryStatus.Late;
         _context.TicketHistory.Update(lastHistory);
         _context.Ticket.Update(ticket);

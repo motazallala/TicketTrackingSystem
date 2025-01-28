@@ -1,6 +1,5 @@
 ﻿using Hangfire;
 using Microsoft.EntityFrameworkCore;
-using TicketTrackingSystem.Core.Model.Enum;
 using TicketTrackingSystem.DAL.Interface;
 
 namespace TicketTrackingSystem.Application.Hangfire.Services;
@@ -16,7 +15,7 @@ public class TicketJobsService : ITicketJobsService
     public async Task CheckOverdueTickets()
     {
         var tickets = await _unitOfWork.TicketHistory.GetAllAsQueryable()
-                                            .Where(p => p.HistoryType.Equals(HistoryType.Assignment) && p.EstimatedCompletionDate <= DateTime.Now && !p.DeliveryStatus.HasValue)
+                                            .Where(p => p.EstimatedCompletionDate <= DateTime.Now && !p.DeliveryStatus.HasValue)
                                             .Select(p => p.Ticket).ToListAsync();
         foreach (var ticket in tickets)
         {

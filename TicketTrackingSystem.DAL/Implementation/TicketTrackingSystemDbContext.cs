@@ -87,8 +87,7 @@ public class TicketTrackingSystemDbContext : IdentityDbContext<ApplicationUser, 
         builder.Entity<TicketHistory>(th =>
         {
             th.HasOne(x => x.Ticket).WithMany(x => x.TicketHistories).HasForeignKey(th => th.TicketId).OnDelete(DeleteBehavior.Cascade);
-            th.HasOne(x => x.User).WithMany(x => x.TicketHistories).HasForeignKey(th => th.UserId).OnDelete(DeleteBehavior.Restrict);
-            th.HasOne(x => x.Parent).WithMany(p => p.Children).HasForeignKey(th => th.ParentId);
+            th.HasOne(x => x.AssignedTo).WithMany(x => x.TicketHistories).HasForeignKey(th => th.AssignedToId).OnDelete(DeleteBehavior.Restrict);
         });
         builder.Entity<TicketMessage>(th =>
         {
