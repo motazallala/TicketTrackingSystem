@@ -61,13 +61,29 @@ public class TicketService : ITicketService
             {
                 if (ticket.Status.Equals(TicketStatus.Returned) && !ticket.AssignedToId.HasValue)
                 {
-                    await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+                    if (lastHistory.StageAfterChange == Stage.Stage1)
                     {
-                        TicketId = ticket.Id,
-                        StageAfterChange = Stage.Stage1,
-                        AssignedToId = user.Id,
-                        EstimatedCompletionDate = estimationTime,
-                    });
+                        await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+                        {
+                            TicketId = ticket.Id,
+                            StageAfterChange = Stage.Stage1,
+                            AssignedToId = user.Id,
+                            EstimatedCompletionDate = estimationTime,
+                            CycleNumber = lastHistory.CycleNumber + 1
+                        });
+                    }
+                    else
+                    {
+                        await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+                        {
+                            TicketId = ticket.Id,
+                            StageAfterChange = Stage.Stage1,
+                            AssignedToId = user.Id,
+                            EstimatedCompletionDate = estimationTime,
+                            CycleNumber = lastHistory.CycleNumber
+                        });
+
+                    }
                     ticket.Status = TicketStatus.Returned;
                     ticket.AssignedToId = user.Id;
                     ticket.Stage = Stage.Stage1;
@@ -83,6 +99,7 @@ public class TicketService : ITicketService
                             StageAfterChange = Stage.Stage1,
                             AssignedToId = user.Id,
                             EstimatedCompletionDate = estimationTime,
+                            CycleNumber = 0
 
 
                         });
@@ -96,6 +113,7 @@ public class TicketService : ITicketService
                             StageAfterChange = Stage.Stage1,
                             AssignedToId = user.Id,
                             EstimatedCompletionDate = estimationTime,
+                            CycleNumber = lastHistory.CycleNumber + 1
                         });
                         //lastHistory.AssignedToId = user.Id;
                         //lastHistory.EstimatedCompletionDate = estimationTime;
@@ -124,6 +142,7 @@ public class TicketService : ITicketService
                         StageAfterChange = Stage.Stage2,
                         AssignedToId = user.Id,
                         EstimatedCompletionDate = estimationTime,
+                        CycleNumber = lastHistory.CycleNumber
                     });
                     ticket.Status = TicketStatus.Returned;
                     ticket.AssignedToId = member.UserId;
@@ -145,6 +164,7 @@ public class TicketService : ITicketService
                             StageAfterChange = Stage.Stage2,
                             AssignedToId = user.Id,
                             EstimatedCompletionDate = estimationTime,
+                            CycleNumber = lastHistory.CycleNumber
                         });
                     }
 
@@ -558,7 +578,8 @@ public class TicketService : ITicketService
                         {
                             TicketId = ticket.Id,
                             StageAfterChange = Stage.Stage2,
-                            AssignedToId = lastStep2History.AssignedToId
+                            AssignedToId = lastStep2History.AssignedToId,
+                            CycleNumber = lastHistory.CycleNumber
                         });
                         ticket.AssignedToId = lastStep2History.AssignedToId;
                         ticket.DeliveryStatus = null;
@@ -572,6 +593,7 @@ public class TicketService : ITicketService
                             TicketId = ticket.Id,
                             StageAfterChange = Stage.Stage2,
                             AssignedToId = null,
+                            CycleNumber = lastHistory.CycleNumber
 
 
                         });
@@ -596,7 +618,8 @@ public class TicketService : ITicketService
                         {
                             TicketId = ticket.Id,
                             StageAfterChange = Stage.Stage1,
-                            AssignedToId = lastStepOneHistory.AssignedToId
+                            AssignedToId = lastStepOneHistory.AssignedToId,
+                            CycleNumber = lastHistory.CycleNumber + 1
                         });
                         //message for the user for the stage 1
                         await _unitOfWork.TicketMessage.AddAsync(new TicketMessage
@@ -686,13 +709,27 @@ public class TicketService : ITicketService
             {
                 return Result<TicketDto>.Failure("User is already assigned to another ticket");
             }
-
-            await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+            if (lastHistory.StageAfterChange == Stage.Stage1)
             {
-                TicketId = ticketId,
-                StageAfterChange = lastHistory.StageAfterChange,
-                AssignedToId = user.Id,
-            });
+                await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+                {
+                    TicketId = ticketId,
+                    StageAfterChange = lastHistory.StageAfterChange,
+                    AssignedToId = user.Id,
+                    CycleNumber = lastHistory.CycleNumber + 1
+                });
+            }
+            else
+            {
+                await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+                {
+                    TicketId = ticketId,
+                    StageAfterChange = lastHistory.StageAfterChange,
+                    AssignedToId = user.Id,
+                    CycleNumber = lastHistory.CycleNumber
+                });
+            }
+
             ticket.AssignedToId = user.Id;
             ticket.DeliveryStatus = null;
             _unitOfWork.Tickets.Update(ticket);

@@ -16,5 +16,11 @@
     "inputFiles": [
       "wwwroot/view/project/projectTable.js"
     ]
+  },
+  {
+    "outputFileName": "wwwroot/lib/UserUI/css/UserUIStyle.min.css",
+    "inputFiles": [
+      "wwwroot/lib/UserUI/css/UserUIStyle.css"
+    ]
   }
 ]

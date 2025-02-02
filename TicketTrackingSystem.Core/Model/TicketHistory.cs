@@ -15,4 +15,5 @@ public class TicketHistory : BaseEntity<Guid>
     public DateTime Date { get; set; } = DateTime.UtcNow;
     public Guid TicketId { get; set; }
     public virtual Ticket Ticket { get; set; }
+    public int CycleNumber { get; set; }
 }

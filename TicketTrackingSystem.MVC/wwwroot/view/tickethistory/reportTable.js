@@ -75,6 +75,7 @@ $(document).ready(async function () {
                 }
             }
         ],
+        ordering : false,
         additionalParameters: () => [ // Wrap in function
             
                  currentFilters.stage,
@@ -101,19 +102,39 @@ $(document).ready(async function () {
         const modalBody = $('#modelBody');
         const modalFooter = $('.modal .modal-footer');
 
-        const title = 'Role Details';
+        const title = 'History Details';
         const bodyContent = `
              <div class="form-group">
-                <label for="name">ID :</label>
-                <input type="text" class="form-control" id="id-view" name="id" value="${data.id}" disabled>
+                <label for="ticketId">Ticket Id :</label>
+                <input type="text" class="form-control" id="id-view" name="ticketId" value="${data.ticketId}" disabled>
             </div>
-            <div class="form-group">
-                <label for="name">Name :</label>
-                <input type="text" class="form-control" id="name-view" name="name" value="${data.name}" disabled>
+            <div class="form-group mt-3">
+                <label for="title">Title :</label>
+                <input type="text" class="form-control" name="title" value="${data.title}" disabled>
             </div>
+            <div class="form-group mt-2">
+                <div class="row">
+                    <div class="col">
+                        <h6>From Stage 1 User :</h6>
+                        <input type="text" class="form-control"  name="assignedFrom" value="${data.assignedFrom}" disabled>
+                        <h6 class="my-2">Delivery Status :</h6>
+                        <input type="text" class="form-control"  name="deliveryStatusFrom" value="${data.deliveryStatusFrom}" disabled>
+                    </div>
+                    <div class="col-1 align-self-center p-0 m-0">
+                        <i class="bi bi-arrow-bar-right fs-1"></i>
+                    </div>
+                    <div class="col">
+                        <h6 class="mb-2">To Stage 2 User :</h6>
+                        <input type="text" class="form-control"  name="assignedTo" value="${data.assignedTo}" disabled>
+                        <h6 class="my-2">Delivery Status :</h6>
+                        <input type="text" class="form-control"  name="deliveryStatusTo" value="${data.deliveryStatusTo}" disabled>
+                    </div>
+                </div>
+            </div>
+
         `;
         const viewButton = `<button type="button" class="btn btn-default" onclick="$('#myModal').modal('hide')" data-dismiss="modal">Close</button>`;
-        const moreDetails = `<a class="btn btn-sm btn-primary dt-view" href="/Role/Details/${data.id}">View</a>`;
+        const moreDetails = `<a class="btn btn-sm btn-primary dt-view" href="#">View All Ticket History</a>`;
         setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [viewButton, moreDetails]);
         $('#myModal').modal('show');
     });

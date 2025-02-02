@@ -8,7 +8,7 @@ $(document).ready(function () {
         method: 'getalluserswithrolepaginatedasync',
         columns: [
             { data: 'id', name: 'ID' },
-            { data: 'fullName', name: 'FullName' },
+            { data: 'fullName', name: 'FullName', orderable: false },
             { data: 'userName', name: 'UserName' },
             { data: 'email', name: 'Email' },
             { data: 'phoneNumber', name: 'PhoneNumber' },

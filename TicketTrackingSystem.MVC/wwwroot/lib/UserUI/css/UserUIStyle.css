@@ -91,6 +91,10 @@
     }
 }
 
+html[data-bs-theme="dark"] {
+    --bs-body-bg: #121212; /* Set your desired dark background color */
+    --bs-body-color: #ffffff; /* Optionally, update the text color for contrast */
+}
 body {
     margin: 0;
     font-family: var(--bs-body-font-family);

@@ -85,13 +85,13 @@ $(document).ready(function () {
 
                     if (reserved) {
                         if (canEdit) {
-                            actionButtons += `<button class="btn btn-warning btn-sm me-2 dt-edit">
-                                <i class="bi bi-pencil-square"></i> Edit
+                            actionButtons += `<button class="btn btn-info btn-sm me-2 dt-edit">
+                                <i class="bi bi-pencil-square"></i> Action
                             </button>`;
                             actionButtons += `<button class="btn btn-warning btn-sm me-2 dt-reAssign">
-                                <i class="bi bi-pencil-square"></i> Re-Assign
+                                <i class="bi bi-arrow-repeat"></i> Re-Assign
                             </button>`;
-                            actionButtons += `<button class="btn btn-warning btn-sm me-2 dt-removeAssign">
+                            actionButtons += `<button class="btn btn-danger btn-sm me-2 dt-removeAssign">
                             <i class="bi bi-info-square-fill"></i> Remove Assign
                             </button>`;
                         }
