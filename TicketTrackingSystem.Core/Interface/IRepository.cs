@@ -34,6 +34,10 @@ public interface IRepository<T> where T : class
 
     #endregion Update
     #endregion
+    #region Count
+    Task<int> CountAsync(params Expression<Func<T, bool>>[] match);
+    Task<int> CountAsync();
+    #endregion
     T GetById(params object?[]? id);
     Task<T> GetByIdAsync(params object?[]? id);
     Task<T> GetSingleOrDefaultAsync(Expression<Func<T, bool>> match, bool tacking = true);

@@ -1,8 +1,108 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@using TicketTrackingSystem.Core.Model.Enum
+@inject IPermissionService _permissionService
+@inject IUserService _userService
+@{
+    ViewData["Title"] = "Home";
+    // Remove unused permission variables since they're not being used in the view
 }
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>
+
+@if (User.Identity.IsAuthenticated)
+{
+    var user = await _userService.GetUserByClaim(User);
+    <div class="col-12">
+        <div class="row row-cards">
+            @if (user.UserType.Equals(UserType.Member) && User.IsInRole("Admin"))
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="bi bi-people-fill fs-2"></i>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium">
+                                        Total User Number
+                                    </div>
+                                    <div class="text-secondary" id="totalUserNumber">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="bi bi-ticket-detailed-fill fs-2"></i>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium">
+                                        Number Of Tickets
+                                    </div>
+                                    <div class="text-secondary" id="allTicketNumber">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            @if (user.UserType.Equals(UserType.Member))
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="bi bi-person-video2 fs-2"></i>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium">
+                                        You Are Assigned To
+                                    </div>
+                                    <div class="text-secondary" id="assignTicketNumber">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            @if (user.UserType.Equals(UserType.Client))
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="bi bi-ticket-detailed-fill fs-2"></i>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium">
+                                        You Open
+                                    </div>
+                                    <div class="text-secondary" id="openedTicket">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @if (User.Identity.IsAuthenticated)
+    {
+        <script type="module" src="~/view/home/dashboardScript.js"></script>
+    }
+}

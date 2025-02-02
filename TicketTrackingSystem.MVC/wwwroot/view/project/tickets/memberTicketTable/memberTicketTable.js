@@ -135,7 +135,7 @@ $(document).ready(function () {
             </div>
             <div class="form-group">
                 <label for="description">Description:</label>
-                <input type="text" class="form-control" value="${data.description || ''}" disabled>
+                <textarea class="form-control" id="description" name="description" style="height: 200px;" disabled>${data.description || ''}</textarea>
             </div>
             <div class="form-group">
                 <label for="status">Status:</label>
@@ -147,11 +147,9 @@ $(document).ready(function () {
             </div>
         `;
         const closeButton = `<button type="button" class="btn btn-default" onclick="$('#myModal').modal('hide')" data-dismiss="modal">Close</button>`;
-        const removeAssingButton = `<button class="btn btn-warning btn-sm me-2 dt-removeAssign">
-                            <i class="bi bi-info-square-fill"></i> Remove Assign
-                        </button>`;
+
         const moreDetails = `<a class="btn btn-sm btn-primary dt-view" href="/project/ticket/${data.id}/messages">View Ticket Message (${notSeenMessageCount})</a>`;
-        const buttons = data.status !== "Returned" ? [closeButton, removeAssingButton, moreDetails] : [closeButton, moreDetails];
+        const buttons = [closeButton, moreDetails];
         setupModalData($('.modal .modal-title'), $('#modelBody'), $('.modal .modal-footer'), title, bodyContent, buttons);
 
         $('#myModal').modal('show');

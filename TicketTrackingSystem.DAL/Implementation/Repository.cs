@@ -4,16 +4,20 @@ using TicketTrackingSystem.Core.Consts;
 using TicketTrackingSystem.Core.Interface;
 
 namespace TicketTrackingSystem.DAL.Implementation;
+
 public class Repository<T> : IRepository<T> where T : class
 {
     protected readonly TicketTrackingSystemDbContext _context;
+
     public Repository(TicketTrackingSystemDbContext context)
     {
         _context = context;
     }
 
     #region CRUD
+
     #region Create
+
     public void Add(T entity)
     {
         _context.Set<T>().Add(entity);
@@ -35,7 +39,9 @@ public class Repository<T> : IRepository<T> where T : class
     }
 
     #endregion Create
+
     #region Remove
+
     public void Remove(T entity)
     {
         _context.Set<T>().Remove(entity);
@@ -47,7 +53,9 @@ public class Repository<T> : IRepository<T> where T : class
     }
 
     #endregion Remove
+
     #region Update
+
     public void Update(T entity)
     {
         _context.Set<T>().Update(entity);
@@ -59,9 +67,11 @@ public class Repository<T> : IRepository<T> where T : class
     }
 
     #endregion Update
-    #endregion
+
+    #endregion CRUD
 
     #region GetAll
+
     public IEnumerable<T> GetAll()
     {
         return FindQueryable(true).ToList();
@@ -79,8 +89,8 @@ public class Repository<T> : IRepository<T> where T : class
         }
 
         return query.ToList();
-
     }
+
     public IEnumerable<T> GetAll(Expression<Func<T, bool>> match)
     {
         IQueryable<T> query = FindQueryable(true);
@@ -102,6 +112,7 @@ public class Repository<T> : IRepository<T> where T : class
     }
 
     #endregion GetAll
+
     #region GetAllAsync
 
     public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> expression)
@@ -144,6 +155,31 @@ public class Repository<T> : IRepository<T> where T : class
 
     #endregion GetAllAsync
 
+    #region Count
+
+    public async Task<int> CountAsync(params Expression<Func<T, bool>>[] match)
+    {
+        IQueryable<T> query = _context.Set<T>();
+        if (match != null)
+        {
+            foreach (var item in match)
+            {
+                if (item != null)
+                {
+                    query = query.Where(item);
+                }
+            }
+        }
+        return await query.CountAsync();
+    }
+
+    public Task<int> CountAsync()
+    {
+        return _context.Set<T>().CountAsync();
+    }
+
+    #endregion Count
+
     public T GetById(params object?[]? id)
     {
         return _context.Set<T>().Find(id);
@@ -153,6 +189,7 @@ public class Repository<T> : IRepository<T> where T : class
     {
         return _context.Set<T>().AsQueryable();
     }
+
     public async Task<bool> CheckItemExistenceByIdAsync(params object?[]? key)
     {
         return await _context.Set<T>().FindAsync(key) is not null;
@@ -229,6 +266,7 @@ public class Repository<T> : IRepository<T> where T : class
         }
         return await query.ToListAsync();
     }
+
     private IQueryable<T> FindQueryable(bool tracking)
     {
         var queryable = GetAllAsQueryable();
@@ -257,9 +295,9 @@ public class Repository<T> : IRepository<T> where T : class
         }
         return await query.SingleOrDefaultAsync(match);
     }
+
     public async Task<T> GetByIdAsync(params object?[]? id)
     {
         return await _context.Set<T>().FindAsync(id);
     }
-
 }
