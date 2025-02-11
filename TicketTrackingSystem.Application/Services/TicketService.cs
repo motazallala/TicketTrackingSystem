@@ -26,6 +26,11 @@ public class TicketService : ITicketService
     {
         try
         {
+            if (estimationTime < DateTime.Now)
+            {
+                return Result<TicketDto>.Failure("The estimation time is invalid");
+            }
+
             var ticket = await _unitOfWork.Tickets.GetByIdAsync(ticketId);
             if (ticket == null)
             {
@@ -115,9 +120,6 @@ public class TicketService : ITicketService
                             EstimatedCompletionDate = estimationTime,
                             CycleNumber = lastHistory.CycleNumber + 1
                         });
-                        //lastHistory.AssignedToId = user.Id;
-                        //lastHistory.EstimatedCompletionDate = estimationTime;
-                        //_unitOfWork.TicketHistory.Update(lastHistory);
                     }
                     ticket.Status = TicketStatus.Assigned;
                     ticket.AssignedToId = user.Id;
@@ -766,6 +768,10 @@ public class TicketService : ITicketService
 
     public async Task<Result<bool>> SetEstimatedCompletionDateForReassignTicketAsync(Guid ticketId, Guid userId, DateTime estimationTime)
     {
+        if (estimationTime < DateTime.Now)
+        {
+            return Result<bool>.Failure("The estimation time is invalid");
+        }
         var lastHistory = await _unitOfWork.TicketHistory.GetAllAsQueryable()
                      .Where(p => p.TicketId == ticketId)
                      .OrderByDescending(p => p.Date)

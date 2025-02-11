@@ -28,12 +28,7 @@ public class PermissionService : IPermissionService
         _mapper = mapper;
     }
 
-    /// <summary>
-    /// Checks if a user has a specific permission on a page or action.
-    /// </summary>
-    /// <param name="userId">User's ID</param>
-    /// <param name="permissionName">The name of the permission (e.g., "View", "Edit")</param>
-    /// <returns>True if the user has permission, otherwise false</returns>
+
     public async Task<bool> HasPermissionAsync(Guid userId, string permissionName)
     {
         // Get the user and their roles

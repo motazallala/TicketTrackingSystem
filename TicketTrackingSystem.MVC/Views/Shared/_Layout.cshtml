@@ -40,6 +40,20 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="~/lib/userui/css/useruistyle.min.css" rel="stylesheet" />
+    <style>
+        /* Custom CSS to lighten shadows in dark mode */
+        [data-bs-theme="dark"] .shadow {
+            box-shadow: 0 0.5rem 1rem rgba(255, 255, 255, 0.1) !important;
+        }
+
+        [data-bs-theme="dark"] .shadow-sm {
+            box-shadow: 0 0.125rem 0.25rem rgba(255, 255, 255, 0.075) !important;
+        }
+
+        [data-bs-theme="dark"] .shadow-lg {
+            box-shadow: 0 1rem 3rem rgba(255, 255, 255, 0.175) !important;
+        }
+    </style>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     @await RenderSectionAsync("Style", required: false)
 
@@ -51,6 +65,9 @@
             <div class="sidebar-heading border-bottom pb-4">Ticket Traking System</div>
             <div class="list-group list-group-flush">
                 @{
+
+
+                    <a class="list-group-item list-group-item-action p-3" asp-controller="Home" asp-action="Index"><i class="bi bi-house-fill"></i> Home</a>
                     if (viewRole)
                     {
                         <a class="list-group-item list-group-item-action  p-3" asp-controller="Role" asp-action="Index"><i class="bi bi-person-lines-fill"></i> Role</a>
@@ -60,11 +77,6 @@
                     {
 
                         <a class="list-group-item list-group-item-action  p-3" asp-controller="User" asp-action="Index"><i class="bi bi-people-fill"></i> Users</a>
-                    }
-                    if (viewClient)
-                    {
-
-                        // <a class="list-group-item list-group-item-action list-group-item-light p-3" asp-controller="Client" asp-action="Index">Clients</a>
                     }
                     if (viewPermission)
                     {
@@ -118,7 +130,7 @@
             </nav>
             <!-- Page content-->
             <div class="container py-3">
-                <h1 class="mt-4 mb-5">@ViewData["Title"] Page</h1>
+                <h1 class="display-4 mt-4 mb-5">@ViewData["Title"]</h1>
                 @RenderBody()
             </div>
         </div>

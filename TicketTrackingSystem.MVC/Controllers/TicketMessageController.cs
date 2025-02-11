@@ -35,6 +35,7 @@ public class TicketMessageController : Controller
         var canDelete = permissions[PermissionName.DeleteTicket.ToString()];
         var response = new BaseResponse();
         var parameters = request.Parameters;
+
         switch (request.Method.ToLower())
         {
             case "getallticketmessagespaginatedasync":

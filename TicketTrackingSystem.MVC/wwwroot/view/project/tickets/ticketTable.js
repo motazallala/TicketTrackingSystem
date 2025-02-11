@@ -101,7 +101,7 @@ $(document).ready(function () {
             </div>
             <div class="form-group">
                 <label for="description">Description :</label>
-                <input type="text" class="form-control" id="description" name="description" value="${data.description}" disabled>
+                <textarea class="form-control" id="description" name="description" disabled>${data.description}</textarea>
             </div>
             <div class="form-group">
                 <label for="status">Status :</label>

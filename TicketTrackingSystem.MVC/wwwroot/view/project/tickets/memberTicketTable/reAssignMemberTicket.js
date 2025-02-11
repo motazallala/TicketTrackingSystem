@@ -10,6 +10,20 @@ $(document).ready(async function () {
         try {
             const result = await getAllFreeMembersDropdownAsync(projectId);
             if (result.isSuccess) {
+                if (!result.data || result.data.length === 0 || result.data === "") {
+                    $('#projectMemberContner').hide();
+                    $('#reAssignMessage').html(`
+                        <div class='alert alert-warning' role='alert'>
+                            <strong>Warning!</strong> There are no free members to re-assign.
+                        </div>
+                    `);
+                    $('#reAssignMessage').show();
+                    $('#reAssignTicket').hide();
+                    return;
+                }
+                $('#reAssignMessage').hide();
+                $('#projectMemberContner').show();
+                $('#reAssignTicket').show();
                 $('#projectMember').html(result.data);
             } else {
                 showErrorModal('Failed to load project members.');
@@ -29,12 +43,16 @@ $(document).ready(async function () {
 
         const title = 'Re-Assign Ticket';
         const bodyContent = `
-            <div class="form-group">
-                <p>Are you sure you want to re-assign this ticket?</p>
+            <div id="reAssignMessage" style="display: none;">
             </div>
-            <div class="form-group">
+            <div id="projectMemberContner">
                 <label for="projectMember">Project Members :</label>
-                <select class="form-control" id="projectMember" name="projectMember"></select>
+                <div class="form-group">
+                    <p>Are you sure you want to re-assign this ticket?</p>
+                </div>
+                <div class="form-group">
+                    <select class="form-control" id="projectMember" name="projectMember"></select>
+                </div>
             </div>
         `;
         const closeButton = `<button type="button" class="btn btn-default" onclick="$('#myModal').modal('hide')" data-dismiss="modal">Close</button>`;

@@ -15,7 +15,7 @@ $(document).ready(function () {
             </div>
             <div class="form-group my-1">
                 <label for="description">Description :</label>
-                <input type="text" class="form-control" id="description" name="description">
+                <textarea class="form-control" id="description" name="description" style="height: 200px;"></textarea>
             </div>
         `;
         const closeButton = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>';

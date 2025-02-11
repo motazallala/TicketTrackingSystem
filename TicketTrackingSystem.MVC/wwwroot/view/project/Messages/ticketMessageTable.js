@@ -17,6 +17,20 @@ $(document).ready(function () {
             //{ data: 'content', name: 'Message' },
             { data: 'stageAtTimeOfMessage', name: 'StageAtTimeOfMessageStageAtTimeOfMessage' },
             {
+                data: 'isSeen',
+                name: 'isSeen',
+                render: function (data, type, row) {
+                    let tage = '';
+                    if (data) {
+                        tage = `<span class="badge bg-primary my-1 permission-badge">Seen</span>`;
+                    }
+                    else {
+                        tage = `<span class="badge bg-warning my-1 permission-badge">Not Seen</span>`;
+                    }
+                    return tage;
+                }
+            },
+            {
                 data: 'createdAt',
                 name: 'SentAt',
                 render: function (data, type, row) {
@@ -43,9 +57,9 @@ $(document).ready(function () {
                     // Add the 'Details' button if viewing is allowed
                     if (canView) {
                         actionButtons += `
-                <button class="btn btn-primary btn-sm me-2 dt-view">
-                    <i class="bi bi-info-square-fill"></i> Details
-                </button>`;
+                            <button class="btn btn-primary btn-sm me-2 dt-view">
+                                <i class="bi bi-info-square-fill"></i> View
+                            </button>`;
                     }
 
                     // Close the div and return the HTML

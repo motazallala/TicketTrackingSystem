@@ -92,9 +92,9 @@ public class RoleService : IRoleService
         }
 
         var nonDeletableRoleIds = new List<Guid>
-    {
-        Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // Admin role ID
-    };
+            {
+                Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // Admin role ID
+            };
 
         if (nonDeletableRoleIds.Contains(role.Id))
         {

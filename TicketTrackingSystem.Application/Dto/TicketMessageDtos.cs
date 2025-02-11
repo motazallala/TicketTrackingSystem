@@ -7,4 +7,6 @@ public class TicketMessageDto
     public Guid UserId { get; set; }
     public DateTime CreatedAt { get; set; }
     public string StageAtTimeOfMessage { get; set; }
+    public bool IsSeen { get; set; }
+
 }

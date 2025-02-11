@@ -2,13 +2,9 @@
 @inject IPermissionService _permissionService
 @inject IUserService _userService
 @{
-    ViewData["Title"] = "Home";
+    ViewData["Title"] = "Welcome Home";
     // Remove unused permission variables since they're not being used in the view
 }
-
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-</div>
 
 @if (User.Identity.IsAuthenticated)
 {
@@ -18,7 +14,7 @@
             @if (user.UserType.Equals(UserType.Member) && User.IsInRole("Admin"))
             {
                 <div class="col-sm-6 col-lg-3">
-                    <div class="card card-sm">
+                    <div class="card card-sm shadow">
                         <div class="card-body">
                             <div class="row align-items-center">
                                 <div class="col-auto">
@@ -36,7 +32,7 @@
                     </div>
                 </div>
                 <div class="col-sm-6 col-lg-3">
-                    <div class="card card-sm">
+                    <div class="card card-sm shadow">
                         <div class="card-body">
                             <div class="row align-items-center">
                                 <div class="col-auto">
@@ -57,7 +53,7 @@
             @if (user.UserType.Equals(UserType.Member))
             {
                 <div class="col-sm-6 col-lg-3">
-                    <div class="card card-sm">
+                    <div class="card card-sm shadow">
                         <div class="card-body">
                             <div class="row align-items-center">
                                 <div class="col-auto">
@@ -78,7 +74,7 @@
             @if (user.UserType.Equals(UserType.Client))
             {
                 <div class="col-sm-6 col-lg-3">
-                    <div class="card card-sm">
+                    <div class="card card-sm shadow">
                         <div class="card-body">
                             <div class="row align-items-center">
                                 <div class="col-auto">
