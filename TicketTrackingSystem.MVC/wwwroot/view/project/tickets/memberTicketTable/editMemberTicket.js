@@ -114,7 +114,6 @@ $(document).ready(function () {
         // Set up button handlers
         $('#accept').on('click', async function () {
             if (data.id) {
-                $('#myModal').modal('hide');
                 await handleUpdateTicket(data.id, 'accept');
             }
         });

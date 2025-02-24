@@ -1,34 +1,27 @@
-﻿const ticketHistoryServiceProxy = new Proxy({}, {
-    get: function (target, prop) {
-        return function (...args) {
-            const serializedArgs = args.map(arg =>
-                typeof arg === "object" ? JSON.stringify(arg) : arg
-            );
+﻿import { apiClient } from '../utility/apiClientUtility.js';
 
-            return fetch('https://localhost:7264/ticketHistory/call', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    Method: prop,
-                    Parameters: serializedArgs,
-                }),
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Network response was not ok: " + response.statusText);
-                    }
-                    return response.json();
-                })
-                .catch(error => {
-                    console.error(`Error calling service method "${prop}":`, error);
-                    throw error; // Rethrow to handle in calling code
-                });
-        };
-    },
-});
+// GET ALL TICKET HISTORY FOR REPORT
+export const getAllTicketHistoryForReportAsync = async (request) => {
+    return await apiClient(
+        '/tickethistory/getalltickethistoryforreportasync',
+        'POST',
+        {
+            dataTablesRequest: request.dataTablesRequest,
+            stageFilter: request.stageFilter,
+            deliveryStatusFilter: request.deliveryStatusFilter
+        }
+    );
+};
 
+// GET DELIVERY STATUS DROPDOWN
+export const getDeliveryStatusDropdown = async () => {
+    return await apiClient(
+        '/tickethistory/deliverystatusdropdown',
+        'GET'
+    );
+};
 
-export const getDeliveryStatusDropdown = () =>
-    ticketHistoryServiceProxy.getdeliverystatusdropdown();
+export default {
+    getAllTicketHistoryForReportAsync,
+    getDeliveryStatusDropdown
+};

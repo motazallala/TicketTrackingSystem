@@ -1,13 +1,12 @@
-﻿import { initializeDataTable } from '../../utility/dataTableUtility.js';
+﻿import { initializeDataTableAjax } from '../../utility/dataTableUtility.js';
 import { setupModalData } from '../../utility/dataModalUtility.js';
 
 let projectTable;
 
 $(document).ready(function () {
-    projectTable = initializeDataTable({
+    projectTable = initializeDataTableAjax({
         tableId: '#projectTable',
-        apiUrl: 'https://localhost:7264/project/call',
-        method: 'getallprojectpaginatedasync',
+        apiUrl: 'https://localhost:7264/project/getallprojectpaginatedasync',
         columns: [
             { data: 'id', name: 'ID' },
             { data: 'name', name: 'Name' },

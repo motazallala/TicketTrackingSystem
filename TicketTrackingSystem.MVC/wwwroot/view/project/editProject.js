@@ -1,62 +1,63 @@
 ﻿import { projectTable } from './projectTable.js';
-import { setupModalData, showErrorModal } from '../../utility/dataModalUtility.js';
+import { setupModalData, showErrorModal, setupFormModal } from '../../utility/dataModalUtility.js';
 import { updateProjectAsync } from '../../services/projectServices.js';
-
+import { showSuccessAlert, showErrorAlert } from '../../utility/alertUtility.js';
+import { FormManager } from '../../utility/formUitilty.js';
+import { showSpinner, hideSpinner } from '../../utility/spinnerUtility.js';
 $(document).ready(function () {
     projectTable.on('click', '.dt-edit', async function () {
         let data = projectTable.row($(this).parents('tr')).data();
-        const modalTitle = $('.modal .modal-title');
-        const modalBody = $('#modelBody');
-        const modalFooter = $('.modal .modal-footer');
 
         const title = 'Edit Department';
-        const bodyContent = `
-            <input type="hidden" class="form-control" id="id" name="id" value="${data.id}" >
-            <div class="form-group my-1">
-                <label for="name">Name :</label>
-                <input type="text" class="form-control" id="name" name="name">
-            </div>
-            <div class="form-group my-1">
-                <label for="description">Description :</label>
-                <input type="text" class="form-control" id="description" name="description">
-            </div>
-        `;
-        const viewButton = `<button type="button" class="btn btn-default" onclick="$('#myModal').modal('hide')" data-dismiss="modal">Close</button>`;
-        const editDepartment = '<button type="button" class="btn btn-primary" id="submit">Submit</button>';
-        setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [viewButton, editDepartment]);
-        populateProjectForm(data);
-        $('#myModal').modal('show');
-        $('#submit').on('click', async function () {
-            const editProjectDto = gatherFormData();
+        setupFormModal('edit-form', title, "Edit");
 
-            try {
-                const updateResult = await updateProjectAsync(JSON.stringify(editProjectDto));
-
+        const form = new FormManager("#edit-form", {
+            showAlerts: false,
+            resetOnSubmit: false,
+            onSubmit: async (data) => {
+                showSpinner('myModalContent', false, false, true);
+                const updateResult = await updateProjectAsync(data);
+                hideSpinner('myModalContent');
                 if (updateResult.isSuccess) {
-
+                    showSuccessAlert(updateResult.successMessage);
                     $('.modal').modal('hide');
                     projectTable.ajax.reload(null, false);
+                } else if (updateResult.error.code === 409) {
+                    showErrorAlert(updateResult.error.description);
+                    // Show error modal if there is a problem
+                    form.handleServerErrors(updateResult.error.validation);
                 }
                 else {
-                    showErrorModal(updateResult.error.description);
+                    showErrorAlert(updateResult.error.description);
                 }
-            } catch (e) {
-                showErrorModal('An error occurred while loading the data.');
             }
         });
+        form.addField({
+            name: "id",
+            label: "Id",
+            type: "hidden",
+            value: data.id,
+            hidden: true
+        });
+        form.addField({
+            name: "name",
+            label: "Name",
+            type: "text",
+            required: false,
+            value: data.name,
+            placeholder: "Enter Name",
+        });
+
+        form.addField({
+            name: "description",
+            label: "Description",
+            type: "text",
+            required: false,
+            value: data.description,
+            placeholder: "Enter Description",
+        });
+
+        $('#myModal').modal('show');
 
     });
-    // Populates user form fields with the data
-    function populateProjectForm(projectData) {
-        $('#id').val(projectData.id);
-        $('#name').val(projectData.name);
-        $('#description').val(projectData.description);
-    }
-    function gatherFormData() {
-        return {
-            id: $('#id').val(),
-            name: $('#name').val(),
-            description: $('#description').val(),
-        };
-    }
 });

@@ -1,5 +1,7 @@
-﻿import { initializeDataTable, reinitializeDataTable } from '../../../utility/dataTableUtility.js';
+﻿import { initializeDataTableAjax } from '../../../utility/dataTableUtility.js';
 import { setupModalData } from '../../../utility/dataModalUtility.js';
+import { showSuccessAlert } from '../../../utility/alertUtility.js';
+
 import { setRoleToUserAsync, removeRoleFromUserAsync } from '../../../services/userServices.js';
 
 $(document).ready(function () {
@@ -7,12 +9,11 @@ $(document).ready(function () {
     const roleId = $('#roleId').val();
 
     // Initialize the DataTable on page load
-    let userWithoutRoleTable = initializeDataTable({
+    let userWithoutRoleTable = initializeDataTableAjax({
         tableId: '#userWithoutRoleTable',
-        apiUrl: 'https://localhost:7264/user/call',
-        method: 'getalluserswithrolewithconditionpaginatedasync',
+        apiUrl: 'https://localhost:7264/user/getalluserswithrolewithconditionpaginatedasync',
         columns: getDataTableColumns(userWithRole),
-        additionalParameters: [userWithRole, roleId],
+        additionalParameters: () => ({ withRole:userWithRole, roleId }),
         failureCallback: showErrorMessage
     });
 
@@ -33,17 +34,22 @@ $(document).ready(function () {
         this.innerHTML = userWithRole ? 'Show Users With Role' : 'Show Users Without Role';
         userWithRole = !userWithRole;
 
-        reinitializeTable(userWithRole, roleId);
+        reloadTableWithFilters();
     });
 
-    // Reinitialize DataTable based on toggle
-    function reinitializeTable(userWithRolepar, roleIdpar) {
-        userWithoutRoleTable = reinitializeDataTable({
+    // Reload DataTable with filters (without reinitializing the table)
+    function reloadTableWithFilters() {
+        if ($.fn.DataTable.isDataTable('#userWithoutRoleTable')) {
+            // Destroy the existing DataTable
+            userWithoutRoleTable.destroy();
+        }
+
+        // Reinitialize the DataTable with updated columns based on userWithRole
+        userWithoutRoleTable = initializeDataTableAjax({
             tableId: '#userWithoutRoleTable',
-            apiUrl: 'https://localhost:7264/user/call',
-            method: 'getalluserswithrolewithconditionpaginatedasync',
-            columns: getDataTableColumns(userWithRolepar),
-            additionalParameters: [userWithRolepar, roleIdpar],
+            apiUrl: 'https://localhost:7264/user/getalluserswithrolewithconditionpaginatedasync',
+            columns: getDataTableColumns(userWithRole),  // Dynamically get columns based on toggle
+            additionalParameters: () => ({ withRole: userWithRole, roleId }),
             failureCallback: showErrorMessage
         });
     }
@@ -174,6 +180,7 @@ $(document).ready(function () {
         try {
             const result = await setRoleToUserAsync(userId, roleId);
             if (result.isSuccess) {
+                showSuccessAlert(result.successMessage);
                 $('#myModal').modal('hide');
                 userWithoutRoleTable.ajax.reload(null, false);
             } else {
@@ -189,6 +196,7 @@ $(document).ready(function () {
         try {
             const result = await removeRoleFromUserAsync(userId, roleId);
             if (result.isSuccess) {
+                showSuccessAlert(result.successMessage);
                 $('#myModal').modal('hide');
                 userWithoutRoleTable.ajax.reload(null, false);
             } else {

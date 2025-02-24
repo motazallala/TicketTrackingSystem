@@ -1,4 +1,6 @@
-﻿namespace TicketTrackingSystem.Application.Dto;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace TicketTrackingSystem.Application.Dto;
 public class UserDto
 {
     public Guid Id { get; set; }
@@ -16,11 +18,22 @@ public class UserDto
 }
 public class CreateUserDto
 {
+    [Required]
+    [MaxLength(100, ErrorMessage = "The FirstName Is To Long!")]
     public string FirstName { get; set; }
+    [Required]
+    [MaxLength(100, ErrorMessage = "The LastName Is To Long!")]
     public string LastName { get; set; }
+    [Required]
+    [MaxLength(100, ErrorMessage = "The UserName Is To Long!")]
     public string UserName { get; set; }
+    [Required]
+    [MaxLength(256, ErrorMessage = "The Email Is To Long!")]
     public string Email { get; set; }
+
+    [MaxLength(13, ErrorMessage = "The PhoneNumber Is To Long!")]
     public string? PhoneNumber { get; set; }
+    [Required]
     public string Password { get; set; }
     public string UserType { get; set; }
     public string? DepartmentId { get; set; }
@@ -28,10 +41,19 @@ public class CreateUserDto
 public class UpdateUserDto
 {
     public Guid Id { get; set; }
+    [Required]
+    [MaxLength(100, ErrorMessage = "The FirstName Is To Long!")]
     public string FirstName { get; set; }
+    [Required]
+    [MaxLength(100, ErrorMessage = "The LastName Is To Long!")]
     public string LastName { get; set; }
+    [Required]
+    [MaxLength(256, ErrorMessage = "The Email Is To Long!")]
     public string UserName { get; set; }
+    [Required]
+    [MaxLength(256, ErrorMessage = "The Email Is To Long!")]
     public string Email { get; set; }
+    [MaxLength(13, ErrorMessage = "The PhoneNumber Is To Long!")]
     public string? PhoneNumber { get; set; }
     public string Password { get; set; }
     public string UserType { get; set; }

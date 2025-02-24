@@ -1,45 +1,85 @@
-﻿const projectServiceProxy = new Proxy({}, {
-    get: function (target, prop) {
-        return function (...args) {
-            const serializedArgs = args.map(arg =>
-                typeof arg === "object" ? JSON.stringify(arg) : arg
-            );
+﻿import { apiClient } from '../utility/apiClientUtility.js';
 
-            return fetch('https://localhost:7264/project/call', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    Method: prop,
-                    Parameters: serializedArgs,
-                }),
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Network response was not ok: " + response.statusText);
-                    }
-                    return response.json();
-                })
-                .catch(error => {
-                    console.error(`Error calling service method "${prop}":`, error);
-                    throw error; // Rethrow to handle in calling code
-                });
-        };
-    },
-});
+// Project CRUD Operations
+export const createProjectAsync = async (createProjectDto) => {
+    return await apiClient(
+        '/project/createprojectasync',
+        'POST',
+        createProjectDto
+    );
+};
 
-export const createProjectAsync = (createProjectDto) =>
-    projectServiceProxy.createprojectasync(createProjectDto);
+export const updateProjectAsync = async (updateProjectDto) => {
+    return await apiClient(
+        '/project/updateprojectasync',
+        'POST',
+        updateProjectDto
+    );
+};
 
-export const updateProjectAsync = (updateProjectDto) =>
-    projectServiceProxy.updateprojectasync(updateProjectDto);
+export const deleteProjectAsync = async (projectId) => {
+    return await apiClient(
+        '/project/deleteprojectasync',
+        'POST',
+        { projectId: projectId }
+    );
+};
 
-export const deleteProjectAsync = (projectId) =>
-    projectServiceProxy.deleteprojectasync(projectId);
-export const setUserForProjectAsync = (userId, projectId, stage) =>
-    projectServiceProxy.setuserforprojectasync(userId, projectId, stage);
-export const removeUserFromProjectAsync = (userId, projectId) =>
-    projectServiceProxy.removeuserfromprojectasync(userId, projectId);
-export const getStageDropdown = () =>
-    projectServiceProxy.getstagedropdown();
+export const deleteProjectCascadeAsync = async (projectId) => {
+    return await apiClient(
+        '/project/deleteprojectcascadeasync',
+        'POST',
+        { projectId: projectId }
+    );
+};
+
+// Project User Management
+export const setUserForProjectAsync = async (userId, projectId, stage) => {
+    return await apiClient(
+        '/project/setuserforprojectasync',
+        'POST',
+        {
+            userId: userId,
+            projectId: projectId,
+            stage: stage
+        }
+    );
+};
+
+export const removeUserFromProjectAsync = async (userId, projectId) => {
+    return await apiClient(
+        '/project/removeuserfromprojectasync',
+        'POST',
+        {
+            userId: userId,
+            projectId: projectId
+        }
+    );
+};
+
+// Project Data Endpoints
+export const getStageDropdown = async () => {
+    return await apiClient(
+        '/project/getstagedropdown',
+        'GET'
+    );
+};
+
+export const getAllProjectPaginatedAsync = async (dataTablesRequest) => {
+    return await apiClient(
+        '/project/getallprojectpaginatedasync',
+        'POST',
+        { dataTablesRequest: dataTablesRequest }
+    );
+};
+
+export default {
+    createProjectAsync,
+    updateProjectAsync,
+    deleteProjectAsync,
+    deleteProjectCascadeAsync,
+    setUserForProjectAsync,
+    removeUserFromProjectAsync,
+    getStageDropdown,
+    getAllProjectPaginatedAsync
+};

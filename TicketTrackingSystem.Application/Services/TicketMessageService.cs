@@ -32,8 +32,19 @@ public class TicketMessageService : ITicketMessageService
             {
                 return Result<DataTablesResponse<TicketMessageDto>>.Failure("Ticket not found");
             }
-            var query = _unitOfWork.TicketMessage.GetAllAsQueryable().AsNoTracking().Where(p => p.TicketId == ticketId);
-
+            var query = _unitOfWork.TicketMessage.GetAllAsQueryable().AsNoTracking().Where(p => p.TicketId == ticketId).Select(c => new TicketMessageAllDto
+            {
+                Id = c.Id,
+                UserId = c.UserId,
+                Content = c.Content,
+                StageAtTimeOfMessage = c.StageAtTimeOfMessage,
+                IsSeen = c.IsSeen,
+                IsVisibleToClient = c.IsVisibleToClient,
+                UserName = c.User.UserName,
+                TicketId = c.TicketId,
+                CreatedAt = c.CreatedAt
+            });
+            var x = query.ToQueryString();
             //message for client
             if (member.User.UserType.Equals(UserType.Client))
             {
@@ -60,13 +71,13 @@ public class TicketMessageService : ITicketMessageService
             if (!string.IsNullOrEmpty(request.Search?.Value))
             {
                 var searchValue = request.Search.Value.ToLower();
-                query = query.Where(p => p.Content.ToLower().Contains(searchValue) || p.User.UserName.ToLower().Contains(searchValue));
+                query = query.Where(p => p.Content.ToLower().Contains(searchValue) || p.UserName.ToLower().Contains(searchValue));
             }
             // Apply ordering
             if (request.Order != null && request.Order.Any())
             {
                 var order = request.Order.First();
-                var columnName = request.Columns[order.Column].Data;
+                var columnName = request.Columns[order.Column.Value].Data;
                 var direction = order.Dir;
 
                 // Dynamically apply ordering

@@ -1,37 +1,37 @@
-﻿const ticketMessageServiceProxy = new Proxy({}, {
-    get: function (target, prop) {
-        return function (...args) {
-            const serializedArgs = args.map(arg =>
-                typeof arg === "object" ? JSON.stringify(arg) : arg
-            );
+﻿import { apiClient } from '../utility/apiClientUtility.js';
 
-            return fetch('https://localhost:7264/ticketMessage/call', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    Method: prop,
-                    Parameters: serializedArgs,
-                }),
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Network response was not ok: " + response.statusText);
-                    }
-                    return response.json();
-                })
-                .catch(error => {
-                    console.error(`Error calling service method "${prop}":`, error);
-                    throw error; // Rethrow to handle in calling code
-                });
-        };
-    },
-});
+// GET ALL TICKET MESSAGES PAGINATED
+export const getAllTicketMessagesPaginatedAsync = async (dataTablesRequest, ticketId) => {
+    return await apiClient(
+        '/ticketmessage/getallticketmessagespaginatedasync',
+        'POST',
+        {
+            dataTablesRequest: dataTablesRequest,
+            ticketId: ticketId
+        }
+    );
+};
 
+// GET ALL NOT SEEN MESSAGES FOR TICKET
+export const getAllNotSeenMessageForTicketAsync = async (ticketId) => {
+    return await apiClient(
+        '/ticketmessage/getallnotseenmessageforticketasync',
+        'POST',
+        { ticketId: ticketId }
+    );
+};
 
-export const getAllNotSeenMessageForTicketAsync = (ticketId) =>
-    ticketMessageServiceProxy.getallnotseenmessageforticketasync(ticketId);
+// MAKE MESSAGE SEEN
+export const makeMessageSeenAsync = async (messageId) => {
+    return await apiClient(
+        '/ticketmessage/makemessageseenasync',
+        'POST',
+        { messageId: messageId }
+    );
+};
 
-export const makeMessageSeenAsync = (messageId) =>
-    ticketMessageServiceProxy.makemessageseenasync(messageId);
+export default {
+    getAllTicketMessagesPaginatedAsync,
+    getAllNotSeenMessageForTicketAsync,
+    makeMessageSeenAsync
+};

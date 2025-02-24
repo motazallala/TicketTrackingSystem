@@ -1,46 +1,68 @@
 ﻿import { departmentTable } from './departmentTable.js';
-import { setupModalData, showErrorModal } from '../../utility/dataModalUtility.js';
+import { setupFormModal } from '../../utility/dataModalUtility.js';
+import { showSuccessAlert, showErrorAlert } from '../../utility/alertUtility.js';
+import { FormManager } from '../../utility/formUitilty.js';
+import {  showSpinner, hideSpinner } from '../../utility/spinnerUtility.js';
 import { updateDepartmentAsync } from '../../services/departmentServices.js';
 
 $(document).ready(function () {
     departmentTable.on('click', '.dt-edit', async function () {
         let data = departmentTable.row($(this).parents('tr')).data();
-        const modalTitle = $('.modal .modal-title');
-        const modalBody = $('#modelBody');
-        const modalFooter = $('.modal .modal-footer');
+
 
         const title = 'Edit Department';
-        const bodyContent = `
-                <input type="hidden" class="form-control" id="id" name="id" value="${data.id}" >
-            <div class="form-group">
-                <label for="name">Name :</label>
-                <input type="text" class="form-control" id="name" name="name" value="${data.name}" >
-            </div>
-            <div class="form-group">
-                <label for="description">Description :</label>
-                <input type="text" class="form-control" id="description" name="description" value="${data.description}">
-            </div>
-        `;
-        const viewButton = `<button type="button" class="btn btn-default" onclick="$('#myModal').modal('hide')" data-dismiss="modal">Close</button>`;
-        const editDepartment = '<button type="button" class="btn btn-primary" id="submit">Submit</button>';
-        setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [viewButton, editDepartment]);
-        $('#myModal').modal('show');
-        $('#submit').on('click', async function () {
-            const editDepartmentDto = {
-                id: $('#id').val().trim(),
-                name: $('#name').val().trim(),
-                description: $('#description').val().trim(),
-            };
-            const updateResult = await updateDepartmentAsync(JSON.stringify(editDepartmentDto))
-            if (updateResult.isSuccess) {
+        setupFormModal('edit-form', title, "Edit");
 
-                $('.modal').modal('hide');
-                departmentTable.ajax.reload(null, false);
-            }
-            else {
-                showErrorModal(updateResult.error.description);
+
+        const form = new FormManager("#edit-form", {
+            showAlerts: false,
+            resetOnSubmit: false,
+            onSubmit: async (data) => {
+                showSpinner('myModalContent', false, false, true);
+                const updateResult = await updateDepartmentAsync(data);
+                hideSpinner('myModalContent');
+                if (updateResult.isSuccess) {
+                    showSuccessAlert(updateResult.successMessage);
+                    $('.modal').modal('hide');
+                    departmentTable.ajax.reload(null, false);
+                } else if (updateResult.error.code === 409) {
+                    showErrorAlert(updateResult.error.description);
+                    // Show error modal if there is a problem
+                    form.handleServerErrors(updateResult.error.validation);
+                }
+                else {
+                    showErrorAlert(updateResult.error.description);
+                }
             }
         });
+        form.addField({
+            name: "id",
+            label: "Id",
+            type: "hidden",
+            value: data.id,
+            hidden : true
+        });
+        form.addField({
+            name: "name",
+            label: "Name",
+            type: "text",
+            required: false,
+            value: data.name,
+            placeholder: "Enter Name",
+        });
+
+        form.addField({
+            name: "description",
+            label: "Description",
+            type: "text",
+            required: false,
+            value: data.description,
+            placeholder: "Enter Description",
+        });
+
+
+
+        $('#myModal').modal('show');
 
     });
 });

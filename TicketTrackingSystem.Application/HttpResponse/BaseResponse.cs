@@ -38,15 +38,43 @@ public class BaseResponse
 
     public void SetErrorFromModelState(ModelStateDictionary modelState)
     {
-        var errors = modelState.Values
-            .SelectMany(v => v.Errors)
-            .Select(e => e.ErrorMessage)
+        var errors = modelState
+            .Where(kvp => kvp.Value.Errors != null)
+            .SelectMany(kvp => kvp.Value.Errors.Select(e => new { Field = kvp.Key.Split('.').Last(), Error = e.ErrorMessage }))
             .ToList();
+
+        // Group errors by field and join error messages for each field
+        var errorDictionary = errors
+            .GroupBy(e => e.Field)
+            .ToDictionary(g => g.Key, g => string.Join(", ", g.Select(e => e.Error)));
+
+        // Format errors as 'Field: ErrorMessage' and join with a new line for each error
+        var description = string.Join(", ", errorDictionary.Select(e => $"{e.Key} : {e.Value}"));
 
         _error = new ErrorMessage
         {
             Code = HttpStatusCode.Conflict,
-            Description = string.Join("; ", errors)
+            Description = description
+        };
+    }
+
+    public void SetErrorFromModelStateAsDictionary(ModelStateDictionary modelState, string descriptionMessage = "The Data You Send Not Correct!")
+    {
+        var errors = modelState
+            .Where(kvp => kvp.Value.Errors != null)
+            .SelectMany(kvp => kvp.Value.Errors.Select(e => new { Field = kvp.Key.Split('.').Last(), Error = e.ErrorMessage }))
+            .ToList();
+
+        // Group errors by field and join error messages for each field
+        var errorDictionary = errors
+            .GroupBy(e => e.Field)
+            .ToDictionary(g => g.Key, g => string.Join(", ", g.Select(e => e.Error)));
+
+        _error = new ErrorMessage
+        {
+            Code = HttpStatusCode.Conflict,
+            Description = descriptionMessage,
+            Validation = errorDictionary
         };
     }
 }

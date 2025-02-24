@@ -41,7 +41,8 @@ public interface IDepartmentService
     /// or an error message if an exception occurs.
     /// The string contains the success message indicating that the department has been deleted.
     /// </returns>
-    Task<Result<string>> DeleteDepartmentAsync(string id);
+    Task<Result<string>> DeleteDepartmentAsync(Guid id);
+    Task<Result<string>> DeleteDepartmentCascadeAsync(Guid id);
     /// <summary>
     /// Updates an existing department in the system based on the provided UpdateDepartmentDto.
     /// </summary>

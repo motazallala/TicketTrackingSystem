@@ -26,11 +26,6 @@ public class TicketService : ITicketService
     {
         try
         {
-            if (estimationTime < DateTime.Now)
-            {
-                return Result<TicketDto>.Failure("The estimation time is invalid");
-            }
-
             var ticket = await _unitOfWork.Tickets.GetByIdAsync(ticketId);
             if (ticket == null)
             {
@@ -52,7 +47,7 @@ public class TicketService : ITicketService
                 return Result<TicketDto>.Failure("The Ticket is already taken.");
             }
 
-            var isAssigned = await _unitOfWork.Tickets.GetAllAsQueryable().AnyAsync(p => p.AssignedToId == member.UserId && p.DeliveryStatus != DeliveryStatus.Late);
+            var isAssigned = await _unitOfWork.Tickets.CheckItemExistenceAsync(p => p.AssignedToId == member.UserId && p.DeliveryStatus != DeliveryStatus.Late);
             if (isAssigned)
             {
                 return Result<TicketDto>.Failure("User is already assigned to another ticket");
@@ -286,7 +281,19 @@ public class TicketService : ITicketService
         {
 
 
-            var query = _unitOfWork.Tickets.GetAllAsQueryable().AsNoTracking();
+            var query = _unitOfWork.Tickets.GetAllAsQueryable().AsNoTracking().Select(c => new AllTicketDto
+            {
+                Id = c.Id,
+                ProjectId = c.ProjectId,
+                AssignedToId = c.AssignedToId,
+                Status = c.Status,
+                Description = c.Description,
+                Stage = c.Stage,
+                Title = c.Title,
+                CreatedAt = c.CreatedAt,
+                CreatorName = c.Creator.UserName
+
+            });
             var user = await _unitOfWork.Users.GetByIdAsync(userId);
             if (_unitOfWork.Users.IsInRole(user, "Admin"))
             {
@@ -319,6 +326,7 @@ public class TicketService : ITicketService
                                             p.AssignedToId == member.UserId);
                 }
             }
+
             if (!string.IsNullOrEmpty(request.Search?.Value))
             {
                 var searchValue = request.Search.Value.ToLower();
@@ -330,7 +338,7 @@ public class TicketService : ITicketService
             if (request.Order != null && request.Order.Any())
             {
                 var order = request.Order.First();
-                var columnName = request.Columns[order.Column].Data;
+                var columnName = request.Columns[order.Column.Value].Data;
                 var direction = order.Dir;
 
                 // Dynamically apply ordering
@@ -345,6 +353,7 @@ public class TicketService : ITicketService
                 .Skip(request.Start)
                 .Take(request.Length)
                 .ToListAsync();
+
             // Now project the roles separately in the mapping phase
             var departmentDtos = _mapper.Map<IEnumerable<TicketDto>>(paginatedData);
             var response = new DataTablesResponse<TicketDto>
@@ -377,22 +386,17 @@ public class TicketService : ITicketService
             {
                 query = query.Where(p => p.CreatorId == userId && p.ProjectId == projectId);
             }
-            else
-            {
-                var member = await _unitOfWork.ProjectMembers.GetAllAsQueryable().FirstOrDefaultAsync(p => p.ProjectId == projectId && p.UserId == userId);
-                //in this line the bug
-                query = query.Where(p => p.Stage.Equals(member.Stage) && p.ProjectId == member.ProjectId);
-            }
+
             if (!string.IsNullOrEmpty(request.Search?.Value))
             {
                 var searchValue = request.Search.Value.ToLower();
-                query = query.Where(p => p.Title.ToLower().Contains(searchValue) || p.Description.ToLower().Contains(searchValue));
+                query = query.Where(p => p.Title.ToLower().Contains(searchValue));
             }
             // Apply ordering
             if (request.Order != null && request.Order.Any())
             {
                 var order = request.Order.First();
-                var columnName = request.Columns[order.Column].Data;
+                var columnName = request.Columns[order.Column.Value].Data;
                 var direction = order.Dir;
 
                 // Dynamically apply ordering
@@ -615,14 +619,28 @@ public class TicketService : ITicketService
                                  .Where(p => p.TicketId == ticket.Id && p.StageAfterChange == Stage.Stage1)
                                  .OrderByDescending(p => p.Date)
                                  .FirstOrDefaultAsync();
-                        //log re assign the user how send the ticket
-                        await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+                        if (lastStepOneHistory is not null)
                         {
-                            TicketId = ticket.Id,
-                            StageAfterChange = Stage.Stage1,
-                            AssignedToId = lastStepOneHistory.AssignedToId,
-                            CycleNumber = lastHistory.CycleNumber + 1
-                        });
+                            //log re assign the user how send the ticket
+                            await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+                            {
+                                TicketId = ticket.Id,
+                                StageAfterChange = Stage.Stage1,
+                                AssignedToId = lastStepOneHistory.AssignedToId,
+                                CycleNumber = lastHistory.CycleNumber + 1
+                            });
+                        }
+                        else
+                        {
+                            //log re assign the user how send the ticket
+                            await _unitOfWork.TicketHistory.AddAsync(new TicketHistory
+                            {
+                                TicketId = ticket.Id,
+                                StageAfterChange = Stage.Stage1,
+                                AssignedToId = null,
+                                CycleNumber = lastHistory.CycleNumber + 1
+                            });
+                        }
                         //message for the user for the stage 1
                         await _unitOfWork.TicketMessage.AddAsync(new TicketMessage
                         {
@@ -632,7 +650,14 @@ public class TicketService : ITicketService
                             Content = message
                         });
                         //re assign the user how returned the ticket
-                        ticket.AssignedToId = lastStepOneHistory.AssignedToId;
+                        if (lastStepOneHistory is not null)
+                        {
+                            ticket.AssignedToId = lastStepOneHistory.AssignedToId;
+                        }
+                        else
+                        {
+                            ticket.AssignedToId = null;
+                        }
                         ticket.Status = TicketStatus.Returned;
                         ticket.DeliveryStatus = null;
                         ticket.Stage = Stage.Stage1;
@@ -768,10 +793,6 @@ public class TicketService : ITicketService
 
     public async Task<Result<bool>> SetEstimatedCompletionDateForReassignTicketAsync(Guid ticketId, Guid userId, DateTime estimationTime)
     {
-        if (estimationTime < DateTime.Now)
-        {
-            return Result<bool>.Failure("The estimation time is invalid");
-        }
         var lastHistory = await _unitOfWork.TicketHistory.GetAllAsQueryable()
                      .Where(p => p.TicketId == ticketId)
                      .OrderByDescending(p => p.Date)
@@ -801,7 +822,7 @@ public class TicketService : ITicketService
         // Check if the user is a member of the specified project
         var member = await _unitOfWork.ProjectMembers
             .GetAllAsQueryable()
-            .FirstOrDefaultAsync(p => p.ProjectId == projectId && p.UserId == userId);
+            .FirstOrDefaultAsync(p => p.ProjectId == projectId && p.UserId != userId);
 
         // If the member doesn't exist, return an empty dropdown
         if (member == null)

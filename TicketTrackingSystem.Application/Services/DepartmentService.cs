@@ -32,7 +32,7 @@ public class DepartmentService : IDepartmentService
             if (request.Order != null && request.Order.Any())
             {
                 var order = request.Order.First();
-                var columnName = request.Columns[order.Column].Data;
+                var columnName = request.Columns[order.Column.Value].Data;
                 var direction = order.Dir;
 
                 // Dynamically apply ordering
@@ -79,18 +79,18 @@ public class DepartmentService : IDepartmentService
             return Result<DepartmentDto>.Failure(ex.Message);
         }
     }
-    public async Task<Result<string>> DeleteDepartmentAsync(string id)
+    public async Task<Result<string>> DeleteDepartmentAsync(Guid id)
     {
         try
         {
-            var department = await _unitOfWork.Departments.GetByIdAsync(Guid.Parse(id));
+            var department = await _unitOfWork.Departments.GetByIdAsync(id);
             if (department == null)
                 return Result<string>.Failure($"Department with ID {id} not found.");
 
             // Check for existing users before deletion
             var hasUsers = await _unitOfWork.Users.CheckItemExistenceAsync(u => u.DepartmentId == department.Id);
             if (hasUsers)
-                return Result<string>.Failure("Cannot delete department with existing users.");
+                return Result<string>.Failure($"There Is Existing Users In This Department.");
 
             _unitOfWork.Departments.Remove(department);
             await _unitOfWork.CompleteAsync();
@@ -99,6 +99,25 @@ public class DepartmentService : IDepartmentService
         catch (FormatException)
         {
             return Result<string>.Failure("Invalid department ID format.");
+        }
+        catch (Exception ex)
+        {
+            // Log the exception here
+            return Result<string>.Failure($"An error occurred while deleting the department: {ex.Message}");
+        }
+    }
+
+    public async Task<Result<string>> DeleteDepartmentCascadeAsync(Guid id)
+    {
+        try
+        {
+            var department = await _unitOfWork.Departments.GetByIdAsync(id);
+            if (department == null)
+                return Result<string>.Failure($"Department with ID {id} not found.");
+
+            _unitOfWork.Departments.Remove(department);
+            await _unitOfWork.CompleteAsync();
+            return Result<string>.Success("Department successfully deleted");
         }
         catch (Exception ex)
         {

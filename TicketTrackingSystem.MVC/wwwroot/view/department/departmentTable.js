@@ -1,13 +1,12 @@
-﻿import { initializeDataTable } from '../../utility/dataTableUtility.js';
+﻿import { initializeDataTableAjax } from '../../utility/dataTableUtility.js';
 import { setupModalData } from '../../utility/dataModalUtility.js';
 
 let departmentTable;
 
 $(document).ready(function () {
-    departmentTable = initializeDataTable({
+    departmentTable = initializeDataTableAjax({
         tableId: '#departmentTable',
-        apiUrl: 'https://localhost:7264/department/call',
-        method: 'getalldepartmentspaginatedasync',
+        apiUrl: 'https://localhost:7264/department/getalldepartmentspaginatedasync',
         columns: [
             { data: 'id', name: 'ID' },
             { data: 'name', name: 'Name' },

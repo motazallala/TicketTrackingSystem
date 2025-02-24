@@ -1,16 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
-using System.Text.Json;
 using TicketTrackingSystem.Application.Dto;
 using TicketTrackingSystem.Application.HttpResponse;
 using TicketTrackingSystem.Application.Interface;
 using TicketTrackingSystem.Common.Model;
 
 namespace TicketTrackingSystem.MVC.Controllers;
+
+[Route("user")]
 public class UserController : Controller
 {
     private readonly IUserService _userService;
     private readonly IPermissionService _permissionService;
+
     public UserController(IUserService userService, IPermissionService permissionService)
     {
         _userService = userService;
@@ -20,619 +23,165 @@ public class UserController : Controller
     {
         return View();
     }
-
-    [HttpPost("/user/call")]
-    public async Task<IActionResult> CallService([FromBody] DynamicRequest request)
+    [HttpPost("getalluserswithrolepaginatedasync")]
+    public async Task<IActionResult> GetAllUsersWithRolePaginatedAsync(
+        [FromBody] DataTablesRequest request)
     {
-        // Check necessary permissions
-        var permissions = await CheckPermissionsAsync(
-            PermissionName.ViewUser.ToString(),
-            PermissionName.CreateUser.ToString(),
-            PermissionName.EditUser.ToString(),
-            PermissionName.DeleteUser.ToString()
-        );
+        return await HandleUserOperation(request, PermissionName.ViewUser, async () =>
+            await _userService.GetAllUsersWithRolePaginatedAsync(request));
+    }
 
-        var canView = permissions[PermissionName.ViewUser.ToString()];
-        var canAdd = permissions[PermissionName.CreateUser.ToString()];
-        var canEdit = permissions[PermissionName.EditUser.ToString()];
-        var canDelete = permissions[PermissionName.DeleteUser.ToString()];
+    [HttpPost("getalluserswithrolewithconditionpaginatedasync")]
+    public async Task<IActionResult> GetAllUsersWithRoleWithConditionPaginatedAsync(
+        [FromBody] UserListRequest request)
+    {
+        return await HandleUserOperation(request, PermissionName.ViewUser, async () =>
+            await _userService.GetAllUsersWithRoleWithConditionPaginatedAsync(
+                request.DataTablesRequest,
+                request.WithRole,
+                request.RoleId));
+    }
 
-        var response = new BaseResponse();
-        var parameters = request.Parameters;
-        switch (request.Method.ToLower())
+    [HttpPost("createuserasync")]
+    public async Task<IActionResult> CreateUserAsync(
+        [FromBody] CreateUserDto request)
+    {
+        return await HandleUserOperation(request, PermissionName.CreateUser, async () =>
+            await _userService.CreateUserAsync(request));
+    }
+
+    [HttpPost("removerolefromuserasync")]
+    public async Task<IActionResult> RemoveRoleFromUserAsync(
+        [FromBody] UserRoleRequest request)
+    {
+        return await HandleUserOperation(request, PermissionName.DeleteUser, async () =>
+            await _userService.RemoveRoleFromUserAsync(request.UserId, request.RoleId));
+    }
+
+    [HttpGet("getusertypedropdown")]
+    public IActionResult GetUserTypeDropdown()
+    {
+        return Ok(new BaseResponse
         {
-            case "getalluserswithrolepaginatedasync":
-                {
-                    try
-                    {
-                        if (!canView)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to view users."
-                            });
-                            break;
-                        }
-                        if (parameters.Length < 1 || !(parameters[0] is JsonElement requestElement))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid pagination request data."
-                            });
-                            break;
-                        }
-                        var dataTablesRequest = JsonSerializer.Deserialize<DataTablesRequest>(requestElement.GetRawText(), new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-                        if (dataTablesRequest == null)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid DataTablesRequest format."
-                            });
-                            break;
-                        }
-                        var paginationResult = await _userService.GetAllUsersWithRolePaginatedAsync(dataTablesRequest);
-                        if (!paginationResult.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = paginationResult.ErrorMessage
-                            });
-                            break;
-                        }
-                        response.IsSuccess = true;
-                        response.Data = paginationResult.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
+            IsSuccess = true,
+            Data = _userService.GetUserTypeDropdown()
+        });
+    }
 
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-            case "getalluserswithrolewithconditionpaginatedasync":
-                {
-                    try
-                    {
-                        if (!canView)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to view users."
-                            });
-                            break;
-                        }
+    [HttpPost("getprojectmembersasync")]
+    public async Task<IActionResult> GetProjectMembersAsync(
+        [FromBody] ProjectMembersRequest request)
+    {
+        return await HandleUserOperation(request, PermissionName.ViewUser, async () =>
+            await _userService.GetProjectMembersAsync(
+                request.DataTablesRequest,
+                request.IsMember,
+                request.ProjectId));
+    }
 
-                        // Validate the number of parameters
-                        if (parameters.Length < 3 || !(parameters[0] is JsonElement requestElement) || !bool.TryParse(parameters[1].ToString(), out bool withRole) || string.IsNullOrEmpty(parameters[2]?.ToString()))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request parameters. Expected pagination request, withRole, and roleId."
-                            });
-                            break;
-                        }
+    [HttpPost("setroletouserasync")]
+    public async Task<IActionResult> SetRoleToUserAsync(
+        [FromBody] UserRoleRequest request)
+    {
+        return await HandleUserOperation(request, PermissionName.EditUser, async () =>
+            await _userService.SetRoleToUserAsync(request.UserId, request.RoleId));
+    }
 
-                        // Deserialize the DataTablesRequest
-                        var dataTablesRequest = JsonSerializer.Deserialize<DataTablesRequest>(requestElement.GetRawText(), new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-                        if (dataTablesRequest == null)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid DataTablesRequest format."
-                            });
-                            break;
-                        }
-                        var roleId = parameters[2].ToString();
-                        // Call the service method with the extracted parameters
-                        var paginationResult = await _userService.GetAllUsersWithRoleWithConditionPaginatedAsync(dataTablesRequest, withRole, roleId);
-                        if (!paginationResult.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = paginationResult.ErrorMessage
-                            });
-                            break;
-                        }
+    [HttpPost("deleteuserasync")]
+    public async Task<IActionResult> DeleteUserAsync(
+        [FromBody] UserIdRequest request)
+    {
+        return await HandleUserOperation(request, PermissionName.DeleteUser, async () =>
+            await _userService.DeleteUserAsync(request.UserId));
+    }
 
-                        // Success response
-                        response.IsSuccess = true;
-                        response.Data = paginationResult.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
+    [HttpPost("deleteusercascadeasync")]
+    public async Task<IActionResult> DeleteUserCascadeAsync(
+        [FromBody] UserIdRequest request)
+    {
+        return await HandleUserOperation(request, PermissionName.DeleteUser, async () =>
+            await _userService.DeleteUserCascadeAsync(request.UserId));
+    }
 
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-            case "createuserasync":
-                {
-                    try
-                    {
-                        if (!canAdd)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to create users."
-                            });
-                            break;
-                        }
-                        //get create users dto and check if the parameters are valid and if yes serilze user
-                        if (parameters.Length < 1 || string.IsNullOrEmpty(request.Parameters[0]?.ToString()))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request data."
-                            });
-                            break;
-                        }
-                        var model = JsonSerializer.Deserialize<CreateUserDto>(parameters[0].ToString(), new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
+    [HttpPost("updateuserasync")]
+    public async Task<IActionResult> UpdateUserAsync(
+        [FromBody] UpdateUserDto request)
+    {
+        return await HandleUserOperation(request, PermissionName.EditUser, async () =>
+            await _userService.UpdateUserAsync(request));
+    }
 
-                        if (model == null)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid CreateUserDto format."
-                            });
-                            break;
-                        }
-                        var result = await _userService.CreateUserAsync(model);
-                        if (!result.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = result.ErrorMessage
-                            });
-                            break;
-                        }
-                        response.IsSuccess = true;
-                        response.Data = result.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
+    [HttpPost("getuserbyidasync")]
+    public async Task<IActionResult> GetUserByIdAsync(
+        [FromBody] UserIdRequest request)
+    {
+        return await HandleUserOperation(request, PermissionName.ViewUser, async () =>
+            await _userService.GetUserByIdAsync(Guid.Parse(request.UserId)));
+    }
 
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
+    #region Common Handlers
+    private async Task<IActionResult> HandleUserOperation<T>(
+        T request,
+        PermissionName requiredPermission,
+        Func<Task<dynamic>> operation)
+    {
+        var response = new BaseResponse();
+        var permissionName = requiredPermission.ToString();
 
-            case "removerolefromuserasync":
-                {
-                    try
-                    {
-                        if (!canDelete)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to delete users."
-                            });
-                            break;
-                        }
-                        if (parameters.Length < 2 || string.IsNullOrEmpty(parameters[1]?.ToString()) || string.IsNullOrEmpty(parameters[1]?.ToString()))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request parameters. Expected user id and role id."
-                            });
-                            break;
-                        }
-                        var userId = parameters[0].ToString();
-                        var roleId = parameters[1].ToString();
-                        var result = await _userService.RemoveRoleFromUserAsync(userId, roleId);
-                        if (!result.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = result.ErrorMessage
-                            });
-                            break;
-                        }
-                        response.IsSuccess = true;
-                        response.Data = result.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-
-            case "getusertypedropdown":
-                {
-                    response.IsSuccess = true;
-                    response.Data = _userService.GetUserTypeDropdown();
-                    break;
-                }
-
-            case "getprojectmembersasync":
-                {
-                    try
-                    {
-                        if (!canView)
-                        {
-                            response.IsSuccess = true;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to view users."
-                            });
-                            break;
-                        }
-                        if (parameters.Length < 3 || string.IsNullOrEmpty(parameters[0]?.ToString()) || !bool.TryParse(parameters[1].ToString(), out bool isMember) || string.IsNullOrEmpty(parameters[2]?.ToString()))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request parameters. Expected user id and role id."
-                            });
-                            break;
-                        }
-                        var model = JsonSerializer.Deserialize<DataTablesRequest>(parameters[0].ToString(), new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true,
-                        });
-                        if (model is null)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid DataTablesRequest format."
-                            });
-                            break;
-                        }
-                        var projectId = Guid.Parse(parameters[2].ToString());
-                        var result = await _userService.GetProjectMembersAsync(model, isMember, projectId);
-                        if (!result.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = result.ErrorMessage
-                            });
-                            break;
-                        }
-                        response.IsSuccess = true;
-                        response.Data = result.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-            case "setroletouserasync":
-                {
-                    try
-                    {
-                        if (!canEdit)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to edit users."
-                            });
-                            break;
-                        }
-                        if (parameters.Length < 2 || string.IsNullOrEmpty(parameters[1]?.ToString()) || string.IsNullOrEmpty(parameters[1]?.ToString()))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request parameters. Expected user id and role id."
-                            });
-                            break;
-                        }
-                        var userId = parameters[0].ToString();
-                        var roleId = parameters[1].ToString();
-                        var result = await _userService.SetRoleToUserAsync(userId, roleId);
-                        if (!result.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = result.ErrorMessage
-                            });
-                            break;
-                        }
-                        response.IsSuccess = true;
-                        response.Data = result.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-
-            case "deleteuserasync":
-                {
-                    if (!canDelete)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.Forbidden,
-                            Description = "You do not have permission to delete users."
-                        });
-                        break;
-                    }
-                    if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.BadRequest,
-                            Description = "Invalid request data."
-                        });
-                        break;
-                    }
-                    var userId = parameters[0].ToString();
-                    var result = await _userService.DeleteUserAsync(userId);
-                    if (!result.IsSuccess)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = result.ErrorMessage
-                        });
-                        break;
-                    }
-                    response.IsSuccess = true;
-                    response.Data = result.Value;
-                    break;
-                }
-
-            case "deleteusercascadeasync":
-                {
-                    if (!canDelete)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.Forbidden,
-                            Description = "You do not have permission to delete users."
-                        });
-                        break;
-                    }
-                    if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.BadRequest,
-                            Description = "Invalid request data."
-                        });
-                        break;
-                    }
-                    var userId = parameters[0].ToString();
-                    var result = await _userService.DeleteUserCascadeAsync(userId);
-                    if (!result.IsSuccess)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = result.ErrorMessage
-                        });
-                        break;
-                    }
-                    response.IsSuccess = true;
-                    response.Data = result.Value;
-                    break;
-                }
-
-
-            case "updateuserasync":
-                {
-                    try
-                    {
-                        if (!canEdit)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to edit users."
-                            });
-                            break;
-                        }
-                        if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request data."
-                            });
-                            break;
-                        }
-                        var model = JsonSerializer.Deserialize<UpdateUserDto>(parameters[0].ToString(), new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-                        if (model == null)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid UpdataUserDto format."
-                            });
-                            break;
-                        }
-                        var result = await _userService.UpdateUserAsync(model);
-                        if (!result.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = result.ErrorMessage
-                            });
-                            break;
-                        }
-                        response.IsSuccess = true;
-                        response.Data = result.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-
-            case "getuserbyidasync":
-                {
-                    try
-                    {
-                        if (!canView)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to view users."
-                            });
-                            break;
-                        }
-                        if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request data."
-                            });
-                            break;
-                        }
-                        var userId = parameters[0].ToString();
-                        var result = await _userService.GetUserByIdAsync(Guid.Parse(userId));
-                        if (!result.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = result.ErrorMessage
-                            });
-                            break;
-                        }
-                        response.IsSuccess = true;
-                        response.Data = result.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-
-            default:
-                {
-                    response.IsSuccess = false;
-                    response.SetError(new ErrorMessage
-                    {
-                        Code = HttpStatusCode.NotFound,
-                        Description = "Method not found."
-                    });
-                    break;
-                }
+        // Check permissions
+        var permissions = await CheckPermissionsAsync(permissionName);
+        if (!permissions.ContainsKey(permissionName) || !permissions[permissionName])
+        {
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.Forbidden,
+                Description = $"No permission to {requiredPermission.ToString().ToLower()}"
+            });
+            return Ok(response);
         }
+
+        // Validate request
+        if (!ModelState.IsValid)
+        {
+            response.SetErrorFromModelState(ModelState);
+            return Ok(response);
+        }
+
+        try
+        {
+            var result = await operation();
+            return HandleServiceResult(response, result);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(response, ex);
+        }
+    }
+
+    private IActionResult HandleServiceResult(BaseResponse response, dynamic result)
+    {
+        if (result.IsSuccess)
+        {
+            response.IsSuccess = true;
+            response.Data = result.Value;
+            return Ok(response);
+        }
+
+        response.SetError(new ErrorMessage
+        {
+            Code = HttpStatusCode.BadRequest,
+            Description = result.ErrorMessage
+        });
+        return Ok(response);
+    }
+
+    private IActionResult HandleException(BaseResponse response, Exception ex)
+    {
+        response.SetError(new ErrorMessage
+        {
+            Code = HttpStatusCode.InternalServerError,
+            Description = ex.Message,
+        });
         return Ok(response);
     }
 
@@ -641,9 +190,40 @@ public class UserController : Controller
         if (User.Identity.IsAuthenticated)
         {
             var user = await _userService.GetUserByClaim(User);
-            var userId = user.Id;
-            return await _permissionService.HasPermissionAsync(userId, permissionNames);
+            return await _permissionService.HasPermissionAsync(user.Id, permissionNames);
         }
         return permissionNames.ToDictionary(p => p, p => false);
     }
+    #endregion
 }
+
+#region DTOs
+public class UserListRequest
+{
+    public DataTablesRequest DataTablesRequest { get; set; }
+    public bool WithRole { get; set; }
+    public string RoleId { get; set; }
+}
+
+public class UserRoleRequest
+{
+    [Required]
+    public string UserId { get; set; }
+
+    [Required]
+    public string RoleId { get; set; }
+}
+
+public class ProjectMembersRequest
+{
+    public DataTablesRequest DataTablesRequest { get; set; }
+    public bool IsMember { get; set; }
+    public Guid ProjectId { get; set; }
+}
+
+public class UserIdRequest
+{
+    [Required]
+    public string UserId { get; set; }
+}
+#endregion

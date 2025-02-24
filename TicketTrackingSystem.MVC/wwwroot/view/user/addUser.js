@@ -1,6 +1,7 @@
 ﻿import { userTable } from './userTable.js';
-import { setupModalData, showErrorModal } from '../../utility/dataModalUtility.js';
-import { addRoleToPermissionAsync, getUserTypeDropdown } from '../../services/userServices.js';
+import { setupModalData, showErrorModal, setupValidationModal } from '../../utility/dataModalUtility.js';
+import { showSuccessAlert } from '../../utility/alertUtility.js';
+import { createUserAsync, getUserTypeDropdown } from '../../services/userServices.js';
 import { getAllDepartmentsAsHtmlAsync } from '../../services/departmentServices.js';
 $(document).ready(function () {
     // Cache for dropdown options to avoid repeated server calls
@@ -64,10 +65,14 @@ $(document).ready(function () {
                 if (addUserDto.userType === '0') {
                     addUserDto.departmentId = '';
                 }
-                const addResult = await addRoleToPermissionAsync(JSON.stringify(addUserDto));
+                const addResult = await createUserAsync(addUserDto);
                 if (addResult.isSuccess) {
+                    showSuccessAlert(addResult.successMessage);
                     $('.modal').modal('hide');
                     userTable.ajax.reload(null, false);
+                }
+                else if (addResult.error.code === 409) {
+                    setupValidationModal(addResult.error.description);
                 }
                 else {
                     showErrorModal(addResult.error.description);
@@ -108,7 +113,7 @@ $(document).ready(function () {
             cachedDepartments = await getAllDepartmentsAsHtmlAsync();
         }
         if (cachedDepartments.isSuccess) {
-            $('#departmentId').append(cachedDepartments.value);
+            $('#departmentId').append(cachedDepartments.data.value);
         }
         else {
             showErrorModal(cachedDepartments.error.description);

@@ -21,17 +21,14 @@ public class HomeController : Controller
         _userService = userService;
         _boardService = boardService;
     }
-
     public IActionResult Index()
     {
         return View();
     }
-
     public IActionResult Privacy()
     {
         return View();
     }
-
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
@@ -39,139 +36,109 @@ public class HomeController : Controller
     }
 
 
-    [HttpPost("/dashboard/call")]
-    public async Task<IActionResult> CallService([FromBody] DynamicRequest request)
+    [HttpGet("home/gettotalmemberticketasync")]
+    public async Task<IActionResult> GetTotalMemberTicketAsync()
     {
-        // Check necessary permissions
-        var permissions = await CheckPermissionsAsync(
-            PermissionName.ViewDepartment.ToString(),
-            PermissionName.CreateDepartment.ToString(),
-            PermissionName.EditDepartment.ToString(),
-            PermissionName.DeleteDepartment.ToString()
-        );
-
-        var canView = permissions[PermissionName.ViewDepartment.ToString()];
-        var canAdd = permissions[PermissionName.CreateDepartment.ToString()];
-        var canEdit = permissions[PermissionName.EditDepartment.ToString()];
-        var canDelete = permissions[PermissionName.DeleteDepartment.ToString()];
-
-        var response = new BaseResponse();
-        var parameters = request.Parameters;
-
-        switch (request.Method.ToLower())
+        return await HandleDashboardOperation(PermissionName.EditTicket, async () =>
         {
-            case "assigntickettouserasync":
-                {
-                    var user = await _userService.GetUserByClaim(User);
-                    var result = await _boardService.GetTotalMemberTicketAsync(user.Id);
-                    if (!result.IsSuccess)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = result.ErrorMessage
-                        });
-                        break;
-                    }
-                    response.IsSuccess = true;
-                    response.Data = result.Value;
-                    break;
-                }
-            case "gettotalclientticketasync":
-                {
-                    var user = await _userService.GetUserByClaim(User);
-                    var result = await _boardService.GetTotalClientTicketAsync(user.Id);
-                    if (!result.IsSuccess)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = result.ErrorMessage
-                        });
-                        break;
-                    }
-                    response.IsSuccess = true;
-                    response.Data = result.Value;
-                    break;
-                }
-            case "gettotalusersasync":
-                {
-                    try
-                    {
-                        var result = await _boardService.GetTotalUsersAsync();
-                        if (!result.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = result.ErrorMessage
-                            });
-                            break;
-                        }
-                        response.IsSuccess = true;
-                        response.Data = result.Value;
-                        break;
+            var user = await _userService.GetUserByClaim(User);
+            return await _boardService.GetTotalMemberTicketAsync(user.Id);
+        });
+    }
 
-                    }
-                    catch (Exception)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = "An error occurred getting the data!"
-                        });
-                        break;
-                    }
-                }
-            case "gettotalticketsasync":
-                {
-                    try
-                    {
-                        var result = await _boardService.GetTotalTicketsAsync();
-                        if (!result.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = result.ErrorMessage
-                            });
-                            break;
-                        }
-                        response.IsSuccess = true;
-                        response.Data = result.Value;
-                        break;
+    [HttpGet("home/gettotalclientticketasync")]
+    public async Task<IActionResult> GetTotalClientTicketAsync()
+    {
+        return await HandleDashboardOperation(null, async () =>
+        {
+            var user = await _userService.GetUserByClaim(User);
+            return await _boardService.GetTotalClientTicketAsync(user.Id);
+        });
+    }
 
-                    }
-                    catch (Exception)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = "An error occurred getting the data!"
-                        });
-                        break;
-                    }
-                }
-            default:
+    [HttpGet("home/gettotalusersasync")]
+    public async Task<IActionResult> GetTotalUsersAsync()
+    {
+        return await HandleDashboardOperation(PermissionName.ViewDepartment, async () =>
+            await _boardService.GetTotalUsersAsync());
+    }
+
+    [HttpGet("home/gettotalticketsasync")]
+    public async Task<IActionResult> GetTotalTicketsAsync()
+    {
+        return await HandleDashboardOperation(PermissionName.ViewDepartment, async () =>
+            await _boardService.GetTotalTicketsAsync());
+    }
+
+    #region Common Handlers
+    private async Task<IActionResult> HandleDashboardOperation(
+        PermissionName? requiredPermission,
+        Func<Task<dynamic>> operation)
+    {
+        var response = new BaseResponse();
+        var permissionName = requiredPermission.ToString();
+
+        if (!string.IsNullOrEmpty(permissionName))
+        {
+            // Check permissions
+            var permissions = await CheckPermissionsAsync(permissionName);
+            if (!permissions.ContainsKey(permissionName) || !permissions[permissionName])
+            {
+                response.SetError(new ErrorMessage
                 {
-                    response.IsSuccess = false;
-                    response.SetError(new ErrorMessage
-                    {
-                        Code = HttpStatusCode.NotFound,
-                        Description = "Method not found."
-                    });
-                    break;
-                }
+                    Code = HttpStatusCode.Forbidden,
+                    Description = $"No permission to {requiredPermission.ToString().ToLower()}"
+                });
+                return Ok(response);
+            }
         }
 
+        // Validate request
+        if (!ModelState.IsValid)
+        {
+            response.SetErrorFromModelState(ModelState);
+            return Ok(response);
+        }
+
+        try
+        {
+            var result = await operation();
+            return HandleServiceResult(response, result);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(ex, response);
+        }
+    }
+    private IActionResult HandleException(Exception ex, BaseResponse response)
+    {
+        response.IsSuccess = false;
+        response.SetError(new ErrorMessage { Code = HttpStatusCode.InternalServerError, Description = ex.Message });
         return Ok(response);
     }
+    private async Task<Guid> GetCurrentUserId()
+    {
+        var user = await _userService.GetUserByClaim(User);
+        return user?.Id ?? Guid.Empty;
+    }
+
+    private IActionResult HandleServiceResult(BaseResponse response, dynamic result)
+    {
+        if (result.IsSuccess)
+        {
+            response.IsSuccess = true;
+            response.Data = result.Value;
+            return Ok(response);
+        }
+
+        response.SetError(new ErrorMessage
+        {
+            Code = HttpStatusCode.BadRequest,
+            Description = result.ErrorMessage
+        });
+        return Ok(response);
+    }
+
     private async Task<Dictionary<string, bool>> CheckPermissionsAsync(params string[] permissionNames)
     {
         if (User.Identity.IsAuthenticated)
@@ -182,5 +149,6 @@ public class HomeController : Controller
         }
         return permissionNames.ToDictionary(p => p, p => false);
     }
+    #endregion
 
 }

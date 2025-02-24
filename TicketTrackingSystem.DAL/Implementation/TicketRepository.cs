@@ -11,6 +11,25 @@ public class TicketRepository : Repository<Ticket>, ITicketRepository
     {
         _context = context;
     }
+    //Set the ticket status to deleted user
+    public async Task RemoveAssignFromTicketAsync(Guid userId)
+    {
+        var tickets = await _context.Ticket.Where(x => x.AssignedToId == userId).ToListAsync();
+        foreach (var ticket in tickets)
+        {
+            if (ticket.Status == TicketStatus.Assigned && ticket.Stage == Stage.Stage1)
+            {
+                ticket.Status = TicketStatus.Pending;
+            }
+            else if (ticket.Status == TicketStatus.Assigned && ticket.Stage == Stage.Stage2)
+            {
+                ticket.Status = TicketStatus.InProgress;
+            }
+            ticket.AssignedToId = null;
+            ticket.DeliveryStatus = null;
+            _context.Ticket.Update(ticket);
+        }
+    }
     public async Task SetLateTicketsAsync(Guid ticketId)
     {
         var ticket = await _context.Ticket.Include(c => c.TicketHistories).SingleOrDefaultAsync(v => v.Id == ticketId);

@@ -32,7 +32,7 @@ $(document).on('click', '.permission-badge', async function () {
     // Delete permission on click
     $('#deletePermission').off('click').on('click', async function () {
         // Implement the delete permission
-        const result = await removeRoleFromPermissionAsync({ roleId, permissionId });
+        const result = await removeRoleFromPermissionAsync({ roleId: roleId, permissionId:permissionId });
         if (result.isSuccess) {
             $('#myModal').modal('hide');
             roleTable.ajax.reload();

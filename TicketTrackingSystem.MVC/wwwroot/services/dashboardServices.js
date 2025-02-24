@@ -1,44 +1,31 @@
-﻿const dashboardServiceProxy = new Proxy({}, {
-    get: function (target, prop) {
-        return function (...args) {
-            const serializedArgs = args.map(arg =>
-                typeof arg === "object" ? JSON.stringify(arg) : arg
-            );
+﻿// Assuming the apiClient function is defined elsewhere in your project, similar to the previous example.
+import { apiClient } from '../utility/apiClientUtility.js';
 
-            return fetch('https://localhost:7264/dashboard/call', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    Method: prop,
-                    Parameters: serializedArgs,
-                }),
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Network response was not ok: " + response.statusText);
-                    }
-                    return response.json();
-                })
-                .catch(error => {
-                    console.error(`Error calling service method "${prop}":`, error);
-                    throw error; // Rethrow to handle in calling code
-                });
-        };
-    },
-});
+// Get Total Member Tickets
+export const getTotalMemberTicketAsync = async () => {
+    return await apiClient('/home/gettotalmemberticketasync', 'GET');
+};
 
-export const getTotalMemberTicketAsync = () =>
-    dashboardServiceProxy.assigntickettouserasync();
+// Get Total Client Tickets
+export const getTotalClientTicketAsync = async () => {
+    return await apiClient('/home/gettotalclientticketasync', 'GET');
+};
 
-export const getTotalClientTicketAsync = () =>
-    dashboardServiceProxy.gettotalclientticketasync();
+// Get Total Users
+export const getTotalUsersAsync = async () => {
+    return await apiClient('/home/gettotalusersasync', 'GET');
+};
 
-export const getTotalUsersAsync = () =>
-    dashboardServiceProxy.gettotalusersasync();
+// Get Total Tickets
+export const getTotalTicketsAsync = async () => {
+    return await apiClient('/home/gettotalticketsasync', 'GET');
+};
 
-export const getTotalTicketsAsync = () =>
-    dashboardServiceProxy.gettotalticketsasync();
+// Exporting all dashboard methods in case you want to import them all together
+export default {
+    getTotalMemberTicketAsync,
+    getTotalClientTicketAsync,
+    getTotalUsersAsync,
+    getTotalTicketsAsync,
+};
 
-export default dashboardServiceProxy;

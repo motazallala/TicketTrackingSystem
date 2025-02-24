@@ -37,7 +37,7 @@ public class ProjectService : IProjectService
             if (request.Order != null && request.Order.Any())
             {
                 var order = request.Order.First();
-                var columnName = request.Columns[order.Column].Data;
+                var columnName = request.Columns[order.Column.Value].Data;
                 var direction = order.Dir;
                 // Dynamically apply ordering
                 query = direction == "asc"
@@ -127,6 +127,13 @@ public class ProjectService : IProjectService
             var project = await _unitOfWork.Projects.GetByIdAsync(id);
             if (project == null)
                 return Result<string>.Failure("There is no product with this id.");
+            var memberInProject = await _unitOfWork.ProjectMembers.CheckItemExistenceAsync(c => c.ProjectId == project.Id);
+            var ticketInProject = await _unitOfWork.Tickets.CheckItemExistenceAsync(c => c.ProjectId == project.Id);
+
+            if (memberInProject || ticketInProject)
+            {
+                return Result<string>.Failure("There is member or opened tickets do you what to delete all related member and ticket?");
+            }
             _unitOfWork.Projects.Remove(project);
             await _unitOfWork.CompleteAsync();
             return Result<string>.Success("Project deleted successfully.");
@@ -137,6 +144,22 @@ public class ProjectService : IProjectService
         }
     }
 
+    public async Task<Result<string>> DeleteProjectCascadeAsync(Guid id)
+    {
+        try
+        {
+            var project = await _unitOfWork.Projects.GetByIdAsync(id);
+            if (project == null)
+                return Result<string>.Failure("There is no product with this id.");
+            _unitOfWork.Projects.Remove(project);
+            await _unitOfWork.CompleteAsync();
+            return Result<string>.Success("Project deleted successfully.");
+        }
+        catch (Exception ex)
+        {
+            return Result<string>.Failure(ex.Message);
+        }
+    }
     public async Task<Result<DataTablesResponse<ProjectDto>>> GetAllUserProjectsAsync(DataTablesRequest request, Guid clientId)
     {
         try

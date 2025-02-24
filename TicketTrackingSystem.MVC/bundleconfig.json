@@ -22,5 +22,17 @@
     "inputFiles": [
       "wwwroot/lib/UserUI/css/UserUIStyle.css"
     ]
+  },
+  {
+    "outputFileName": "wwwroot/utility/formUitilty.min.js",
+    "inputFiles": [
+      "wwwroot/utility/formUitilty.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/view/project/details/projectMemberTable.min.js",
+    "inputFiles": [
+      "wwwroot/view/project/details/projectMemberTable.js"
+    ]
   }
 ]

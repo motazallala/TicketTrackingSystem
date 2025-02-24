@@ -1,57 +1,52 @@
-﻿const userServiceProxy = new Proxy({}, {
-    get: function (target, prop) {
-        return function (...args) {
-            const serializedArgs = args.map(arg =>
-                typeof arg === "object" ? JSON.stringify(arg) : arg
-            );
+﻿import { apiClient } from '../utility/apiClientUtility.js';
 
-            return fetch('https://localhost:7264/user/call', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    Method: prop,
-                    Parameters: serializedArgs,
-                }),
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Network response was not ok: " + response.statusText);
-                    }
-                    return response.json();
-                })
-                .catch(error => {
-                    console.error(`Error calling service method "${prop}":`, error);
-                    throw error; // Rethrow to handle in calling code
-                });
-        };
-    },
-});
-export const setRoleToUserAsync = (userId, roleId) =>
-    userServiceProxy.setroletouserasync(userId, roleId);
+// Set Role to User
+export const setRoleToUserAsync = async (userId, roleId) => {
+    return await apiClient('/user/setroletouserasync', 'POST', { userId, roleId });
+};
 
+// Create User
+export const createUserAsync = async (createUserDto) => {
+    return await apiClient('/user/createuserasync', 'POST', createUserDto);
+};
 
+// Get User Type Dropdown
+export const getUserTypeDropdown = async () => {
+    return await apiClient('/user/getusertypedropdown', 'GET');
+};
 
-export const addRoleToPermissionAsync = (createUserDto) =>
-    userServiceProxy.createuserasync(createUserDto);
+// Remove Role from User
+export const removeRoleFromUserAsync = async (userId, roleId) => {
+    return await apiClient('/user/removerolefromuserasync', 'POST', { userId, roleId });
+};
 
+// Delete User
+export const deleteUserAsync = async (userId) => {
+    return await apiClient('/user/deleteuserasync', 'POST', { userId });
+};
 
-export const getUserTypeDropdown = () =>
-    userServiceProxy.getusertypedropdown();
+// Delete User Cascade
+export const deleteUserCascadeAsync = async (userId) => {
+    return await apiClient('/user/deleteusercascadeasync', 'POST', { userId });
+};
 
-export const removeRoleFromUserAsync = (userId, roleId) =>
-    userServiceProxy.removerolefromuserasync(userId, roleId);
+// Update User
+export const updateUserAsync = async (updateUserDto) => {
+    return await apiClient('/user/updateuserasync', 'POST', updateUserDto);
+};
 
-export const deleteUserAsync = (userId) =>
-    userServiceProxy.deleteuserasync(userId);
+// Get User by ID
+export const getUserByIdAsync = async (userId) => {
+    return await apiClient('/user/getuserbyidasync', 'POST', { userId });
+};
 
-export const deleteUserCascadeAsync = (userId) =>
-    userServiceProxy.deleteusercascadeasync(userId);
-export const updateUserAsync = (updateUserDto) =>
-    userServiceProxy.updateuserasync(updateUserDto);
-export const getUserByIdasync = (userId) =>
-    userServiceProxy.getuserbyidasync(userId);
-
-export default userServiceProxy;
-
+export default {
+    setRoleToUserAsync,
+    createUserAsync,
+    getUserTypeDropdown,
+    removeRoleFromUserAsync,
+    deleteUserAsync,
+    deleteUserCascadeAsync,
+    updateUserAsync,
+    getUserByIdAsync
+};

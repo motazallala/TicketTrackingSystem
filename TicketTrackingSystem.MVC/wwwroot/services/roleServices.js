@@ -1,41 +1,38 @@
-﻿const roleServiceProxy = new Proxy({}, {
-    get: function (target, prop) {
-        return function (...args) {
-            const serializedArgs = args.map(arg =>
-                typeof arg === "object" ? JSON.stringify(arg) : arg
-            );
+﻿import { apiClient } from '../utility/apiClientUtility.js';
 
-            return fetch('https://localhost:7264/role/call', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    Method: prop,
-                    Parameters: serializedArgs,
-                }),
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Network response was not ok: " + response.statusText);
-                }
-                return response.json();
-            })
-            .catch(error => {
-                console.error(`Error calling service method "${prop}":`, error);
-                throw error; // Rethrow to handle in calling code
-            });
-        };
-    },
-});
+// GET ALL ROLES PAGINATED
+export const getAllRolesPaginatedAsync = async (dataTablesRequest) => {
+    return await apiClient('/role/getallrolespaginatedasync', 'POST', dataTablesRequest);
+};
 
-export const createRoleAsync = (roleName) =>
-    roleServiceProxy.createroleasync(roleName);
-export const deleteRoleAsync = (roleName) =>
-    roleServiceProxy.deleteroleasync(roleName);
-export const updataRoleAsync = (updateRoleDto) =>
-    roleServiceProxy.updateroleasync(updateRoleDto);
-export const getAllRolesAsHtmlAsync = () =>
-    roleServiceProxy.getallrolesashtmlasync();
+// CREATE ROLE
+// If your backend expects an object with a roleName property, you can wrap the roleName accordingly.
+export const createRoleAsync = async (roleName) => {
+    return await apiClient('/role/createroleasync', 'POST',  roleName );
+};
 
-export default roleServiceProxy;
+// DELETE ROLE
+export const deleteRoleAsync = async (roleName) => {
+    return await apiClient(`/role/deleteroleasync/${roleName}`, 'DELETE');
+};
+
+export const deleteRoleCascadeAsync = async (roleName) => {
+    return await apiClient(`/role/deleterolecascadeasync/${roleName}`, 'DELETE');
+};
+// UPDATE ROLE
+export const updateRoleAsync = async (updateRoleDto) => {
+    return await apiClient('/role/updateroleasync', 'PUT', updateRoleDto);
+};
+
+// GET ALL ROLES AS HTML
+export const getAllRolesAsHtmlAsync = async () => {
+    return await apiClient('/role/getallrolesashtmlasync', 'GET');
+};
+
+export default {
+    getAllRolesPaginatedAsync,
+    createRoleAsync,
+    deleteRoleAsync,
+    updateRoleAsync,
+    getAllRolesAsHtmlAsync
+};

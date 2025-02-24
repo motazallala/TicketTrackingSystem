@@ -1,45 +1,62 @@
 ﻿import { departmentTable } from './departmentTable.js';
-import { setupModalData, showErrorModal } from '../../utility/dataModalUtility.js';
+import { setupFormModal } from '../../utility/dataModalUtility.js';
+import { showSuccessAlert, showErrorAlert } from '../../utility/alertUtility.js';
+import { showSpinner, hideSpinner } from '../../utility/spinnerUtility.js';
+import { FormManager } from '../../utility/formUitilty.js';
 import { createDepartmentAsync } from '../../services/departmentServices.js';
+
 $(document).ready(function () {
     $("#addDepartment").on("click", async function () {
-        //add department modal that has a name and description field and a submit button
-        const modalTitle = $('.modal .modal-title');
-        const modalBody = $('#modelBody');
-        const modalFooter = $('.modal .modal-footer');
         const title = 'Add Department';
-        const bodyContent = `
-            <div class="form-group">
-                <label for="name">Name:</label>
-                <input type="text" class="form-control" id="name" name="name">
-            </div>
-                <div class="form-group">
-                <label for="description">Description:</label>
-                <input type="text" class="form-control" id="description" name="description">
-           </div>
-        `;
-        const closeButton = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>';
-        const submitButton = '<button type="button" class="btn btn-primary" id="submit">Submit</button>';
-        setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [closeButton, submitButton]);
-        $('#myModal').modal('show');
-        $('#submit').on('click', async function () {
-            //get the name and description values from the modal
-            const addDepartmentDto = {
-                name: $('#name').val().trim(),
-                description: $('#description').val().trim(),
-            };
+        setupFormModal('myForm', title, 'Add');
 
-            //call the createDepartmentAsync method from the departmentService
-            const addResult = await createDepartmentAsync(JSON.stringify(addDepartmentDto))
-            if (addResult.isSuccess) {
-                //close the modal
-                $('.modal').modal('hide');
-                //reload the departmentTable
-                departmentTable.ajax.reload(null, false);
-            }
-            else {
-                showErrorModal(addResult.error.description);
+        const form = new FormManager("#myForm", {
+            showAlerts: false,
+            resetOnSubmit: false,
+            onSubmit: async (data) => {
+                showSpinner('myModalContent', false, false, true);
+                // Call the createDepartmentAsync method using the DTO object
+                const addResult = await createDepartmentAsync(data);
+                hideSpinner('myModalContent');
+                if (addResult.isSuccess) {
+                    showSuccessAlert(addResult.successMessage);
+                    // Hide the modal on success
+                    $('#myModal').modal('hide');
+                    // Reload the department table without resetting pagination
+                    departmentTable.ajax.reload(null, false);
+                } else if (addResult.error.code === 409) {
+                    showErrorAlert(addResult.error.description);
+                    // Show error modal if there is a problem
+                    form.handleServerErrors(addResult.error.validation);
+                }
+                else {
+                    showErrorAlert(addResult.error.description);
+                }
             }
         });
+        form.addField({
+            name: "name",
+            label: "Name",
+            type: "text",
+            required: false,
+            placeholder: "Enter Name",
+            //validation: ['required']
+        });
+
+        form.addField({
+            name: "description",
+            label: "Description",
+            type: "text",
+            required: false,
+            placeholder: "Enter Description",
+            //validation: ['required', 'min:2','date']
+            //validation: ['required']
+        });
+
+        // Show the modal
+        $('#myModal').modal('show');
+
     });
+
+
 });

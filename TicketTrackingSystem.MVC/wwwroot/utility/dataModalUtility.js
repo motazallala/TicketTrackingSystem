@@ -29,6 +29,48 @@ export function setupModalData(modalTitle, modalBody, modalFooter, title, bodyCo
     // Add buttons to the modal footer
     footerButtons.forEach(button => modalFooter.append(button));
 }
+//setupvaledtionmodel that take string like this Name : Name is required.,Description : Description is required. and return the error message
+export function setupValidationModal(errorMessage) {
+    const modalTitle = $('.modal .modal-title');
+    const modalBody = $('#modelBody');
+    const modalFooter = $('.modal .modal-footer');
+    const title = 'Error';
+
+    // Parse error messages into field-message pairs
+    const errorMessages = errorMessage.split('.,')
+        .filter(msg => msg.trim())
+        .map(msg => {
+            const [field, message] = msg.split(':').map(part => part.trim());
+            return `
+                <div class="alert alert-danger mb-2">
+                    <strong>${field}</strong>
+                    <p class="mb-0">${message.replace('.', '')}</p>
+                </div>
+            `;
+        })
+        .join('');
+
+    const bodyContent = errorMessages;
+    const closeButton = `<button type="button" class="btn btn-default" onclick="$('#myModal').modal('hide')" data-dismiss="modal">Close</button>`;
+
+    setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [closeButton]);
+    $('#myModal').modal('show');
+}
+
+export function setupFormModal(fromId, title, submitButtonName = 'Submit') {
+    // Get references to modal elements
+    const modalTitle = $('.modal .modal-title');
+    const modalBody = $('#modelBody');
+    const modalFooter = $('.modal .modal-footer');
+    const bodyContent = `
+                <form id="${fromId}">
+                    <div class="error-message text-danger" id="AllError"></div>
+                </form>
+        `;
+    const closeButton = `<button type="button" class="btn btn-secondary" onclick="$('#myModal').modal('hide')">Close</button>`;
+    const submitButton = `<button type="submit" class="btn btn-primary" form="${fromId}" id="submit">${submitButtonName}</button>`;
+    setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [submitButton,closeButton]);
+}
 
 export function showModal(title, description) {
     const modalTitle = $('.modal .modal-title');
@@ -53,8 +95,13 @@ export function showErrorModal(errorMessage) {
     const modalBody = $('.modal .modal-body');
     const modalFooter = $('.modal .modal-footer');
     const title = 'Error';
-    const bodyContent = `Error Description <p>${errorMessage}</p>`;
+
+    // Replace new lines with <br> tags for HTML rendering
+    const formattedErrorMessage = errorMessage.replace(/\n/g, '<br>');
+
+    const bodyContent = `Error Description <p>${formattedErrorMessage}</p>`;
     const closeButton = `<button type="button" class="btn btn-default" onclick="$('#myModal').modal('hide')" data-dismiss="modal">Close</button>`;
+
     setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [closeButton]);
     $('#myModal').modal('show');
 }

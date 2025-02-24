@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using System.Text.Json;
 using TicketTrackingSystem.Application.Dto;
 using TicketTrackingSystem.Application.HttpResponse;
 using TicketTrackingSystem.Application.Interface;
 using TicketTrackingSystem.Common.Model;
 
 namespace TicketTrackingSystem.MVC.Controllers;
+[Authorize]
+[Route("project")]
 public class ProjectController : Controller
 {
     private readonly IProjectService _projectService;
@@ -25,6 +26,7 @@ public class ProjectController : Controller
     {
         return View();
     }
+    [Route("Details/{id}")]
     public async Task<IActionResult> Details(Guid id)
     {
         var result = await _projectService.GetProjectByIdAsync(id);
@@ -35,7 +37,7 @@ public class ProjectController : Controller
         }
         return View(result.Value);
     }
-    [Authorize]
+    [Route("Tickets/{id}")]
     public async Task<IActionResult> Tickets(Guid id)
     {
         var result = await _projectService.GetProjectByIdAsync(id);
@@ -53,7 +55,7 @@ public class ProjectController : Controller
         return View(result.Value);
     }
 
-    [HttpGet("project/ticket/{ticketId}/messages")]
+    [HttpGet("ticket/{ticketId}/messages")]
     public async Task<IActionResult> Messages(Guid ticketId)
     {
         var result = await _ticketService.GetTicketByIdAsync(ticketId);
@@ -65,469 +67,308 @@ public class ProjectController : Controller
         return View(result.Value);
     }
 
-    [HttpPost("/project/call")]
-    public async Task<IActionResult> CallService([FromBody] DynamicRequest request)
+    [HttpPost("getallprojectpaginatedasync")]
+    public async Task<IActionResult> GetAllProjectPaginatedAsync(
+            [FromBody] DataTablesRequest request)
     {
-        // Check necessary permissions
-        var permissions = await CheckPermissionsAsync(
-            PermissionName.ViewProject.ToString(),
-            PermissionName.CreateProject.ToString(),
-            PermissionName.EditProject.ToString(),
-            PermissionName.DeleteProject.ToString()
-        );
-
-
-        var canView = permissions[PermissionName.ViewProject.ToString()];
-        var canAdd = permissions[PermissionName.CreateProject.ToString()];
-        var canEdit = permissions[PermissionName.EditProject.ToString()];
-        var canDelete = permissions[PermissionName.DeleteProject.ToString()];
-
         var response = new BaseResponse();
-        var parameters = request.Parameters;
-        switch (request.Method.ToLower())
+        if (!ModelState.IsValid)
         {
-            case "getallprojectpaginatedasync":
-                {
-                    try
-                    {
-                        if (!canView)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to view projects."
-                            });
-                            break;
-                        }
-                        if (parameters.Length < 1 || !(parameters[0] is JsonElement requestElement))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request."
-                            });
-                            break;
-                        }
-                        var requestModel = JsonSerializer.Deserialize<DataTablesRequest>(requestElement.GetRawText(), new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-                        var result = await _projectService.GetAllProjectPaginatedAsync(requestModel);
-                        if (!result.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = result.ErrorMessage
-                            });
-                            break;
-                        }
-                        response.IsSuccess = true;
-                        response.Data = result.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-
-            case "createprojectasync":
-                {
-                    try
-                    {
-                        if (!canAdd)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to add projects."
-                            });
-                            break;
-                        }
-                        if (parameters.Length < 1 || string.IsNullOrEmpty(request.Parameters[0]?.ToString()))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request."
-                            });
-                            break;
-                        }
-                        var requestModel = JsonSerializer.Deserialize<CreateProjectDto>(parameters[0].ToString(), new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-                        if (requestModel is null || string.IsNullOrEmpty(requestModel.Name) || string.IsNullOrEmpty(requestModel.Description))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request."
-                            });
-                            break;
-                        }
-                        var result = await _projectService.CreateProjectAsync(requestModel);
-                        if (!result.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = result.ErrorMessage
-                            });
-                        }
-                        response.IsSuccess = true;
-                        response.Data = result.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-
-            case "updateprojectasync":
-                {
-                    try
-                    {
-                        if (!canEdit)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to edit projects."
-                            });
-                            break;
-                        }
-                        if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request."
-                            });
-                            break;
-                        }
-                        var requestModel = JsonSerializer.Deserialize<UpdateProjectDto>(parameters[0].ToString(), new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-                        if (requestModel is null || requestModel.Id == Guid.Empty || string.IsNullOrEmpty(requestModel.Name) || string.IsNullOrEmpty(requestModel.Description))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request."
-                            });
-                            break;
-                        }
-                        var result = await _projectService.UpdateProjectAsync(requestModel);
-                        if (!result.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = result.ErrorMessage
-                            });
-                        }
-                        response.IsSuccess = true;
-                        response.Data = result.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-
-            case "deleteprojectasync":
-                {
-                    try
-                    {
-                        if (!canDelete)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.Forbidden,
-                                Description = "You do not have permission to delete projects."
-                            });
-                            break;
-                        }
-                        if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid request."
-                            });
-                            break;
-                        }
-                        var projectId = Guid.Parse(parameters[0].ToString());
-                        var result = await _projectService.DeleteProjectAsync(projectId);
-                        if (!result.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = result.ErrorMessage
-                            });
-                            break;
-                        }
-                        response.IsSuccess = true;
-                        response.Data = result.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-
-            case "setuserforprojectasync":
-                {
-                    if (!canEdit)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.Forbidden,
-                            Description = "You do not have permission to edit projects."
-                        });
-                        break;
-                    }
-                    if (parameters.Length < 3 || string.IsNullOrEmpty(parameters[0]?.ToString()) || string.IsNullOrEmpty(parameters[1]?.ToString()) || !(int.TryParse(parameters[2]?.ToString(), out int stage)))
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.BadRequest,
-                            Description = "Invalid request."
-                        });
-                        break;
-                    }
-                    var userId = Guid.Parse(parameters[0].ToString());
-                    var projectId = Guid.Parse(parameters[1].ToString());
-                    var result = await _projectService.SetUserForProjectAsync(userId, projectId, stage);
-                    if (!result.IsSuccess)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = result.ErrorMessage
-                        });
-                        break;
-                    }
-                    response.IsSuccess = true;
-                    response.Data = result.Value;
-                    break;
-                }
-
-            case "removeuserfromprojectasync":
-                {
-                    if (!canEdit)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.Forbidden,
-                            Description = "You do not have permission to edit projects."
-                        });
-                        break;
-                    }
-                    if (parameters.Length < 2 || string.IsNullOrEmpty(parameters[0]?.ToString()) || string.IsNullOrEmpty(parameters[1]?.ToString()))
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.BadRequest,
-                            Description = "Invalid request."
-                        });
-                        break;
-                    }
-                    var userId = Guid.Parse(parameters[0].ToString());
-                    var projectId = Guid.Parse(parameters[1].ToString());
-                    var result = await _projectService.RemoveUserFromProjectAsync(userId, projectId);
-                    if (!result.IsSuccess)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = result.ErrorMessage
-                        });
-                        break;
-                    }
-                    response.IsSuccess = true;
-                    response.Data = result.Value;
-                    break;
-                }
-            case "getstagedropdown":
-                {
-                    response.IsSuccess = true;
-                    response.Data = _projectService.GetStageDropdown();
-                    break;
-                }
-            default:
-                {
-                    response.IsSuccess = false;
-                    response.SetError(new ErrorMessage
-                    {
-                        Code = HttpStatusCode.MethodNotAllowed,
-                        Description = "Invalid method."
-                    });
-                    break;
-                }
+            response.IsSuccess = false;
+            response.SetErrorFromModelState(ModelState);
+            return Ok(response);
         }
-        return Ok(response);
+        var permissions = await CheckPermissionsAsync(PermissionName.ViewProject.ToString());
 
+        if (!permissions[PermissionName.ViewProject.ToString()])
+        {
+            return ForbidResponse(response, "view projects");
+        }
+
+        try
+        {
+            var result = await _projectService.GetAllProjectPaginatedAsync(request);
+            return HandleServiceResult(response, result);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(response, ex);
+        }
     }
 
-    [HttpPost("/projectforclient/call")]
-    public async Task<IActionResult> CallProjectService([FromBody] DynamicRequest request)
+    [HttpPost("getalluserprojectsasync")]
+    public async Task<IActionResult> GetAllUserProjectsAsync(
+    [FromBody] DataTablesRequest request)
     {
-        // Check necessary permissions
-        var permissions = await CheckPermissionsAsync(
-            PermissionName.ViewProject.ToString(),
-            PermissionName.CreateProject.ToString(),
-            PermissionName.EditProject.ToString(),
-            PermissionName.DeleteProject.ToString()
-        );
-
-
-        var canView = permissions[PermissionName.ViewProject.ToString()];
-        var canAdd = permissions[PermissionName.CreateProject.ToString()];
-        var canEdit = permissions[PermissionName.EditProject.ToString()];
-        var canDelete = permissions[PermissionName.DeleteProject.ToString()];
         var response = new BaseResponse();
-        var parameters = request.Parameters;
-        switch (request.Method.ToLower())
+
+        // Permission check
+        var permissions = await CheckPermissionsAsync(PermissionName.ViewProject.ToString());
+        if (!permissions[PermissionName.ViewProject.ToString()])
         {
-            case "getalluserprojectsasync":
-                {
-                    if (!canView)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.Forbidden,
-                            Description = "You do not have permission to view projects."
-                        });
-                        break;
-                    }
-                    if (parameters.Length < 1 || string.IsNullOrEmpty(parameters[0]?.ToString()))
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.BadRequest,
-                            Description = "Invalid request."
-                        });
-                        break;
-                    }
-                    if (!User.Identity.IsAuthenticated)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.Unauthorized,
-                            Description = "You are not authenticated."
-                        });
-                        break;
-                    }
-                    var user = await _userService.GetUserByClaim(User);
-                    if (user is null)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.Unauthorized,
-                            Description = "You are not authenticated."
-                        });
-                        break;
-                    }
-                    var model = JsonSerializer.Deserialize<DataTablesRequest>(parameters[0].ToString(), new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true,
-                    });
-                    if (model is null)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.BadRequest,
-                            Description = "Invalid request."
-                        });
-
-                        break;
-                    }
-                    var userId = user.Id;
-                    var result = await _projectService.GetAllUserProjectsAsync(model, userId);
-                    if (!result.IsSuccess)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = result.ErrorMessage
-                        });
-                        break;
-                    }
-                    response.IsSuccess = true;
-                    response.Data = result.Value;
-
-                    break;
-                }
-
-            default:
-                {
-                    response.IsSuccess = false;
-                    response.SetError(new ErrorMessage
-                    {
-                        Code = HttpStatusCode.MethodNotAllowed,
-                        Description = "Invalid method."
-                    });
-                    break;
-                }
+            return ForbidResponse(response, "view projects");
         }
+
+
+
+        // Get current user
+        var user = await _userService.GetUserByClaim(User);
+        if (user == null)
+        {
+            return UnauthorizedResponse(response);
+        }
+
+        try
+        {
+            var result = await _projectService.GetAllUserProjectsAsync(
+                request,
+                user.Id);
+
+            return HandleServiceResult(response, result);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(response, ex);
+        }
+    }
+
+
+    [HttpPost("createprojectasync")]
+    public async Task<IActionResult> CreateProjectAsync(
+        [FromBody] CreateProjectDto request)
+    {
+        var response = new BaseResponse();
+        if (!ModelState.IsValid)
+        {
+            response.IsSuccess = false;
+            response.SetErrorFromModelStateAsDictionary(ModelState);
+            return Ok(response);
+        }
+        var permissions = await CheckPermissionsAsync(PermissionName.CreateProject.ToString());
+
+        if (!permissions[PermissionName.CreateProject.ToString()])
+        {
+            return ForbidResponse(response, "create projects");
+        }
+
+        try
+        {
+            var result = await _projectService.CreateProjectAsync(request);
+            return HandleServiceResult(response, result);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(response, ex);
+        }
+    }
+
+    [HttpPost("updateprojectasync")]
+    public async Task<IActionResult> UpdateProjectAsync(
+        [FromBody] UpdateProjectDto request)
+    {
+        var response = new BaseResponse();
+        if (!ModelState.IsValid)
+        {
+            response.IsSuccess = false;
+            response.SetErrorFromModelStateAsDictionary(ModelState);
+            return Ok(response);
+        }
+        var permissions = await CheckPermissionsAsync(PermissionName.EditProject.ToString());
+
+        if (!permissions[PermissionName.EditProject.ToString()])
+        {
+            return ForbidResponse(response, "edit projects");
+        }
+
+        try
+        {
+            var result = await _projectService.UpdateProjectAsync(request);
+            return HandleServiceResult(response, result);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(response, ex);
+        }
+    }
+
+    [HttpPost("deleteprojectasync")]
+    public async Task<IActionResult> DeleteProjectAsync(
+        [FromBody] DeleteProjectRequest request)
+    {
+        var response = new BaseResponse();
+        if (!ModelState.IsValid)
+        {
+            response.IsSuccess = false;
+            response.SetErrorFromModelState(ModelState);
+            return Ok(response);
+        }
+        var permissions = await CheckPermissionsAsync(PermissionName.DeleteProject.ToString());
+
+        if (!permissions[PermissionName.DeleteProject.ToString()])
+        {
+            return ForbidResponse(response, "delete projects");
+        }
+
+        try
+        {
+            var result = await _projectService.DeleteProjectAsync(request.ProjectId);
+            return HandleServiceResult(response, result);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(response, ex);
+        }
+    }
+    [HttpPost("deleteprojectcascadeasync")]
+    public async Task<IActionResult> DeleteProjectCascadeAsync(
+    [FromBody] DeleteProjectRequest request)
+    {
+        var response = new BaseResponse();
+        if (!ModelState.IsValid)
+        {
+            response.IsSuccess = false;
+            response.SetErrorFromModelState(ModelState);
+            return Ok(response);
+        }
+        var permissions = await CheckPermissionsAsync(PermissionName.DeleteProject.ToString());
+
+        if (!permissions[PermissionName.DeleteProject.ToString()])
+        {
+            return ForbidResponse(response, "delete projects");
+        }
+
+        try
+        {
+            var result = await _projectService.DeleteProjectCascadeAsync(request.ProjectId);
+            return HandleServiceResult(response, result);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(response, ex);
+        }
+    }
+    [HttpPost("setuserforprojectasync")]
+    public async Task<IActionResult> SetUserForProjectAsync(
+        [FromBody] SetUserForProjectRequest request)
+    {
+        var response = new BaseResponse();
+        if (!ModelState.IsValid)
+        {
+            response.IsSuccess = false;
+            response.SetErrorFromModelState(ModelState);
+            return Ok(response);
+        }
+        var permissions = await CheckPermissionsAsync(PermissionName.EditProject.ToString());
+
+        if (!permissions[PermissionName.EditProject.ToString()])
+        {
+            return ForbidResponse(response, "edit projects");
+        }
+
+        try
+        {
+            var result = await _projectService.SetUserForProjectAsync(
+                request.UserId,
+                request.ProjectId,
+                request.Stage);
+            return HandleServiceResult(response, result);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(response, ex);
+        }
+    }
+
+    [HttpPost("removeuserfromprojectasync")]
+    public async Task<IActionResult> RemoveUserFromProjectAsync(
+        [FromBody] RemoveUserFromProjectRequest request)
+    {
+        var response = new BaseResponse();
+        if (!ModelState.IsValid)
+        {
+            response.IsSuccess = false;
+            response.SetErrorFromModelState(ModelState);
+            return Ok(response);
+        }
+        var permissions = await CheckPermissionsAsync(PermissionName.EditProject.ToString());
+
+        if (!permissions[PermissionName.EditProject.ToString()])
+        {
+            return ForbidResponse(response, "edit projects");
+        }
+
+        try
+        {
+            var result = await _projectService.RemoveUserFromProjectAsync(
+                request.UserId,
+                request.ProjectId);
+            return HandleServiceResult(response, result);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(response, ex);
+        }
+    }
+
+    [HttpGet("getstagedropdown")]
+    public IActionResult GetStageDropdown()
+    {
+        var response = new BaseResponse
+        {
+            IsSuccess = true,
+            Data = _projectService.GetStageDropdown()
+        };
+        return Ok(response);
+    }
+
+    // Common handler methods
+    private IActionResult UnauthorizedResponse(BaseResponse response)
+    {
+        response.IsSuccess = false;
+        response.SetError(new ErrorMessage
+        {
+            Code = HttpStatusCode.Unauthorized,
+            Description = "You are not authenticated."
+        });
+        return Ok(response);
+    }
+    private IActionResult HandleServiceResult(BaseResponse response, dynamic result)
+    {
+        if (!result.IsSuccess)
+        {
+            response.IsSuccess = false;
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.InternalServerError,
+                Description = result.ErrorMessage
+            });
+            return Ok(response);
+        }
+
+        response.IsSuccess = true;
+        response.Data = result.Value;
+        return Ok(response);
+    }
+
+    private IActionResult HandleException(BaseResponse response, Exception ex)
+    {
+        response.IsSuccess = false;
+        response.SetError(new ErrorMessage
+        {
+            Code = HttpStatusCode.InternalServerError,
+            Description = ex.Message
+        });
+        return Ok(response);
+    }
+
+    private IActionResult ForbidResponse(BaseResponse response, string action)
+    {
+        response.IsSuccess = false;
+        response.SetError(new ErrorMessage
+        {
+            Code = HttpStatusCode.Forbidden,
+            Description = $"You do not have permission to {action}."
+        });
         return Ok(response);
     }
 
@@ -542,3 +383,5 @@ public class ProjectController : Controller
         return permissionNames.ToDictionary(p => p, p => false);
     }
 }
+
+

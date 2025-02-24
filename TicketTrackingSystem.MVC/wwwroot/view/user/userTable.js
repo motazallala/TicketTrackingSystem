@@ -1,11 +1,11 @@
-﻿import { initializeDataTable } from '../../utility/dataTableUtility.js';
+﻿import { initializeDataTableAjax } from '../../utility/dataTableUtility.js';
 import { setupModalData } from '../../utility/dataModalUtility.js';
 let userTable;
 $(document).ready(function () {
-    userTable = initializeDataTable({
+    userTable = initializeDataTableAjax({
         tableId: '#userTable',
-        apiUrl: 'https://localhost:7264/user/call',
-        method: 'getalluserswithrolepaginatedasync',
+        apiUrl: 'https://localhost:7264/user/getalluserswithrolepaginatedasync',
+        method: '',
         columns: [
             { data: 'id', name: 'ID' },
             { data: 'fullName', name: 'FullName', orderable: false },

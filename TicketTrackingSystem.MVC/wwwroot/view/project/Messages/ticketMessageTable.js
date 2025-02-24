@@ -1,4 +1,4 @@
-﻿import { initializeDataTable } from '../../../utility/dataTableUtility.js';
+﻿import { initializeDataTableAjax } from '../../../utility/dataTableUtility.js';
 import { setupModalData } from '../../../utility/dataModalUtility.js';
 import { makeMessageSeenAsync } from '../../../services/ticketMessageService.js';
 
@@ -8,13 +8,13 @@ $(document).ready(function () {
     let ticketId = $('#ticketId').val();
 
 
-    ticketMessageTable = initializeDataTable({
+    ticketMessageTable = initializeDataTableAjax({
         tableId: '#ticketMessageTable',
-        apiUrl: 'https://localhost:7264/ticketMessage/call',
-        method: 'getallticketmessagespaginatedasync',
+        apiUrl: 'https://localhost:7264/ticketMessage/getallticketmessagespaginatedasync',
         columns: [
             { data: 'id', name: 'ID' },
             //{ data: 'content', name: 'Message' },
+            { data: 'userName', name: 'UserName' },
             { data: 'stageAtTimeOfMessage', name: 'StageAtTimeOfMessageStageAtTimeOfMessage' },
             {
                 data: 'isSeen',
@@ -69,7 +69,7 @@ $(document).ready(function () {
                 }
             }
         ],
-        additionalParameters: [ticketId],
+        additionalParameters: () => ({ ticketId: ticketId }),
         failureCallback: showErrorMessage
     });
 

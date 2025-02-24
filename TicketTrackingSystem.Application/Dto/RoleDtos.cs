@@ -1,4 +1,6 @@
-﻿namespace TicketTrackingSystem.Application.Dto;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace TicketTrackingSystem.Application.Dto;
 public class RoleDto
 {
     public Guid Id { get; set; }
@@ -6,6 +8,13 @@ public class RoleDto
 }
 public class UpdateRoleDto
 {
+    [Required]
     public Guid Id { get; set; }
+    [Required]
+    public string Name { get; set; }
+}
+public class CreateRoleDto
+{
+    [Required]
     public string Name { get; set; }
 }

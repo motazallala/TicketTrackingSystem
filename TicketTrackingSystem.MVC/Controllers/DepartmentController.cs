@@ -1,321 +1,303 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using System.Text.Json;
 using TicketTrackingSystem.Application.Dto;
 using TicketTrackingSystem.Application.HttpResponse;
 using TicketTrackingSystem.Application.Interface;
 using TicketTrackingSystem.Common.Model;
 
 namespace TicketTrackingSystem.MVC.Controllers;
+
 [Authorize]
+[Route("department")]
 public class DepartmentController : Controller
 {
     private readonly IPermissionService _permissionService;
     private readonly IUserService _userService;
     private readonly IDepartmentService _departmentService;
 
-    public DepartmentController(IPermissionService permissionService, IUserService userService, IDepartmentService departmentService)
+    public DepartmentController(
+        IPermissionService permissionService,
+        IUserService userService,
+        IDepartmentService departmentService)
     {
         _permissionService = permissionService;
         _userService = userService;
         _departmentService = departmentService;
     }
+
     public async Task<IActionResult> Index()
     {
-        // Check necessary permissions
-        var permissions = await CheckPermissionsAsync(
-            PermissionName.ViewDepartment.ToString()
-        );
-        var canView = permissions[PermissionName.ViewDepartment.ToString()];
-        if (!canView)
+        // Check necessary permissions before displaying the view.
+        var permissions = await CheckPermissionsAsync(PermissionName.ViewDepartment.ToString());
+        if (!permissions[PermissionName.ViewDepartment.ToString()])
         {
             return Forbid();
         }
         return View();
     }
 
-
-    [HttpPost("/department/call")]
-    public async Task<IActionResult> CallService([FromBody] DynamicRequest request)
+    [HttpPost("getalldepartmentspaginatedasync")]
+    public async Task<IActionResult> GetAllDepartmentsPaginatedAsync([FromBody] DataTablesRequest dataTablesRequest)
     {
-        // Check necessary permissions
-        var permissions = await CheckPermissionsAsync(
-            PermissionName.ViewDepartment.ToString(),
-            PermissionName.CreateDepartment.ToString(),
-            PermissionName.EditDepartment.ToString(),
-            PermissionName.DeleteDepartment.ToString()
-        );
-
-        var canView = permissions[PermissionName.ViewDepartment.ToString()];
-        var canAdd = permissions[PermissionName.CreateDepartment.ToString()];
-        var canEdit = permissions[PermissionName.EditDepartment.ToString()];
-        var canDelete = permissions[PermissionName.DeleteDepartment.ToString()];
-
         var response = new BaseResponse();
-        var parameters = request.Parameters;
 
-        switch (request.Method.ToLower())
+        // Check if the model binding for dataTablesRequest is valid.
+        if (!ModelState.IsValid)
         {
-            case "getalldepartmentspaginatedasync":
-                {
-                    if (!canView)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.Forbidden,
-                            Description = "You do not have permission to view departments."
-                        });
-                        break;
-                    }
-                    if (parameters.Length < 1 || !(parameters[0] is JsonElement requestElement))
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.BadRequest,
-                            Description = "Invalid request parameters."
-                        });
-                        break;
-                    }
-                    var dataTablesRequest = JsonSerializer.Deserialize<DataTablesRequest>(requestElement.GetRawText(), new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-                    if (dataTablesRequest == null)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.BadRequest,
-                            Description = "Invalid pagination request data."
-                        });
-                        break;
-                    }
-                    var paginationResult = await _departmentService.GetAllDepartmentsPaginatedAsync(dataTablesRequest);
-                    if (!paginationResult.IsSuccess)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = paginationResult.ErrorMessage
-                        });
-                        break;
-                    }
-                    response.IsSuccess = true;
-                    response.Data = paginationResult.Value;
-                    break;
-                }
-            case "createdepartmentasync":
-                {
-                    if (!canAdd)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.Forbidden,
-                            Description = "You do not have permission to create departments."
-                        });
-                        break;
-                    }
-                    if (request.Parameters.Length < 1 || string.IsNullOrEmpty(request.Parameters[0]?.ToString()))
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.BadRequest,
-                            Description = "Invalid request parameters."
-                        });
-                        break;
-                    }
-
-                    try
-                    {
-                        var department = JsonSerializer.Deserialize<CreateDepartmentDto>(request.Parameters[0].ToString(), new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-                        if (department is null || string.IsNullOrEmpty(department.Name) || string.IsNullOrEmpty(department.Description))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid department data."
-                            });
-                            break;
-                        }
-                        var createResult = await _departmentService.CreateDepartmentAsync(department);
-                        if (!createResult.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = createResult.ErrorMessage
-                            });
-                            break;
-                        }
-                        response.IsSuccess = true;
-                        response.Data = createResult.Value;
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = ex.Message
-                        });
-                        break;
-                    }
-                }
-
-            case "deletedepartmentasync":
-                {
-                    if (!canDelete)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.Forbidden,
-                            Description = "You do not have permission to delete departments."
-                        });
-                        break;
-                    }
-                    if (parameters.Length < 1 && string.IsNullOrEmpty(request.Parameters[0]?.ToString()))
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.NotFound,
-                            Description = "Invalid Department ID."
-                        });
-                        break;
-                    }
-                    var result = await _departmentService.DeleteDepartmentAsync(request.Parameters[0].ToString());
-                    if (!result.IsSuccess)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.NotFound,
-                            Description = result.ErrorMessage
-                        });
-                        break;
-                    }
-                    response.IsSuccess = true;
-                    response.Data = "the delete is complete!";
-                    break;
-                }
-
-            case "updatedepartmentasync":
-                {
-                    if (!canEdit)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.Forbidden,
-                            Description = "You do not have permission to edit departments."
-                        });
-                        break;
-                    }
-                    if (parameters.Length < 1 || string.IsNullOrEmpty(request.Parameters[0]?.ToString()))
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.NotFound,
-                            Description = "Invalid request parameters."
-                        });
-                        break;
-                    }
-                    try
-                    {
-                        var updataDepartmentDto = JsonSerializer.Deserialize<UpdateDepartmentDto>(parameters[0].ToString(), new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-                        if (updataDepartmentDto == null || updataDepartmentDto.Id == Guid.Empty || string.IsNullOrEmpty(updataDepartmentDto.Name) || string.IsNullOrEmpty(updataDepartmentDto.Description))
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.BadRequest,
-                                Description = "Invalid department data."
-                            });
-                            break;
-                        }
-                        var updateResult = await _departmentService.UpdateDepartmentAsync(updataDepartmentDto);
-                        if (!updateResult.IsSuccess)
-                        {
-                            response.IsSuccess = false;
-                            response.SetError(new ErrorMessage
-                            {
-                                Code = HttpStatusCode.InternalServerError,
-                                Description = updateResult.ErrorMessage
-                            });
-                            break;
-                        }
-                        response.IsSuccess = true;
-                        response.Data = updateResult.Value;
-                        break;
-
-                    }
-                    catch (Exception)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = "An error occurred while updating the department."
-                        });
-                        break;
-                    }
-                }
-
-            case "getalldepartmentsashtmlasync":
-                {
-                    if (!canView)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.Forbidden,
-                            Description = "You do not have permission to view departments."
-                        });
-                        break;
-                    }
-                    var departments = await _departmentService.GetAllDepartmentsAsHtmlAsync();
-                    if (!departments.IsSuccess)
-                    {
-                        response.IsSuccess = false;
-                        response.SetError(new ErrorMessage
-                        {
-                            Code = HttpStatusCode.InternalServerError,
-                            Description = departments.ErrorMessage
-                        });
-                        break;
-                    }
-                    return Ok(departments);
-                }
-
-            default:
-                {
-                    response.IsSuccess = false;
-                    response.SetError(new ErrorMessage
-                    {
-                        Code = HttpStatusCode.NotFound,
-                        Description = "Method not found."
-                    });
-                    break;
-                }
+            response.IsSuccess = false;
+            response.SetErrorFromModelState(ModelState);
+            return Ok(response);
         }
 
+        var permissions = await CheckPermissionsAsync(PermissionName.ViewDepartment.ToString());
+        if (!permissions[PermissionName.ViewDepartment.ToString()])
+        {
+            response.IsSuccess = false;
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.Forbidden,
+                Description = "You do not have permission to view departments."
+            });
+            return Ok(response);
+        }
+
+        var paginationResult = await _departmentService.GetAllDepartmentsPaginatedAsync(dataTablesRequest);
+        if (!paginationResult.IsSuccess)
+        {
+            response.IsSuccess = false;
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.InternalServerError,
+                Description = paginationResult.ErrorMessage
+            });
+            return Ok(response);
+        }
+
+        response.IsSuccess = true;
+        response.Data = paginationResult.Value;
+        return Ok(response);
+    }
+
+    [HttpPost("createdepartmentasync")]
+    public async Task<IActionResult> CreateDepartmentAsync([FromBody] CreateDepartmentDto department)
+    {
+        var response = new BaseResponse();
+
+        // Check the model state for CreateDepartmentDto.
+        if (!ModelState.IsValid)
+        {
+            response.IsSuccess = false;
+            response.SetErrorFromModelStateAsDictionary(ModelState);
+            return Ok(response);
+        }
+
+        var permissions = await CheckPermissionsAsync(PermissionName.CreateDepartment.ToString());
+        if (!permissions[PermissionName.CreateDepartment.ToString()])
+        {
+            response.IsSuccess = false;
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.Forbidden,
+                Description = "You do not have permission to create departments."
+            });
+            return Ok(response);
+        }
+
+        var createResult = await _departmentService.CreateDepartmentAsync(department);
+        if (!createResult.IsSuccess)
+        {
+            response.IsSuccess = false;
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.InternalServerError,
+                Description = createResult.ErrorMessage
+            });
+            return Ok(response);
+        }
+
+        response.IsSuccess = true;
+        response.Data = createResult.Value;
+        response.SuccessMessage = $"The {department.Name} Department Created Successfully";
+        return Ok(response);
+    }
+
+    [HttpDelete("deletedepartmentasync/{id}")]
+    public async Task<IActionResult> DeleteDepartmentAsync(Guid id)
+    {
+        var response = new BaseResponse();
+
+        var permissions = await CheckPermissionsAsync(PermissionName.DeleteDepartment.ToString());
+        if (!permissions[PermissionName.DeleteDepartment.ToString()])
+        {
+            response.IsSuccess = false;
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.Forbidden,
+                Description = "You do not have permission to delete departments."
+            });
+            return Ok(response);
+        }
+
+        if (id.Equals(Guid.Empty))
+        {
+            response.IsSuccess = false;
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.BadRequest,
+                Description = "Invalid Department ID."
+            });
+            return Ok(response);
+        }
+
+        var result = await _departmentService.DeleteDepartmentAsync(id);
+        if (!result.IsSuccess)
+        {
+            response.IsSuccess = false;
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.NotFound,
+                Description = result.ErrorMessage
+            });
+            return Ok(response);
+        }
+
+        response.IsSuccess = true;
+        response.Data = "The delete is complete!";
+        response.SuccessMessage = "The Department is Deleted!";
+        return Ok(response);
+    }
+
+    [HttpDelete("deletedepartmentcascadeasync/{id}")]
+    public async Task<IActionResult> DeleteDepartmentCascadeAsync(Guid id)
+    {
+        var response = new BaseResponse();
+
+        var permissions = await CheckPermissionsAsync(PermissionName.DeleteDepartment.ToString());
+        if (!permissions[PermissionName.DeleteDepartment.ToString()])
+        {
+            response.IsSuccess = false;
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.Forbidden,
+                Description = "You do not have permission to delete departments."
+            });
+            return Ok(response);
+        }
+
+        if (id.Equals(Guid.Empty))
+        {
+            response.IsSuccess = false;
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.BadRequest,
+                Description = "Invalid Department ID."
+            });
+            return Ok(response);
+        }
+
+        var result = await _departmentService.DeleteDepartmentCascadeAsync(id);
+        if (!result.IsSuccess)
+        {
+            response.IsSuccess = false;
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.NotFound,
+                Description = result.ErrorMessage
+            });
+            return Ok(response);
+        }
+
+        response.IsSuccess = true;
+        response.Data = "The delete is complete!";
+        return Ok(response);
+    }
+
+    [HttpPut("updatedepartmentasync")]
+    public async Task<IActionResult> UpdateDepartmentAsync([FromBody] UpdateDepartmentDto updateDepartmentDto)
+    {
+        var response = new BaseResponse();
+
+        // Check the model state for UpdateDepartmentDto.
+        if (!ModelState.IsValid)
+        {
+            response.IsSuccess = false;
+            response.SetErrorFromModelStateAsDictionary(ModelState);
+            return Ok(response);
+        }
+
+        var permissions = await CheckPermissionsAsync(PermissionName.EditDepartment.ToString());
+        if (!permissions[PermissionName.EditDepartment.ToString()])
+        {
+            response.IsSuccess = false;
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.Forbidden,
+                Description = "You do not have permission to edit departments."
+            });
+            return Ok(response);
+        }
+
+        if (updateDepartmentDto == null || updateDepartmentDto.Id == Guid.Empty ||
+            string.IsNullOrEmpty(updateDepartmentDto.Name) || string.IsNullOrEmpty(updateDepartmentDto.Description))
+        {
+            response.IsSuccess = false;
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.BadRequest,
+                Description = "Invalid department data."
+            });
+            return Ok(response);
+        }
+
+        var updateResult = await _departmentService.UpdateDepartmentAsync(updateDepartmentDto);
+        if (!updateResult.IsSuccess)
+        {
+            response.IsSuccess = false;
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.InternalServerError,
+                Description = updateResult.ErrorMessage
+            });
+            return Ok(response);
+        }
+
+        response.IsSuccess = true;
+        response.Data = updateResult.Value;
+        return Ok(response);
+    }
+
+    [HttpGet("getalldepartmentsashtmlasync")]
+    public async Task<IActionResult> GetAllDepartmentsAsHtmlAsync()
+    {
+        var response = new BaseResponse();
+
+        var permissions = await CheckPermissionsAsync(PermissionName.ViewDepartment.ToString());
+        if (!permissions[PermissionName.ViewDepartment.ToString()])
+        {
+            response.IsSuccess = false;
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.Forbidden,
+                Description = "You do not have permission to view departments."
+            });
+            return Ok(response);
+        }
+
+        var departments = await _departmentService.GetAllDepartmentsAsHtmlAsync();
+        if (!departments.IsSuccess)
+        {
+            response.IsSuccess = false;
+            response.SetError(new ErrorMessage
+            {
+                Code = HttpStatusCode.InternalServerError,
+                Description = departments.ErrorMessage
+            });
+            return Ok(response);
+        }
+
+        response.IsSuccess = true;
+        response.Data = departments;
         return Ok(response);
     }
 

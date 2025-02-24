@@ -1,4 +1,4 @@
-﻿import { initializeDataTable, reinitializeDataTable } from '../../../../utility/dataTableUtility.js';
+﻿import { initializeDataTableAjax } from '../../../../utility/dataTableUtility.js';
 import { setupModalData, showErrorModal } from '../../../../utility/dataModalUtility.js';
 import { getAllNotSeenMessageForTicketAsync } from '../../../../services/ticketMessageService.js';
 
@@ -10,24 +10,38 @@ $(document).ready(function () {
     let reserved = true;
 
     // Initialize the DataTable on page load
-    memberTicketTable = initializeDataTable({
+    memberTicketTable = initializeDataTableAjax({
         tableId: '#memberTicketTable',
-        apiUrl: 'https://localhost:7264/ticket/call',
+        apiUrl: 'https://localhost:7264/ticket/getallticketformemberpaginatedasync',
         method: 'getallticketformemberpaginatedasync',
         columns: getDataTableColumns(reserved),
-        additionalParameters: [projectId, reserved],
+        additionalParameters: () => ({ projectId, reserved }),
         failureCallback: showErrorMessage
     });
 
 
-    // Reinitialize DataTable based on toggle
-    function reinitializeTable(projectId, reserved) {
-        memberTicketTable = reinitializeDataTable({
+
+    // Toggle between showing users with and without roles
+    $('#reinitializeBtn').on('click', function () {
+        this.innerHTML = !reserved ? 'My Tickets' : 'All Tickets';
+        reserved = !reserved;
+
+        reloadTableWithFilters();
+    });
+
+    // Reload DataTable with filters (without reinitializing the table)
+    function reloadTableWithFilters() {
+        if ($.fn.DataTable.isDataTable('#memberTicketTable')) {
+            // Destroy the existing DataTable
+            memberTicketTable.destroy();
+        }
+
+        // Reinitialize the DataTable with updated columns based on userWithRole
+        memberTicketTable = initializeDataTableAjax({
             tableId: '#memberTicketTable',
-            apiUrl: 'https://localhost:7264/ticket/call',
-            method: 'getallticketformemberpaginatedasync',
-            columns: getDataTableColumns(reserved),
-            additionalParameters: [projectId, reserved],
+            apiUrl: 'https://localhost:7264/ticket/getallticketformemberpaginatedasync',
+            columns: getDataTableColumns(reserved),  // Dynamically get columns based on toggle
+            additionalParameters: () => ({ projectId, reserved }),
             failureCallback: showErrorMessage
         });
     }
@@ -41,19 +55,13 @@ $(document).ready(function () {
         }
     });
 
-    // Toggle between "My Tickets" and "All Tickets"
-    $('#reinitializeBtn').on('click', function () {
-        this.innerHTML = !reserved ? 'My Tickets' : 'All Tickets';
-        reserved = !reserved;
-
-        reinitializeTable(projectId, reserved);
-    });
 
     // Common function to get DataTable columns with the reserved toggle
     function getDataTableColumns(reserved) {
         return [
-            { data: 'id', name: 'ID' },
+            //{ data: 'id', name: 'ID' },
             { data: 'title', name: 'Title' },
+            { data: 'creatorName', name: 'CreatorName' },
             { data: 'description', name: 'Description' },
             { data: 'status', name: 'Status' },
             {
@@ -76,8 +84,8 @@ $(document).ready(function () {
                     let actionButtons = `<div class="d-flex justify-content-center">`;
 
                     if (canView) {
-                        actionButtons += `<button class="btn btn-primary btn-sm me-2 dt-view">
-                            <i class="bi bi-info-square-fill"></i> Details
+                        actionButtons += `<button class="btn btn-primary btn-sm me-2 d-flex flex-column dt-view">
+                            <i class="bi bi-info-square-fill"></i> <div class="text-nowrap">Details</div>
                         </button>`;
 
                     }
@@ -85,19 +93,19 @@ $(document).ready(function () {
 
                     if (reserved) {
                         if (canEdit) {
-                            actionButtons += `<button class="btn btn-info btn-sm me-2 dt-edit">
-                                <i class="bi bi-pencil-square"></i> Action
+                            actionButtons += `<button class="btn btn-info btn-sm me-2 d-flex flex-column dt-edit">
+                                <i class="bi bi-pencil-square"></i> <div class="text-nowrap">Action</div>
                             </button>`;
-                            actionButtons += `<button class="btn btn-warning btn-sm me-2 dt-reAssign">
-                                <i class="bi bi-arrow-repeat"></i> Re-Assign
+                            actionButtons += `<button class="btn btn-warning btn-sm me-2 d-flex flex-column dt-reAssign">
+                                <i class="bi bi-arrow-repeat"></i> <div class="text-nowrap">Re-Assign</div>
                             </button>`;
-                            actionButtons += `<button class="btn btn-danger btn-sm me-2 dt-removeAssign">
-                            <i class="bi bi-info-square-fill"></i> Remove Assign
+                            actionButtons += `<button class="btn btn-danger btn-sm me-2 d-flex flex-column dt-removeAssign">
+                            <i class="bi bi-info-square-fill"></i> <div class="text-nowrap">Remove Assign</div>
                             </button>`;
                         }
                     } else {
-                        actionButtons += `<button class="btn btn-warning btn-sm me-2 dt-assign">
-                            <i class="bi bi-pencil-square"></i> Assign to Me
+                        actionButtons += `<button class="btn btn-warning btn-sm me-2 d-flex flex-column dt-assign">
+                            <i class="bi bi-pencil-square"></i> <div class="text-nowrap">Assign to Me</div>
                         </button>`;
                     }
 

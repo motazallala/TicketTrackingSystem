@@ -36,5 +36,12 @@ public class MappingProfile : Profile
         CreateMap<TicketMessage, TicketMessageDto>()
             .ForMember(dest => dest.StageAtTimeOfMessage, opt => opt.MapFrom(src => src.StageAtTimeOfMessage.ToString()))
             .ReverseMap();
+
+        CreateMap<AllTicketDto, TicketDto>()
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+        CreateMap<TicketMessageAllDto, TicketMessageDto>()
+            .ForMember(dest => dest.StageAtTimeOfMessage, opt => opt.MapFrom(src => src.StageAtTimeOfMessage.ToString()));
+
+
     }
 }

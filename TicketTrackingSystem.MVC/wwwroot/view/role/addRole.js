@@ -1,37 +1,50 @@
-﻿import { roleTable } from './roleTable.js';
-import { setupModalData, showErrorModal } from '../../utility/dataModalUtility.js';
+﻿import { _hashModelId , _ModalContentId } from '../../utility/globals.js';
+import { roleTable } from './roleTable.js';
+import { setupFormModal } from '../../utility/dataModalUtility.js';
 import { createRoleAsync } from '../../services/roleServices.js';
+import { FormManager } from '../../utility/formUitilty.js';
+import { showSpinner, hideSpinner } from '../../utility/spinnerUtility.js';
+import { showSuccessAlert, showErrorAlert } from '../../utility/alertUtility.js';
 $(document).ready(function () {
     $("#addButton").on('click', async function () {
         //add department modal that has a name and description field and a submit button
-        const modalTitle = $('.modal .modal-title');
-        const modalBody = $('#modelBody');
-        const modalFooter = $('.modal .modal-footer');
         const title = 'Add Role';
-        const bodyContent = `
-            <div class="form-group my-1">
-                <label for="name">Name:</label>
-                <input type="text" class="form-control" id="name" name="name">
-            </div>
-        `;
-        const closeButton = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>';
-        const submitButton = '<button type="button" class="btn btn-primary" id="submit">Submit</button>';
-        setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [closeButton, submitButton]);
-        $('#myModal').modal('show');
-        $('#submit').off('click').on('click', async function () {
+        setupFormModal('myForm', title, 'Add');
 
-            //call the createDepartmentAsync method from the departmentService
-            const addResult = await createRoleAsync($('#name').val().trim())
-            if (addResult.isSuccess) {
-                //close the modal
-                $('.modal').modal('hide');
-                //reload the departmentTable
-                roleTable.ajax.reload(null, false);
 
-            }
-            else {
-                showErrorModal(addResult.error.description);
+
+        const form = new FormManager("#myForm", {
+            showAlerts: false,
+            resetOnSubmit: false,
+            onSubmit: async (data) => {
+                showSpinner(_ModalContentId, false, false, true);
+                // Call the createDepartmentAsync method using the DTO object
+                const addResult = await createRoleAsync(data)
+                hideSpinner(_ModalContentId);
+                if (addResult.isSuccess) {
+                    showSuccessAlert(addResult.successMessage);
+                    // Hide the modal on success
+                    $('#myModal').modal('hide');
+                    // Reload the department table without resetting pagination
+                    roleTable.ajax.reload(null, false);
+                } else if (addResult.error.code === 409) {
+                    showErrorAlert(addResult.error.description);
+                    // Show error modal if there is a problem
+                    form.handleServerErrors(addResult.error.validation);
+                }
+                else {
+                    showErrorAlert(addResult.error.description);
+                }
             }
         });
+        form.addField({
+            name: "name",
+            label: "Name",
+            type: "text",
+            required: false,
+            placeholder: "Enter Name",
+        });
+        $(_hashModelId).modal('show');
+
     });
 });

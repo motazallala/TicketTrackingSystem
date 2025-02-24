@@ -246,21 +246,21 @@ public class PermissionService : IPermissionService
             var role = await _roleManager.FindByIdAsync(removePermission.RoleId.ToString());
             if (role == null)
             {
-                return Result<CreateRolePermissionDto>.Failure($"Role with ID {removePermission.RoleId} not found.");
+                return Result<CreateRolePermissionDto>.Failure($"Role not found.");
             }
             var permission = await _unitOfWork.Permissions.GetByIdAsync(removePermission.PermissionId);
             if (permission == null)
             {
-                return Result<CreateRolePermissionDto>.Failure($"Permission with ID {removePermission.PermissionId} not found.");
+                return Result<CreateRolePermissionDto>.Failure($"Permission with Role {role.Name} not found.");
             }
             var rolePermissions = await _unitOfWork.RolesPermissions.GetByIdAsync(removePermission.RoleId, removePermission.PermissionId);
             if (rolePermissions == null)
             {
-                return Result<CreateRolePermissionDto>.Failure($"Role with ID {removePermission.RoleId} does not have permission with ID {removePermission.PermissionId}.");
+                return Result<CreateRolePermissionDto>.Failure($"Role with Name {role.Name} does not have permission {permission.Name}.");
             }
             if (rolePermissions.RoleId == Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"))
             {
-                return Result<CreateRolePermissionDto>.Failure($"Permission with ID {removePermission.PermissionId} is required for the Admin role.");
+                return Result<CreateRolePermissionDto>.Failure($"Permission {permission.Name} is required for the Admin role.");
             }
             _unitOfWork.RolesPermissions.Remove(rolePermissions);
             await _unitOfWork.CompleteAsync();

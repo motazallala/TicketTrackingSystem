@@ -1,6 +1,7 @@
 ﻿import { userTable } from './userTable.js';
-import { setupModalData, showErrorModal } from '../../utility/dataModalUtility.js';
-import { updateUserAsync, getUserByIdasync, getUserTypeDropdown } from '../../services/userServices.js';
+import { setupModalData, showErrorModal, setupValidationModal } from '../../utility/dataModalUtility.js';
+import { showSuccessAlert } from '../../utility/alertUtility.js';
+import { updateUserAsync, getUserByIdAsync, getUserTypeDropdown } from '../../services/userServices.js';
 import { getAllDepartmentsAsHtmlAsync } from '../../services/departmentServices.js';
 
 $(document).ready(function () {
@@ -59,7 +60,7 @@ $(document).ready(function () {
 
         try {
             // Populate User Data
-            const result = await getUserByIdasync(data.id);
+            const result = await getUserByIdAsync(data.id);
             if (result.isSuccess) {
                 populateUserForm(result.data);
             } else {
@@ -82,12 +83,16 @@ $(document).ready(function () {
                 if (editUserDto.userType === '0') {
                     editUserDto.departmentId = '';
                 }
-                const updateResult = await updateUserAsync(JSON.stringify(editUserDto));
+                const updateResult = await updateUserAsync(editUserDto);
 
                 if (updateResult.isSuccess) {
+                    showSuccessAlert(updateResult.successMessage);
                     $('#myModal').modal('hide');
                     userTable.ajax.reload(null, false);
-                } else {
+                } else if (updateResult.error.code === 409) {
+                    setupValidationModal(updateResult.error.description);
+                }
+                else {
                     showErrorModal(updateResult.error.description);
                 }
             });
@@ -126,7 +131,7 @@ $(document).ready(function () {
             cachedDepartments = await getAllDepartmentsAsHtmlAsync();
         }
         if (cachedDepartments.isSuccess) {
-            $('#departmentId').append(cachedDepartments.value).val(selectedDepartment);
+            $('#departmentId').append(cachedDepartments.data.value).val(selectedDepartment);
         }
     }
 

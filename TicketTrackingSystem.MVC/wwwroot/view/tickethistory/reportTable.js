@@ -1,4 +1,4 @@
-﻿import { initializeDataTable } from '../../utility/dataTableUtility.js';
+﻿import { initializeDataTableAjax } from '../../utility/dataTableUtility.js';
 import { setupModalData } from '../../utility/dataModalUtility.js';
 import { getDeliveryStatusDropdown } from '../../services/ticketHistoryService.js';
 import { getStageDropdown } from '../../services/projectServices.js';
@@ -33,10 +33,9 @@ $(document).ready(async function () {
             reportTable.ajax.reload();
         }
     }
-    reportTable = initializeDataTable({
+    reportTable = initializeDataTableAjax({
         tableId: '#reportTable',
-        apiUrl: 'https://localhost:7264/ticketHistory/call',
-        method: 'getalltickethistoryforreportasync',
+        apiUrl: 'https://localhost:7264/tickethistory/getalltickethistoryforreportasync',
         columns: [
             { data: 'ticketId', name: 'TicketId' },
             { data: 'title', name: 'Title' },
@@ -76,12 +75,12 @@ $(document).ready(async function () {
             }
         ],
         ordering : false,
-        additionalParameters: () => [ // Wrap in function
-            
-                 currentFilters.stage,
-                 currentFilters.deliveryStatus
-            
-        ], 
+        additionalParameters: () => ({ // Wrap in function
+
+            stageFilter: currentFilters.stage,
+            deliveryStatusFilter: currentFilters.deliveryStatus
+
+        }), 
         failureCallback: showErrorMessage
     });
 

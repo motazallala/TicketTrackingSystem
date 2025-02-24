@@ -1,62 +1,53 @@
-﻿const ticketServiceProxy = new Proxy({}, {
-    get: function (target, prop) {
-        return function (...args) {
-            const serializedArgs = args.map(arg =>
-                typeof arg === "object" ? JSON.stringify(arg) : arg
-            );
+﻿// Assuming you have the apiClient function defined elsewhere in your project, as shown in the example you provided:
 
-            return fetch('https://localhost:7264/ticket/call', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    Method: prop,
-                    Parameters: serializedArgs,
-                }),
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Network response was not ok: " + response.statusText);
-                    }
-                    return response.json();
-                })
-                .catch(error => {
-                    console.error(`Error calling service method "${prop}":`, error);
-                    throw error; // Rethrow to handle in calling code
-                });
-        };
-    },
-});
+import { apiClient } from '../utility/apiClientUtility.js';
 
-export const getTicketByIdAsync = (ticketId) =>
-    ticketServiceProxy.getticketbyidasync(ticketId);
+// Get Ticket by ID
+export const getTicketByIdAsync = async (ticketId) => {
+    return await apiClient(`/ticket/getticketbyidasync/${ticketId}`, 'GET');
+};
 
-export const removeTicketFromUserAsync = (ticketId) =>
-    ticketServiceProxy.removeticketfromuserasync(ticketId);
+// Remove Ticket from User
+export const removeTicketFromUserAsync = async (ticketId) => {
+    return await apiClient('/ticket/removeticketfromuserasync', 'POST', { ticketId });
+};
 
-//export const assignTicketToUserAsync = (ticketId) =>
-//    ticketServiceProxy.assigntickettouserasync(ticketId);
-export const assignTicketToUserAsync = (ticketId, estimationTime) =>
-    ticketServiceProxy.assigntickettouserasync(ticketId, estimationTime);
+// Assign Ticket to User
+export const assignTicketToUserAsync = async (ticketId, estimationTime) => {
+    return await apiClient('/ticket/assigntickettouserasync', 'POST', { ticketId, estimationTime });
+};
 
+// Set Estimated Completion Date for Reassign Ticket
+export const setEstimatedCompletionDateForReassignTicketAsync = async (ticketId, estimationTime) => {
+    return await apiClient('/ticket/setestimatedcompletiondateforreassignticketasync', 'POST', { ticketId, estimationTime });
+};
 
-export const setEstimatedCompletionDateForReassignTicketAsync = (ticketId, estimationTime) =>
-    ticketServiceProxy.setestimatedcompletiondateforreassignticketasync(ticketId, estimationTime);
-export const updateTicketWithAutoStageAsync = (ticketId, status, isFinished, message) =>
-    ticketServiceProxy.updateticketwithautostageasync(ticketId, status, isFinished, message);
+// Update Ticket With Auto Stage
+export const updateTicketWithAutoStageAsync = async (ticketId, status, isFinished, message) => {
+    return await apiClient('/ticket/updateticketwithautostageasync', 'POST', { ticketId, status, isFinished, message });
+};
 
-export const addTicketAsync = (ticketDto) =>
-    ticketServiceProxy.addticketasync(ticketDto);
+// Add Ticket
+export const addTicketAsync = async (ticketDto) => {
+    return await apiClient('/ticket/addticketasync', 'POST', ticketDto);
+};
 
-export const getTicketStatusDropdown = () =>
-    ticketServiceProxy.getticketstatusdropdown();
+// Get Ticket Status Dropdown
+export const getTicketStatusDropdown = async () => {
+    return await apiClient('/ticket/getticketstatusdropdown', 'GET');
+};
 
-export const getAllFreeMembersDropdownAsync = (projectId) =>
-    ticketServiceProxy.getallfreemembersdropdownasync(projectId);
+// Get All Free Members Dropdown
+export const getAllFreeMembersDropdownAsync = async (projectId) => {
+    return await apiClient(`/ticket/getallfreemembersdropdownasync?projectId=${projectId}`, 'GET');
+};
 
-export const checkEstimatedCompletionDateAsync = (ticketId) =>
-    ticketServiceProxy.checkestimatedcompletiondateasync(ticketId);
+// Check Estimated Completion Date
+export const checkEstimatedCompletionDateAsync = async (ticketId) => {
+    return await apiClient(`/ticket/checkestimatedcompletiondateasync/${ticketId}`, 'GET');
+};
 
-export const reAssignTicketAsync = (ticketId, userId) =>
-    ticketServiceProxy.reassignticketasync(ticketId, userId);
+// Reassign Ticket to Another User
+export const reAssignTicketAsync = async (ticketId, userId) => {
+    return await apiClient('/ticket/reassignticketasync', 'POST', { ticketId, userId });
+};

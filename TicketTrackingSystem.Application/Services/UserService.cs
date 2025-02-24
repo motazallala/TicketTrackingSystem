@@ -127,7 +127,7 @@ public class UserService : IUserService
             if (request.Order != null && request.Order.Any())
             {
                 var order = request.Order.First();
-                var columnName = request.Columns[order.Column].Data;
+                var columnName = request.Columns[order.Column.Value].Data;
                 var direction = order.Dir;
 
                 // Dynamically apply ordering
@@ -236,7 +236,7 @@ public class UserService : IUserService
             if (request.Order != null && request.Order.Any())
             {
                 var order = request.Order.First();
-                var columnName = request.Columns[order.Column].Data;
+                var columnName = request.Columns[order.Column.Value].Data;
                 var direction = order.Dir;
 
                 // Dynamically apply ordering
@@ -346,7 +346,11 @@ public class UserService : IUserService
             {
                 return Result<string>.Failure($"{user.UserName} is an Admin. You cannot delete it!");
             }
-
+            var hasTicket = await _unitOfWork.Tickets.CheckItemExistenceAsync(th => th.CreatorId == user.Id || th.AssignedToId == user.Id);
+            if (hasTicket)
+            {
+                return Result<string>.Failure("This user has associated ticket. Delete or reassign those records first.");
+            }
             // Check for dependent TicketHistory records
             var hasTicketHistory = await _unitOfWork.TicketHistory.CheckItemExistenceAsync(th => th.AssignedToId == user.Id);
             if (hasTicketHistory)
@@ -394,12 +398,12 @@ public class UserService : IUserService
             {
                 return Result<string>.Failure($"{user.UserName} is an Admin. You cannot delete it!");
             }
-
+            await _unitOfWork.Tickets.RemoveAssignFromTicketAsync(user.Id);
             _unitOfWork.TicketHistory.DeleteAllHistoryForUser(user.Id);
             _unitOfWork.TicketMessage.DeleteAllMessageForUser(user.Id);
-            await _unitOfWork.CompleteAsync();
             // Attempt to delete the user
             var result = await _userManager.DeleteAsync(user);
+            await _unitOfWork.CompleteAsync();
             if (!result.Succeeded)
             {
                 return Result<string>.Failure(string.Join("; ", result.Errors.Select(e => e.Description)));
@@ -448,6 +452,7 @@ public class UserService : IUserService
             }
             user.FirstName = userDto.FirstName;
             user.LastName = userDto.LastName;
+            user.UserName = userDto.UserName;
             user.Email = userDto.Email;
             user.PhoneNumber = userDto.PhoneNumber;
             user.UserType = (UserType)int.Parse(userDto.UserType);

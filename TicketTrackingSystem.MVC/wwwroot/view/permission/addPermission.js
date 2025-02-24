@@ -36,7 +36,7 @@ $(document).ready(function () {
             $('#submit').off('click').on('click', async function () {
                 const createPermissionDto = gatherFormData();
 
-                const addResult = await addRoleToPermissionAsync(JSON.stringify(createPermissionDto));
+                const addResult = await addRoleToPermissionAsync(createPermissionDto);
                 if (addResult.isSuccess) {
                     $('.modal').modal('hide');
                     roleTable.ajax.reload(null, false);

@@ -77,4 +77,5 @@ public interface IRoleService
     /// - Failure: An error message indicating the reason for the failure.
     /// </returns>
     Task<Result<string>> GetAllRolesAsHtmlAsync();
+    Task<Result<string>> DeleteRoleCascadeAsync(string roleName);
 }

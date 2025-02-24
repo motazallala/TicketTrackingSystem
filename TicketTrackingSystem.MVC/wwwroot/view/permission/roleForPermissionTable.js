@@ -1,13 +1,12 @@
-﻿import { initializeDataTable } from '../../utility/dataTableUtility.js';
+﻿import { initializeDataTableAjax } from '../../utility/dataTableUtility.js';
 import { setupModalData } from '../../utility/dataModalUtility.js';
 
 let roleTable;
 
 $(document).ready(function () {
-    roleTable = initializeDataTable({
+    roleTable = initializeDataTableAjax({
         tableId: '#roleTable',
-        apiUrl: 'https://localhost:7264/permission/call',
-        method: 'getallroleswithpermissionpaginatedasync',
+        apiUrl: 'https://localhost:7264/permission/getallroleswithpermissionpaginatedasync',
         ordering: false,
         columns: [
             { data: 'id', name: 'ID', orderable: false, },

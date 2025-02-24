@@ -44,6 +44,7 @@ public interface IProjectService
     /// and the <see cref="Result{string}.ErrorMessage"/> property will contain the error message.
     /// </returns>
     Task<Result<string>> DeleteProjectAsync(Guid id);
+    Task<Result<string>> DeleteProjectCascadeAsync(Guid id);
     /// <summary>
     /// Retrieves a paginated list of projects asynchronously based on the provided data tables request.
     /// </summary>

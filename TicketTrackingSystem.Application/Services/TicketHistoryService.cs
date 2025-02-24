@@ -57,7 +57,6 @@ public class TicketHistoryService : ITicketHistoryService
                     s2Estimation = s2 != null ? s2.EstimatedCompletionDate : (DateTime?)null,
                 };
 
-
             var totalRecords = await combinedQuery.CountAsync();
 
             if (!string.IsNullOrEmpty(stageFilter) && Enum.TryParse<Stage>(stageFilter, true, out var stageEnum))
@@ -67,6 +66,7 @@ public class TicketHistoryService : ITicketHistoryService
                 {
                     if (stageEnum.Equals(Stage.Stage1))
                     {
+
                         combinedQuery = combinedQuery.Where(h => h.StageAfterChange == Stage.Stage1 && h.DeliveryStatus.Equals(deliveryStatusEnum));
                     }
                     else
@@ -110,12 +110,6 @@ public class TicketHistoryService : ITicketHistoryService
             var filteredRecords = await combinedQuery.CountAsync();
 
             // Apply pagination on the server side
-            var xxxx = combinedQuery
-                .OrderByDescending(c => c.Date)
-                .ThenByDescending(c => c.s2Data)
-                .Skip(request.Start)
-                .Take(request.Length)
-                .ToQueryString();
             var paginatedServerData = await combinedQuery
                 .OrderByDescending(c => c.Date)
                 .ThenByDescending(c => c.s2Data)
@@ -129,7 +123,7 @@ public class TicketHistoryService : ITicketHistoryService
                 TicketId = x.TicketId,
                 Title = x.Title,
                 DeliveryStatusFrom = x.s1Estimation.HasValue ? x.DeliveryStatus.HasValue ? x.DeliveryStatus.ToString() : "OnTime" : "N/A", // Client-side conversion
-                AssignedFrom = x.AssignedFrom,
+                AssignedFrom = x.AssignedFrom ?? "N/A",
                 StageFrom = x.StageAfterChange.ToString(),
                 DeliveryStatusTo = x.s2Estimation.HasValue ? x.s2DeliveryStatus.HasValue ? x.s2DeliveryStatus?.ToString() : "OnTime" : "N/A",
                 AssignedTo = x.s2AssignedTo ?? "N/A",

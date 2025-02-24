@@ -1,4 +1,4 @@
-﻿import { initializeDataTable } from '../../../utility/dataTableUtility.js';
+﻿import { initializeDataTableAjax } from '../../../utility/dataTableUtility.js';
 import { setupModalData, showErrorModal } from '../../../utility/dataModalUtility.js';
 import { getAllNotSeenMessageForTicketAsync } from '../../../services/ticketMessageService.js';
 
@@ -7,10 +7,9 @@ let ticketTable;
 $(document).ready(function () {
     let projectId = $('#projectId').val();
 
-    ticketTable = initializeDataTable({
+    ticketTable = initializeDataTableAjax({
         tableId: '#ticketTable',
-        apiUrl: 'https://localhost:7264/ticket/call',
-        method: 'getallticketpaginatedasync',
+        apiUrl: 'https://localhost:7264/ticket/getallticketpaginatedasync',
         columns: [
             { data: 'id', name: 'ID' },
             { data: 'title', name: 'Title' },
@@ -47,9 +46,9 @@ $(document).ready(function () {
                     // Add the 'Details' button if viewing is allowed
                     if (canView) {
                         actionButtons += `
-                <button class="btn btn-primary btn-sm me-2 dt-view">
-                    <i class="bi bi-info-square-fill"></i> Details
-                </button>`;
+                            <button class="btn btn-primary btn-sm me-2 d-flex flex-column dt-view">
+                                <i class="bi bi-info-square-fill"></i> <div class="text-nowrap">Details</div>
+                            </button>`;
                     }
                     // Close the div and return the HTML
                     actionButtons += `</div>`;
@@ -58,7 +57,7 @@ $(document).ready(function () {
                 }
             }
         ],
-        additionalParameters: [projectId],
+        additionalParameters: () => ({ projectId }),
         failureCallback: showErrorMessage
     });
 

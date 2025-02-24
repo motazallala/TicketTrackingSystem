@@ -7,6 +7,7 @@ using TicketTrackingSystem.Application.Model;
 using TicketTrackingSystem.Common.ExtensionMethod;
 using TicketTrackingSystem.Common.Model;
 using TicketTrackingSystem.Core.Model;
+using TicketTrackingSystem.DAL.Interface;
 
 
 namespace TicketTrackingSystem.Application.Services;
@@ -14,10 +15,12 @@ public class RoleService : IRoleService
 {
     private readonly RoleManager<Role> _roleManager;
     private readonly IMapper _mapper;
-    public RoleService(RoleManager<Role> roleManager, IMapper mapper)
+    private readonly IUnitOfWork _unitOfWork;
+    public RoleService(RoleManager<Role> roleManager, IMapper mapper, IUnitOfWork unitOfWork)
     {
         _roleManager = roleManager;
         _mapper = mapper;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<DataTablesResponse<RoleDto>>> GetAllRolesPaginatedAsync(DataTablesRequest request)
@@ -34,7 +37,7 @@ public class RoleService : IRoleService
             if (request.Order != null && request.Order.Any())
             {
                 var order = request.Order.First();
-                var columnName = request.Columns[order.Column].Data;
+                var columnName = request.Columns[order.Column.Value].Data;
                 var direction = order.Dir;
 
                 // Dynamically apply ordering
@@ -84,6 +87,37 @@ public class RoleService : IRoleService
         return Result<string>.Success("Role Added");
     }
     public async Task<Result<string>> DeleteRoleAsync(string roleName)
+    {
+        var role = await _roleManager.FindByNameAsync(roleName);
+        if (role == null)
+        {
+            return Result<string>.Failure("Role not found.");
+        }
+
+        var nonDeletableRoleIds = new List<Guid>
+            {
+                Guid.Parse("5e4d3c2b-a123-4f57-88ef-1ab23cdb3e57"), // Admin role ID
+            };
+
+        if (nonDeletableRoleIds.Contains(role.Id))
+        {
+            return Result<string>.Failure($"Cannot delete the {role.Name} role.");
+        }
+        var hasUsers = await _unitOfWork.Users.CheckItemExistenceAsync(c => c.Roles.Any(v => v.RoleId == role.Id));
+        if (hasUsers)
+        {
+            return Result<string>.Failure("This Role Has Users");
+        }
+
+        var result = await _roleManager.DeleteAsync(role);
+        if (!result.Succeeded)
+        {
+            return Result<string>.Failure(string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
+
+        return Result<string>.Success();
+    }
+    public async Task<Result<string>> DeleteRoleCascadeAsync(string roleName)
     {
         var role = await _roleManager.FindByNameAsync(roleName);
         if (role == null)

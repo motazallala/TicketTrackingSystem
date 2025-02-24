@@ -1,13 +1,12 @@
-﻿import { initializeDataTable } from '../../../utility/dataTableUtility.js';
+﻿import { initializeDataTableAjax } from '../../../utility/dataTableUtility.js';
 import { setupModalData } from '../../../utility/dataModalUtility.js';
 
 let userProjectTable;
 
 $(document).ready(function () {
-    userProjectTable = initializeDataTable({
+    userProjectTable = initializeDataTableAjax({
         tableId: '#userProjectTable',
-        apiUrl: 'https://localhost:7264/projectforclient/call',
-        method: 'getalluserprojectsasync',
+        apiUrl: 'https://localhost:7264/project/getalluserprojectsasync',
         columns: [
             { data: 'id', name: 'ID' },
             { data: 'name', name: 'Name' },

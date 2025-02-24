@@ -50,7 +50,7 @@ public class TicketTrackingSystemDbContext : IdentityDbContext<ApplicationUser, 
         {
             rp.Property(x => x.FirstName).HasMaxLength(100);
             rp.Property(x => x.LastName).HasMaxLength(100);
-            rp.HasOne(x => x.Department).WithMany(x => x.Employees).HasForeignKey(rp => rp.DepartmentId);
+            rp.HasOne(x => x.Department).WithMany(x => x.Employees).HasForeignKey(rp => rp.DepartmentId).OnDelete(DeleteBehavior.SetNull);
 
         });
         builder.Entity<ProjectMember>(pm =>

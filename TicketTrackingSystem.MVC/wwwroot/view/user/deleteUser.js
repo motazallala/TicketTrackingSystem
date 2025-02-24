@@ -1,5 +1,6 @@
 ﻿import { userTable } from './userTable.js';
 import { setupModalData, showErrorModal } from '../../utility/dataModalUtility.js';
+import { showSuccessAlert } from '../../utility/alertUtility.js';
 import { deleteUserAsync, deleteUserCascadeAsync } from '../../services/userServices.js';
 
 $(document).ready(function () {
@@ -33,6 +34,7 @@ $(document).ready(function () {
             const deleteResult = await deleteUserAsync(userId);
 
             if (deleteResult.isSuccess) {
+                showSuccessAlert(deleteResult.successMessage);
                 userTable.ajax.reload();
                 $('#myModal').modal('hide');
             }
@@ -41,7 +43,8 @@ $(document).ready(function () {
                 <p>Deleting this user will also delete all associated ticket history and ticket messages.</p>`;
                 title = 'Delete User with Cascade';
                 if (deleteResult.error.description === 'This user has associated ticket history. Delete or reassign those records first.' ||
-                    deleteResult.error.description === 'This user has associated ticket message. Delete or reassign those records first.'
+                    deleteResult.error.description === 'This user has associated ticket message. Delete or reassign those records first.' ||
+                    deleteResult.error.description === "This user has associated ticket. Delete or reassign those records first."
                 ) {
                     setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [deleteButtonCascade, cancelButton]);
 
@@ -51,6 +54,7 @@ $(document).ready(function () {
                         const deleteResult = await deleteUserCascadeAsync(userId);
 
                         if (deleteResult.isSuccess) {
+                            showSuccessAlert(deleteResult.successMessage);
                             userTable.ajax.reload();
                             $('#myModal').modal('hide');
                         }

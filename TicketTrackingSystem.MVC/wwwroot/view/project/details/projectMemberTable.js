@@ -1,5 +1,6 @@
-﻿import { initializeDataTable, reinitializeDataTable } from '../../../utility/dataTableUtility.js';
+﻿import { initializeDataTableAjax } from '../../../utility/dataTableUtility.js';
 import { setupModalData } from '../../../utility/dataModalUtility.js';
+import { showSuccessAlert } from '../../../utility/alertUtility.js';
 import { setUserForProjectAsync, removeUserFromProjectAsync, getStageDropdown } from '../../../services/projectServices.js';
 
 $(document).ready(function () {
@@ -7,12 +8,11 @@ $(document).ready(function () {
     const projectId = $('#projectId').val();
 
     // Initialize the DataTable on page load
-    let userMemberTable = initializeDataTable({
+    let userMemberTable = initializeDataTableAjax({
         tableId: '#userMemberTable',
-        apiUrl: 'https://localhost:7264/user/call',
-        method: 'getprojectmembersasync',
+        apiUrl: 'https://localhost:7264/user/getprojectmembersasync',
         columns: getDataTableColumns(isMember),
-        additionalParameters: [isMember, projectId],
+        additionalParameters: () => ({ isMember, projectId }),
         failureCallback: showErrorMessage
     });
 
@@ -28,24 +28,38 @@ $(document).ready(function () {
         showRemoveUserModal(data.id, data.userName);
     });
 
+
+
+
+
+
     // Toggle between showing users with and without roles
     $('#switchBtn').on('click', function () {
         this.innerHTML = isMember ? 'Show Users With This Project' : 'Show Users Not In the Project';
         isMember = !isMember;
-        reinitializeTable(isMember, projectId);
+
+        reloadTableWithFilters();
     });
 
-    // Reinitialize DataTable based on toggle
-    function reinitializeTable(isMember, projectId) {
-        userMemberTable = reinitializeDataTable({
+    // Reload DataTable with filters (without reinitializing the table)
+    function reloadTableWithFilters() {
+        if ($.fn.DataTable.isDataTable('#userMemberTable')) {
+            // Destroy the existing DataTable
+            userMemberTable.destroy();
+        }
+
+        // Reinitialize the DataTable with updated columns based on userWithRole
+        userMemberTable = initializeDataTableAjax({
             tableId: '#userMemberTable',
-            apiUrl: 'https://localhost:7264/user/call',
-            method: 'getprojectmembersasync',
-            columns: getDataTableColumns(isMember),
-            additionalParameters: [isMember, projectId],
+            apiUrl: 'https://localhost:7264/user/getprojectmembersasync',
+            columns: getDataTableColumns(isMember),  // Dynamically get columns based on toggle
+            additionalParameters: () => ({ isMember, projectId }),
             failureCallback: showErrorMessage
         });
     }
+
+
+
 
     // Function to get DataTable columns based on user role
     function getDataTableColumns(isMember) {
@@ -239,6 +253,7 @@ $(document).ready(function () {
 
         const result = await setUserForProjectAsync(userId, projectId, stage);
         if (result.isSuccess) {
+            showSuccessAlert(result.successMessage);
             $('#myModal').modal('hide');
             userMemberTable.ajax.reload(null, false);
         } else {
@@ -252,6 +267,7 @@ $(document).ready(function () {
 
         const result = await removeUserFromProjectAsync(userId, projectId);
         if (result.isSuccess) {
+            showSuccessAlert(result.successMessage);
             $('#myModal').modal('hide');
             userMemberTable.ajax.reload(null, false);
         } else {

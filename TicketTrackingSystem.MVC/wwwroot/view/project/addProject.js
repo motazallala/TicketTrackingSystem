@@ -1,53 +1,56 @@
 ﻿import { projectTable } from './projectTable.js';
-import { setupModalData, showErrorModal } from '../../utility/dataModalUtility.js';
+import { setupFormModal } from '../../utility/dataModalUtility.js';
 import { createProjectAsync } from '../../services/projectServices.js';
+import { showSpinner, hideSpinner } from '../../utility/spinnerUtility.js';
+import { showSuccessAlert, showErrorAlert } from '../../utility/alertUtility.js';
+import { FormManager } from '../../utility/formUitilty.js';
+
 $(document).ready(function () {
     $("#addButton").on('click', async function () {
-        const modalTitle = $('.modal .modal-title');
-        const modalBody = $('#modelBody');
-        const modalFooter = $('.modal .modal-footer');
         const title = 'Add Project';
-        const bodyContent = `
-            <div class="form-group my-1">
-                <label for="name">Name :</label>
-                <input type="text" class="form-control" id="name" name="name">
-            </div>
-            <div class="form-group my-1">
-                <label for="description">Description :</label>
-                <input type="text" class="form-control" id="description" name="description">
-            </div>
-        `;
-        const closeButton = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>';
-        const submitButton = '<button type="button" class="btn btn-primary" id="submit">Submit</button>';
-        setupModalData(modalTitle, modalBody, modalFooter, title, bodyContent, [closeButton, submitButton]);
-        $('#myModal').modal('show');
-        $('#submit').off('click').on('click', async function () {
+        setupFormModal('myForm', title, 'Add');
 
-            try {
-                const dto = gatherFormData();
-                //call the createProjectAsync method from the projectServices
-                const addResult = await createProjectAsync(dto)
+        const form = new FormManager("#myForm", {
+            showAlerts: false,
+            resetOnSubmit: false,
+            onSubmit: async (data) => {
+                showSpinner('myModalContent', false, false, true);
+                // Call the createDepartmentAsync method using the DTO object
+                const addResult = await createProjectAsync(data);
+                hideSpinner('myModalContent');
                 if (addResult.isSuccess) {
-                    //close the modal
-                    $('.modal').modal('hide');
-                    //reload the projectTable
-                    projectTable.ajax.reload(null, false);
-
+                    showSuccessAlert(addResult.successMessage);
+                    // Hide the modal on success
+                    $('#myModal').modal('hide');
+                    // Reload the department table without resetting pagination
+                    projectTable    .ajax.reload(null, false);
+                } else if (addResult.error.code === 409) {
+                    showErrorAlert(addResult.error.description);
+                    // Show error modal if there is a problem
+                    form.handleServerErrors(addResult.error.validation);
                 }
                 else {
-                    showErrorModal(addResult.error.description);
+                    showErrorAlert(addResult.error.description);
                 }
-
-            } catch (e) {
-                showErrorModal('An error occurred while loading the data.');
             }
         });
+        form.addField({
+            name: "name",
+            label: "Name",
+            type: "text",
+            required: false,
+            placeholder: "Enter Name",
+        });
+        form.addField({
+            name: "description",
+            label: "Description",
+            type: "text",
+            required: false,
+            placeholder: "Enter Description",
+        });
+
+
+        $('#myModal').modal('show');
     });
 
-    function gatherFormData() {
-        return {
-            name: $('#name').val(),
-            description: $('#description').val(),
-        };
-    }
 });
